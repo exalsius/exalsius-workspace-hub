@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deploymentName }}-code
+  namespace: {{ .Values.deploymentNamespace | default "default" }}
+  labels:
+    app: {{ .Values.deploymentName }}-code
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.deploymentName }}-code
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deploymentName }}-code
+    spec:
+      securityContext:
+        fsGroup: 0
+      runtimeClassName: nvidia
+      containers:
+        - name: cuda-pytorch
+          image: {{ .Values.deploymentImage }}
+          command: ["sleep", "infinity"]
+          volumeMounts:
+            - name: {{ .Values.deploymentName }}-code-storage
+              mountPath: /workspace
+            - name: dshm
+              mountPath: /dev/shm
+          resources:
+            requests:
+              cpu: {{ .Values.podCpu }}
+              memory: {{ .Values.podMemory }}
+              nvidia.com/gpu: {{ .Values.podGpu }}
+              ephemeral-storage: 8Gi
+            limits:
+              cpu: {{ .Values.podCpu }}
+              memory: {{ .Values.podMemory }}
+              nvidia.com/gpu: {{ .Values.podGpu }}
+              ephemeral-storage: {{ .Values.podEphemeral | default "8Gi" }}
+      volumes:
+        - name: {{ .Values.deploymentName }}-code-storage
+          persistentVolumeClaim:
+            claimName: {{ .Values.deploymentName }}-code-pvc
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.podShmSize | default "8Gi" }}
