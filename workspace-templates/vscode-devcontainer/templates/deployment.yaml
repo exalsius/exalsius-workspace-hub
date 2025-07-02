@@ -2,11 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.deploymentName }}-code
-  namespace: {{ .Values.deploymentNamespace | default "default" }}
+  namespace: {{ .Values.deploymentNamespace }}
   labels:
     app: {{ .Values.deploymentName }}-code
 spec:
-  replicas: {{ .Values.deploymentNumReplicas | default 1 }}
+  replicas: {{ .Values.deploymentNumReplicas }}
   selector:
     matchLabels:
       app: {{ .Values.deploymentName }}-code
@@ -45,4 +45,4 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
-            sizeLimit: {{ .Values.podShmSize | default "8Gi" }}
+            sizeLimit: {{ .Values.podShmSize }}
