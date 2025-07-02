@@ -29,15 +29,15 @@ spec:
               mountPath: /dev/shm
           resources:
             requests:
-              cpu: {{ .Values.resources.cpuCores }}
-              memory: {{ .Values.resources.memoryGB }}Gi
-              nvidia.com/gpu: {{ .Values.resources.gpuCount }}
-              ephemeral-storage: {{ .Values.resources.storageGB }}Gi
+              cpu: {{ .Values.cpuCores }}
+              memory: {{ .Values.memoryGB }}Gi
+              nvidia.com/gpu: {{ .Values.gpuCount }}
+              ephemeral-storage: {{ .Values.storageGB }}Gi
             limits:
-              cpu: {{ .Values.resources.cpuCores }}
-              memory: {{ .Values.resources.memoryGB }}Gi
-              nvidia.com/gpu: {{ .Values.resources.gpuCount }}
-              ephemeral-storage: {{ .Values.resources.storageGB }}Gi
+              cpu: {{ .Values.cpuCores }}
+              memory: {{ .Values.memoryGB }}Gi
+              nvidia.com/gpu: {{ .Values.gpuCount }}
+              ephemeral-storage: {{ .Values.storageGB }}Gi
       volumes:
         - name: {{ .Values.deploymentName }}-code-storage
           persistentVolumeClaim:
