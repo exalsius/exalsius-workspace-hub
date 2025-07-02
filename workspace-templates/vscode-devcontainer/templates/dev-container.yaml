@@ -6,7 +6,7 @@ metadata:
   labels:
     app: {{ .Values.deploymentName }}-code
 spec:
-  replicas: 1
+  replicas: {{ .Values.deploymentNumReplicas | default 1 }}
   selector:
     matchLabels:
       app: {{ .Values.deploymentName }}-code
@@ -29,15 +29,15 @@ spec:
               mountPath: /dev/shm
           resources:
             requests:
-              cpu: {{ .Values.podCpu }}
-              memory: {{ .Values.podMemory }}
-              nvidia.com/gpu: {{ .Values.podGpu }}
-              ephemeral-storage: 8Gi
+              cpu: {{ .Values.resources.cpuCores }}
+              memory: {{ .Values.resources.memoryGB }}Gi
+              nvidia.com/gpu: {{ .Values.resources.gpuCount }}
+              ephemeral-storage: {{ .Values.resources.storageGB }}Gi
             limits:
-              cpu: {{ .Values.podCpu }}
-              memory: {{ .Values.podMemory }}
-              nvidia.com/gpu: {{ .Values.podGpu }}
-              ephemeral-storage: {{ .Values.podEphemeral | default "8Gi" }}
+              cpu: {{ .Values.resources.cpuCores }}
+              memory: {{ .Values.resources.memoryGB }}Gi
+              nvidia.com/gpu: {{ .Values.resources.gpuCount }}
+              ephemeral-storage: {{ .Values.resources.storageGB }}Gi
       volumes:
         - name: {{ .Values.deploymentName }}-code-storage
           persistentVolumeClaim:

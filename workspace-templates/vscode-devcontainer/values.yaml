@@ -1,24 +1,20 @@
 # VSCode DevContainer Helm Chart Values
 
+# DO NOT CHANGE THIS PARAMETER
+deploymentNumReplicas: 1
+
 # Deployment configuration
 deploymentName: "devcontainer"
 deploymentNamespace: "default"
 deploymentImage: "nvidia/cuda:11.8-devel-ubuntu22.04"
 
 # PVC and storage configuration
-deployDevContainer: true
-enablePvcDeletion: false
 podStorage: "10Gi"
-
-# Resource configuration
-podCpu: "2"
-podMemory: "8Gi"
-podGpu: "1"
-podEphemeral: "8Gi"
 podShmSize: "8Gi"
 
-# Node selector configuration
-nodeSelectorSpecs: {}
-  # Example node selector - uncomment and modify as needed
-  # "node-role.kubernetes.io/gpu": "true"
-  # "kubernetes.io/arch": "amd64" 
+# Resource configuration (this maps to ResourcePool spec in API, but camelcase)
+resources:
+  cpuCores: 2
+  memoryGB: 8
+  storageGB: 8
+  gpuCount: 1
