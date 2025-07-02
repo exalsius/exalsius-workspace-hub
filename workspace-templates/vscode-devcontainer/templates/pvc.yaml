@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ .Values.deploymentName }}-code-pvc
-  namespace: {{ .Values.deploymentNamespace | default "default" }}
+  namespace: {{ .Values.deploymentNamespace }}
 spec:
   accessModes:
     - ReadWriteOnce
