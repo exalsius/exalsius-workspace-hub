@@ -1,0 +1,5 @@
+apiVersion: v2
+name: jupyter-notebook
+description: A Helm chart for a Jupyter Notebook
+version: 0.1.0
+type: application

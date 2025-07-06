@@ -1,0 +1,25 @@
+# Jupyter Notebook Helm Chart Values
+
+# DO NOT CHANGE THIS PARAMETER
+deploymentNumReplicas: 1
+
+# Deployment configuration
+deploymentName: my-notebook
+deploymentNamespace: default
+deploymentImage: jupyter/tensorflow-notebook:latest
+enablePvcDeletion: false
+
+# Jupyter Notebook configuration
+notebookPassword: mysecurepassword
+
+# PVC and storage configuration
+podStorage: "10Gi"
+
+# Resource configuration (this maps to ResourcePool spec in API, but camelcase)
+cpuCores: 2
+memoryGB: 8
+storageGB: 8
+gpuCount: 1
+
+
+nodeSelectorSpecs: {}

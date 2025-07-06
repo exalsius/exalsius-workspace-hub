@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.deploymentName }}-notebook-configmap
+  namespace: {{ .Values.deploymentNamespace | default "default" }}
+data:
+  jupyter_server_config.py: |
+    from jupyter_server.auth import passwd
+    c = get_config()
+    c.PasswordIdentityProvider.hashed_password = passwd('{{ .Values.notebookPassword }}')
+    c.PasswordIdentityProvider.allow_password_change = False
