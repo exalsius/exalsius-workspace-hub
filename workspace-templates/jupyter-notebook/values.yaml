@@ -4,13 +4,13 @@
 deploymentNumReplicas: 1
 
 # Deployment configuration
-deploymentName: my-notebook
-deploymentNamespace: default
-deploymentImage: jupyter/tensorflow-notebook:latest
-enablePvcDeletion: false
+deploymentName: "my-notebook"
+deploymentNamespace: "default"
+deploymentImage: "jupyter/tensorflow-notebook:latest"
+enablePvcDeletion: "false"
 
 # Jupyter Notebook configuration
-notebookPassword: mysecurepassword
+notebookPassword: "mysecurepassword"
 
 # PVC and storage configuration
 podStorage: "10Gi"
