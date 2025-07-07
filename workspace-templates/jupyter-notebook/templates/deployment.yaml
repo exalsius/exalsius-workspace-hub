@@ -17,10 +17,8 @@ spec:
     spec:
       securityContext:
         fsGroup: 0
+{{- if gt .Values.gpuCount 0 }}
       runtimeClassName: nvidia
-{{- if .Values.nodeSelectorSpecs }}
-      nodeSelector:
-{{ toYaml .Values.nodeSelectorSpecs | indent 8 }}
 {{- end }}
       containers:
         - name: {{ .Values.deploymentName }}-notebook

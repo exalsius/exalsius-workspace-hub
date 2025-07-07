@@ -20,6 +20,3 @@ cpuCores: 2
 memoryGB: 8
 storageGB: 8
 gpuCount: 1
-
-
-nodeSelectorSpecs: {}
