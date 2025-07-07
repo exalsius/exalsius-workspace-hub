@@ -17,7 +17,7 @@ spec:
     spec:
       securityContext:
         fsGroup: 0
-{{- if gt .Values.gpuCount 0 }}
+{{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) }}
       runtimeClassName: nvidia
 {{- end }}
       containers:
