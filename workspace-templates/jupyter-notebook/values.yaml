@@ -17,6 +17,6 @@ podStorage: "10Gi"
 
 # Resource configuration (this maps to ResourcePool spec in API, but camelcase)
 cpuCores: 2
-memoryGB: 8
-storageGB: 8
+memoryGb: 8
+storageGb: 8
 gpuCount: 1
