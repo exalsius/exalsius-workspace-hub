@@ -1,0 +1,15 @@
+# Test Workspace Helm Chart Values
+
+# DO NOT CHANGE THIS PARAMETER
+deploymentNumReplicas: 1
+
+# Deployment configuration
+deploymentName: "test-workspace"
+deploymentNamespace: "default"
+deploymentImage: "ubuntu:22.04"
+
+# Resource configuration
+cpuCores: 1
+memoryGb: 2
+storageGb: 5
+gpuCount: 0

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: test-workspace
+description: A minimal workspace used for end-to-end testing
+version: 0.1.0
+type: application
