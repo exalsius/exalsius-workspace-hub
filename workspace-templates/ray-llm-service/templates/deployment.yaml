@@ -15,8 +15,9 @@ spec:
       runtime_env:
 {{- if .Values.runtimeEnvironmentPipPackages }}
         pip:
-{{- range .Values.runtimeEnvironmentPipPackages }}
-          - {{ . }}
+{{- $items := split "," .Values.runtimeEnvironmentPipPackages }}
+{{- range $i, $item := $items }}
+          - {{ $item | quote }}
 {{- end }}
 {{- end }}
         env_vars:
