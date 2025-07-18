@@ -1,0 +1,5 @@
+apiVersion: v2
+name: ray-llm-service
+description: A Helm chart for a Ray LLM Service
+version: 0.1.0
+type: application
