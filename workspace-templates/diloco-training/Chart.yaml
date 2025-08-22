@@ -1,0 +1,5 @@
+apiVersion: v2
+name: diloco-training
+description: A workspace which executes a diloco training job
+version: 0.1.0
+type: application

@@ -1,0 +1,77 @@
+apiVersion: batch.volcano.sh/v1alpha1
+kind: Job
+metadata:
+  name: {{ .Values.deploymentName }}
+  namespace: {{ .Values.deploymentNamespace }}
+  labels:
+    job-name: {{ .Values.deploymentName }}
+spec:
+  maxRetry: 3
+  minAvailable: 2
+  plugins:
+    pytorch:
+      - --master=master
+      - --worker=worker
+      - --port=23456
+    svc: []
+  queue: default
+  schedulerName: volcano
+  tasks:
+    - maxRetry: 3
+      minAvailable: 1
+      name: master
+      policies:
+        - action: CompleteJob
+          event: TaskCompleted
+      replicas: 1
+      template:
+        metadata:
+          annotations:
+            scheduling.k8s.io/group-name: {{ .Values.deploymentName }}
+          labels:
+            job-name: {{ .Values.deploymentName }}
+            role: master
+        spec:
+          containers:
+            - command:
+                - python
+                - /app/diloco_training/training/start_training.py
+              envFrom:
+                - configMapRef:
+                    name: {{ include "diloco-training.fullname" . }}-config
+              image: {{ .Values.deploymentImage }}
+              imagePullPolicy: IfNotPresent
+              name: master
+              resources:
+                limits:
+                  nvidia.com/gpu: "1"
+          restartPolicy: OnFailure
+          runtimeClassName: nvidia
+    - maxRetry: 3
+      minAvailable: {{ sub .Values.nodes 1 }}
+      name: worker
+      replicas: {{ sub .Values.nodes 1 }}
+      template:
+        metadata:
+          annotations:
+            scheduling.k8s.io/group-name: {{ .Values.deploymentName }}
+          labels:
+            job-name: {{ .Values.deploymentName }}
+            role: worker
+        spec:
+          containers:
+            - command:
+                - python
+                - /app/diloco_training/training/start_training.py
+              envFrom:
+                - configMapRef:
+                    name: {{ include "diloco-training.fullname" . }}-config
+              image: {{ .Values.deploymentImage }}
+              imagePullPolicy: IfNotPresent
+              name: worker
+              resources:
+                limits:
+                  nvidia.com/gpu: "1"
+              workingDir: /app
+          restartPolicy: OnFailure
+          runtimeClassName: nvidia

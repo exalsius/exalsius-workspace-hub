@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "diloco-training.fullname" . }}-config
+  labels:
+    {{- include "diloco-training.labels" . | nindent 4 }}
+data:
+{{- if .Values.diloco.model }}
+  DILOCO_MODEL: {{ .Values.diloco.model | quote }}
+{{- end }}
+{{- if .Values.diloco.dataset }}
+  DILOCO_DATASET: {{ .Values.diloco.dataset | quote }}
+{{- end }}
+{{- if .Values.diloco.localSteps }}
+  DILOCO_LOCAL_STEPS: {{ .Values.diloco.localSteps | quote }}
+{{- end }}
+{{- if .Values.diloco.lr }}
+  DILOCO_LR: {{ .Values.diloco.lr | quote }}
+{{- end }}
+{{- if .Values.diloco.outerLr }}
+  DILOCO_OUTER_LR: {{ .Values.diloco.outerLr | quote }}
+{{- end }}
+{{- if .Values.diloco.warmupSteps }}
+  DILOCO_WARMUP_STEPS: {{ .Values.diloco.warmupSteps | quote }}
+{{- end }}
+{{- if .Values.diloco.totalSteps }}
+  DILOCO_TOTAL_STEPS: {{ .Values.diloco.totalSteps | quote }}
+{{- end }}
+{{- if .Values.diloco.perDeviceTrainBatchSize }}
+  DILOCO_PER_DEVICE_TRAIN_BATCH_SIZE: {{ .Values.diloco.perDeviceTrainBatchSize | quote }}
+{{- end }}
+{{- if .Values.diloco.batchSize }}
+  DILOCO_BATCH_SIZE: {{ .Values.diloco.batchSize | quote }}
+{{- end }}
+{{- if .Values.diloco.optimMethod }}
+  DILOCO_OPTIM_METHOD: {{ .Values.diloco.optimMethod | quote }}
+{{- end }}
+{{- if .Values.diloco.quantization }}
+  DILOCO_QUANTIZATION: {{ .Values.diloco.quantization | quote }}
+{{- end }}
+{{- if .Values.diloco.checkpointPath }}
+  DILOCO_CHECKPOINT_PATH: {{ .Values.diloco.checkpointPath | quote }}
+{{- end }}
+{{- if .Values.diloco.checkpointInterval }}
+  DILOCO_CHECKPOINT_INTERVAL: {{ .Values.diloco.checkpointInterval | quote }}
+{{- end }}
+{{- if .Values.diloco.device }}
+  DILOCO_DEVICE: {{ .Values.diloco.device | quote }}
+{{- end }}
+{{- if .Values.diloco.wandbProjectName }}
+  DILOCO_WANDB_PROJECT_NAME: {{ .Values.diloco.wandbProjectName | quote }}
+{{- end }}
+{{- if .Values.diloco.wandbGroup }}
+  DILOCO_WANDB_GROUP: {{ .Values.diloco.wandbGroup | quote }}
+{{- end }}
+{{- if .Values.diloco.heterogeneous }}
+  DILOCO_HETEROGENEOUS: {{ .Values.diloco.heterogeneous | quote }}
+{{- end }}
+{{- if .Values.diloco.compressionDecay }}
+  DILOCO_COMPRESSION_DECAY: {{ .Values.diloco.compressionDecay | quote }}
+{{- end }}
+{{- if .Values.diloco.compressionTopk }}
+  DILOCO_COMPRESSION_TOPK: {{ .Values.diloco.compressionTopk | quote }}
+{{- end }}
+{{- if .Values.diloco.experimentDescription }}
+  DILOCO_EXPERIMENT_DESCRIPTION: {{ .Values.diloco.experimentDescription | quote }}
+{{- end }}
+{{- if .Values.diloco.experimentTags }}
+  DILOCO_EXPERIMENT_TAGS: {{ .Values.diloco.experimentTags | quote }}
+{{- end }}
+{{- if .Values.diloco.seed }}
+  DILOCO_SEED: {{ .Values.diloco.seed | quote }}
+{{- end }}
+{{- if .Values.diloco.wandbLogging }}
+  DILOCO_WANDB_LOGGING: {{ .Values.diloco.wandbLogging | quote }}
+{{- end }}
+{{- if .Values.diloco.wandbUserKey }}
+  WANDB_USER_KEY: {{ .Values.diloco.wandbUserKey | quote }}
+{{- end }}
+{{- if .Values.diloco.huggingfaceToken }}
+  HUGGINGFACE_TOKEN: {{ .Values.diloco.huggingfaceToken | quote }}
+{{- end }}
