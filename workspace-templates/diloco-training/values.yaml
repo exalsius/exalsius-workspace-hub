@@ -40,7 +40,7 @@ diloco:
   compressionDecay: "0.9"
   compressionTopk: "32"
   experimentDescription: "DiLoCo distributed training experiment"
-  experimentTags: "diloco,gpt-neo-x,c4"
+  experimentTags: "[\"diloco\", \"gpt-neo-x\", \"c4\"]"
   seed: "42"
   wandbLogging: "true"
   wandbUserKey: "XXXXXXXXXXXXXXXXX"
