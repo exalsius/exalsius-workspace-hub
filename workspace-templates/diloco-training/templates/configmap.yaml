@@ -2,8 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Values.deploymentName }}-config
-  labels:
-    {{- include "diloco-training.labels" . | nindent 4 }}
+  namespace: {{ .Values.deploymentNamespace }}
 data:
 {{- if .Values.diloco.model }}
   DILOCO_MODEL: {{ .Values.diloco.model | quote }}
