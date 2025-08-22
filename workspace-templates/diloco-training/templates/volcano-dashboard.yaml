@@ -21,6 +21,8 @@ spec:
           level: s0:c123,c456
         seccompProfile:
           type: RuntimeDefault
+        fsGroup: 101
+        fsGroupChangePolicy: OnRootMismatch
       serviceAccountName: {{ .Values.deploymentName }}-dashboard
       containers:
         - image: volcanosh/vc-dashboard-frontend:latest
@@ -34,9 +36,22 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-              - ALL
+                - ALL
             runAsNonRoot: true
-            runAsUser: 1000
+            runAsUser: 101
+            runAsGroup: 101
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20
           volumeMounts:
             - mountPath: /var/cache/nginx
               name: nginx-cache
@@ -53,16 +68,27 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-              - ALL
+                - ALL
             runAsNonRoot: true
             runAsUser: 1000
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3001
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 20
       volumes:
         - name: nginx-cache
           emptyDir: {}
         - name: nginx-run
           emptyDir: {}
 ---
-
 # volcano dashboard serviceAccount
 apiVersion: v1
 kind: ServiceAccount
@@ -70,7 +96,6 @@ metadata:
   name: {{ .Values.deploymentName }}-dashboard
   namespace: {{ .Values.deploymentNamespace }}
 ---
-
 # volcano dashboard cluster role binding
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -86,7 +111,6 @@ subjects:
     name: {{ .Values.deploymentName }}-dashboard
     namespace: {{ .Values.deploymentNamespace }}
 ---
-
 # volcano dashboard cluster role
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -98,40 +122,13 @@ rules:
       - batch.volcano.sh
     resources:
       - jobs
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - delete
-
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - scheduling.incubator.k8s.io
-      - scheduling.volcano.sh
-    resources:
-      - queues
-    verbs:
-      - get
-      - list
-      - watch
-      - delete
-      - create
-      - update
-      - patch
-
+    verbs: ["get","list","watch","create","delete"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get","list","watch"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get","list","watch"]
+  - apiGroups: ["scheduling.incubator.k8s.io","scheduling.volcano.sh"]
+    resources: ["queues"]
+    verbs: ["get","list","watch","delete","create","update","patch"]
