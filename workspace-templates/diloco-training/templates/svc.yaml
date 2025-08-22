@@ -1,0 +1,22 @@
+# volcano dashboard service
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.deploymentName }}-dashboard
+  namespace: {{ .Values.deploymentNamespace }}
+  labels:
+    app: {{ .Values.deploymentName }}-dashboard
+  annotations:
+    workspace.exalsius.ai/access-info: "true"
+    workspace.exalsius.ai/access-type: "nodeport"
+    workspace.exalsius.ai/protocol: "http"
+    workspace.exalsius.ai/port-name: "http"
+spec:
+  type: NodePort
+  ports:
+    - name: frontend
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: {{ .Values.deploymentName }}-dashboard
