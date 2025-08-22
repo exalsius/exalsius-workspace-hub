@@ -38,7 +38,7 @@ spec:
                 - /app/diloco_training/training/start_training.py
               envFrom:
                 - configMapRef:
-                    name: {{ include "diloco-training.fullname" . }}-config
+                    name: {{ .Values.deploymentName }}-config
               image: {{ .Values.deploymentImage }}
               imagePullPolicy: IfNotPresent
               name: master
@@ -65,7 +65,7 @@ spec:
                 - /app/diloco_training/training/start_training.py
               envFrom:
                 - configMapRef:
-                    name: {{ include "diloco-training.fullname" . }}-config
+                    name: {{ .Values.deploymentName }}-config
               image: {{ .Values.deploymentImage }}
               imagePullPolicy: IfNotPresent
               name: worker
