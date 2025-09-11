@@ -13,7 +13,7 @@ deploymentImage: "rayproject/ray-ml:2.46.0.0e19ea"
 
 # LLM / Ray / vLLM specific configuration
 numModelReplicas: 1
-runtimeEnvironmentPipPackages: "numpy==1.26.4,vllm>=0.9.0,ray==2.46.0"
+runtimeEnvironmentPipPackages: "numpy==1.26.4,vllm==0.9.0,ray==2.46.0"
 
 llmModelName: "microsoft/phi-4"
 tensorParallelSize: 1
