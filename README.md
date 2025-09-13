@@ -36,7 +36,7 @@ You can also deploy workspaces directly using Helm.
 
 1.  **Clone the repository:**
     ```sh
-    git clone https://github.com/exalsius/exalsius-workspace-templates.git
+    git clone https://github.com/exalsius/exalsius-workspace-hub.git
     cd exalsius-workspace-templates/workspace-templates
     ```
 
