@@ -8,12 +8,12 @@ deploymentName: "devcontainer"
 deploymentNamespace: "default"
 deploymentImage: "nvcr.io/nvidia/pytorch:25.01-py3"
 
-# PVC and storage configuration
-podStorage: "10Gi"
-podShmSize: "8Gi"
+# Ephemeral and shared memory storage configuration
+podEphemeralStorageGb: 50
+podShmSizeGb: 8
 
 # Resource configuration (this maps to ResourcePool spec in API, but camelcase)
-cpuCores: 2
-memoryGb: 8
-storageGb: 8
+cpuCores: 16
+memoryGb: 32
+storageGb: 50
 gpuCount: 1

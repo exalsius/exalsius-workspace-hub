@@ -73,16 +73,12 @@ spec:
                   cpu: {{ .Values.cpuCores }}
                   memory: {{ .Values.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.gpuCount }}
-{{ if .Values.storageGb }}
-                  ephemeral-storage: {{ .Values.storageGb }}Gi
-{{ end }}
+                  ephemeral-storage: {{ .Values.podEphemeralStorageGb }}Gi
                 requests:
                   cpu: {{ .Values.cpuCores }}
                   memory: {{ .Values.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.gpuCount }}
-{{ if .Values.storageGb }}
-                  ephemeral-storage: {{ .Values.storageGb }}Gi
-{{ end }}
+                  ephemeral-storage: {{ .Values.podEphemeralStorageGb }}Gi
               volumeMounts:
               - mountPath: /tmp/files
                 name: ray-head-files

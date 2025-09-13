@@ -12,11 +12,11 @@ enablePvcDeletion: "false"
 # Jupyter Notebook configuration
 notebookPassword: "mysecurepassword"
 
-# PVC and storage configuration
-podStorage: "10Gi"
+# Ephemeral storage storage configuration
+podEphemeralStorageGb: 50
 
 # Resource configuration (this maps to ResourcePool spec in API, but camelcase)
-cpuCores: 2
-memoryGb: 8
-storageGb: 8
+cpuCores: 16
+memoryGb: 32
+storageGb: 50
 gpuCount: 1

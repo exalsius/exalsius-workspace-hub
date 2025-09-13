@@ -22,6 +22,9 @@ placementGroupStrategy: "PACK"
 cpuPerActor: 8
 gpuPerActor: 1
 
+# Ephemeral storage configuration
+podEphemeralStorageGb: 50
+
 # Resource configuration (this maps to ResourcePool spec in API, but camelcase)
 cpuCores: 16
 memoryGb: 32

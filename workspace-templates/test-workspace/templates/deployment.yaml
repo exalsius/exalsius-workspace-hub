@@ -23,11 +23,11 @@ spec:
             requests:
               cpu: {{ .Values.cpuCores }}
               memory: {{ .Values.memoryGb }}Gi
-              ephemeral-storage: {{ .Values.storageGb }}Gi
+              ephemeral-storage: {{ .Values.podEphemeralStorageGb }}Gi
             limits:
               cpu: {{ .Values.cpuCores }}
               memory: {{ .Values.memoryGb }}Gi
-              ephemeral-storage: {{ .Values.storageGb }}Gi
+              ephemeral-storage: {{ .Values.podEphemeralStorageGb }}Gi
           ports:
             - containerPort: 8080
               name: http
