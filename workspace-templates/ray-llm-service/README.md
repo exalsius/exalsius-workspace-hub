@@ -1,53 +1,72 @@
-# Ray-LLM Service
+<p align="center"><img src="../../docs/img/logo_banner.png" alt="exalsius banner" width="250"></p>
 
-A helm-based template for a RayService deployment that serves a specified LLM.
+# Ray LLM Service Workspace
+
+This workspace provides a Helm chart for deploying a Large Language Model (LLM) serving environment on Kubernetes using [Ray Serve](https://docs.ray.io/en/latest/serve/index.html). 
+It is designed for quickly setting up a scalable and efficient LLM inference service. 
+This template automates the deployment of a Ray cluster and the LLM, making it easy to get started.
 
 ## Prerequisites
 
 - A running Kubernetes cluster.
 - The [KubeRay operator](https://github.com/ray-project/kuberay) installed in your cluster.
 
-## Installation
+## Quickstart
 
-To install the chart, you can use the following command:
+### Using the exalsius CLI
 
-```bash
-helm install <release-name> . --namespace <namespace>
+The recommended way to deploy this workspace is with the `exls` command-line tool. You can specify the model you want to serve and other configurations.
+
+```sh
+exls workspace deploy llm-inference <CLI parameters>
 ```
+
+### Using Helm
+
+You can also deploy the workspace directly using Helm.
+
+1.  **Clone the repository:**
+    ```sh
+    git clone https://github.com/exalsius/exalsius-workspace-hub.git
+    cd exalsius-workspace-templates/workspace-templates
+    ```
+
+2.  **Install the chart:**
+    ```sh
+    helm install my-llm-service ./ray-llm-service --set llmModelName="mistralai/Mistral-7B-v0.1" --set huggingFaceToken=<your-hf-token>
+    ```
 
 ## Configuration
 
-The following table lists the configurable parameters of the Ray-LLM Service chart. For default values, please refer to the `values.yaml` file.
+All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
 
-| Parameter                           | Description                                                                  |
-|-------------------------------------|------------------------------------------------------------------------------|
-| `deploymentNumReplicas`             | Number of replicas for the deployment. **Do not change this value.**           |
-| `deploymentName`                    | Name of the deployment.                                                      |
-| `deploymentNamespace`               | Namespace for the deployment.                                                |
-| `deploymentImage`                   | Docker image for the Ray service.                                            |
-| `huggingFaceToken`                  | Optional Hugging Face token for accessing private models.                    |
-| `numModelReplicas`                  | Number of replicas for the LLM model.                                        |
-| `runtimeEnvironmentPipPackages`     | List of pip packages to install in the runtime environment.                  |
-| `llmModelName`                      | Name of the LLM model to serve.                                              |
-| `tensorParallelSize`                | Tensor parallel size for the model.                                          |
-| `pipelineParallelSize`              | Pipeline parallel size for the model.                                        |
-| `placementGroupStrategy`            | Placement group strategy for the model.                                      |
-| `cpuPerActor`                       | Number of CPUs per actor.                                                    |
-| `gpuPerActor`                       | Number of GPUs per actor.                                                    |
-| `cpuCores`                          | Number of CPU cores for the Ray head.                                        |
-| `memoryGb`                          | Memory in GB for the Ray head.                                               |
-| `storageGb`                         | Ephemeral storage in GB for the Ray head.                                    |
-| `gpuCount`                          | Number of GPUs for the Ray head.                                             |
+### Deployment Configuration
 
-## Deployment
+| Parameter             | Description                                                            | Default Value                   |
+| --------------------- | ---------------------------------------------------------------------- | ------------------------------- |
+| `deploymentName`      | The name of the RayService deployment.                                 | `my-llm-service`                |
+| `deploymentNamespace` | The Kubernetes namespace for the deployment.                           | `default`                       |
+| `deploymentImage`     | The Docker image for the Ray service.                                  | `rayproject/ray-ml:2.46.0.0e19ea` |
+| `huggingFaceToken`    | **Optional.** Your Hugging Face token for accessing private models.    | `""`                            |
 
-This chart deploys the following Kubernetes resources:
+### Ray and LLM Configuration
 
-- A `RayService` which manages the Ray cluster and the LLM deployment. **Note:** This chart deploys a single-node Ray cluster, meaning only a head pod is created and no worker pods.
-- Two `Service` manifests to expose the LLM via NodePort(s): Once for the dashboard, and once for the serve endpoint.
-- A `ConfigMap` to store the runtime environment configuration.
-- A `Secret` to store the Hugging Face token, if provided.
+| Parameter                         | Description                                                          | Default Value                             |
+| --------------------------------- | -------------------------------------------------------------------- | ----------------------------------------- |
+| `numModelReplicas`                | The number of replicas for the LLM model.                            | `1`                                       |
+| `runtimeEnvironmentPipPackages`   | A list of pip packages to install in the runtime environment.        | `numpy==1.26.4,vllm==0.9.0,ray==2.46.0`     |
+| `llmModelName`                    | The name of the LLM model from Hugging Face to serve.                | `microsoft/phi-4`                         |
+| `tensorParallelSize`              | The tensor parallel size for the model.                              | `1`                                       |
+| `pipelineParallelSize`            | The pipeline parallel size for the model.                            | `1`                                       |
+| `placementGroupStrategy`          | The placement group strategy for the model.                          | `PACK`                                    |
+| `cpuPerActor`                     | The number of CPUs to allocate per actor.                            | `8`                                       |
+| `gpuPerActor`                     | The number of GPUs to allocate per actor.                            | `1`                                       |
 
-## Accessing the Service
+### Resource Configuration
 
-Once the service is deployed, you can access the LLM by using one of the provided NodePort services. You will need to lookup the ports that have been automatically used.
+| Parameter             | Description                                       | Default Value |
+| --------------------- | ------------------------------------------------- | ------------- |
+| `cpuCores`            | The number of CPU cores for the Ray head.         | `16`          |
+| `memoryGb`            | The amount of memory in GB for the Ray head.      | `32`          |
+| `gpuCount`            | The number of GPUs for the Ray head.              | `1`           |
+| `podEphemeralStorageGb` | The amount of ephemeral storage in GB for the pod. | `50`          |
