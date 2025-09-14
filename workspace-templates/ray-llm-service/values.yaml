@@ -19,7 +19,7 @@ llmModelName: "microsoft/phi-4"
 tensorParallelSize: 1
 pipelineParallelSize: 1
 placementGroupStrategy: "PACK"
-cpuPerActor: 8
+cpuPerActor: 16
 gpuPerActor: 1
 
 # Ephemeral storage configuration
