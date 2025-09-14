@@ -9,7 +9,7 @@ deploymentNamespace: "default"
 deploymentImage: "ubuntu:22.04"
 
 # Ephemeral storage configuration
-podEphemeralStorageGb: 10
+ephemeralStorageGb: 10
 
 # Resource configuration
 cpuCores: 1

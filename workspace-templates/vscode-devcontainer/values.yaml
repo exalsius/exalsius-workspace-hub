@@ -9,8 +9,8 @@ deploymentNamespace: "default"
 deploymentImage: "nvcr.io/nvidia/pytorch:25.01-py3"
 
 # Ephemeral and shared memory storage configuration
-podEphemeralStorageGb: 50
-podShmSizeGb: 8
+ephemeralStorageGb: 50
+shmSizeGb: 8
 
 # Resource configuration (this maps to ResourcePool spec in API, but camelcase)
 cpuCores: 16

@@ -12,10 +12,13 @@ deploymentImage: "srnbckr/diloco-training:latest"
 deploymentName: "diloco-training-job"
 nodes: 2  # Number of nodes for distributed training
 
+# Ephemeral storage configuration
+ephemeralStorageGb: 100
+
 # Resource configuration
-cpuCores: 1
-memoryGb: 16
-storageGb: 60
+# the job template does not configure pvc storage
+cpuCores: 16
+memoryGb: 32
 gpuCount: 1
 
 # DiLoCo Training Environment Variables

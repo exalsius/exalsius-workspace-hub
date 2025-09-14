@@ -23,11 +23,13 @@ spec:
             requests:
               cpu: {{ .Values.cpuCores }}
               memory: {{ .Values.memoryGb }}Gi
-              ephemeral-storage: {{ .Values.podEphemeralStorageGb }}Gi
+              nvidia.com/gpu: {{ .Values.gpuCount }}
+              ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
             limits:
               cpu: {{ .Values.cpuCores }}
               memory: {{ .Values.memoryGb }}Gi
-              ephemeral-storage: {{ .Values.podEphemeralStorageGb }}Gi
+              nvidia.com/gpu: {{ .Values.gpuCount }}
+              ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
           ports:
             - containerPort: 8080
               name: http

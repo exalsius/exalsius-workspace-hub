@@ -23,9 +23,10 @@ cpuPerActor: 8
 gpuPerActor: 1
 
 # Ephemeral storage configuration
-podEphemeralStorageGb: 50
+ephemeralStorageGb: 50
 
 # Resource configuration (this maps to ResourcePool spec in API, but camelcase)
+# the workspace template does not configure pvc storage
 cpuCores: 16
 memoryGb: 32
 gpuCount: 1

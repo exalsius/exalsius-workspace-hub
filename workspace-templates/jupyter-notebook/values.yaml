@@ -13,7 +13,7 @@ enablePvcDeletion: "false"
 notebookPassword: "mysecurepassword"
 
 # Ephemeral storage storage configuration
-podEphemeralStorageGb: 50
+ephemeralStorageGb: 50
 
 # Resource configuration (this maps to ResourcePool spec in API, but camelcase)
 cpuCores: 16
