@@ -9,7 +9,7 @@ deploymentNamespace: "default"
 deploymentImage: "rayproject/ray-ml:2.46.0.0e19ea"
 
 # If you require access to access-restricted models, you can specify a Hugging Face token here.
-# huggingFaceToken: "my-hugging-face-token"
+# huggingfaceToken: "my-hugging-face-token"
 
 # LLM / Ray / vLLM specific configuration
 numModelReplicas: 1

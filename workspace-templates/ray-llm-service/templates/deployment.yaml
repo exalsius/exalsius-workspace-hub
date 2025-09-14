@@ -61,7 +61,7 @@ spec:
               env:
               - name: PYTHONPATH
                 value: /tmp/files
-{{- if .Values.huggingFaceToken }}
+{{- if .Values.huggingfaceToken }}
               - name: HUGGING_FACE_HUB_TOKEN
                 valueFrom:
                   secretKeyRef:
