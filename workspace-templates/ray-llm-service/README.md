@@ -47,26 +47,26 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | `deploymentName`      | The name of the RayService deployment.                                 | `my-llm-service`                |
 | `deploymentNamespace` | The Kubernetes namespace for the deployment.                           | `default`                       |
 | `deploymentImage`     | The Docker image for the Ray service.                                  | `rayproject/ray-ml:2.46.0.0e19ea` |
-| `huggingFaceToken`    | **Optional.** Your Hugging Face token for accessing private models.    | `""`                            |
+| `huggingfaceToken`    | **Optional.** Your Hugging Face token for accessing private models.    | `""`                            |
 
 ### Ray and LLM Configuration
 
-| Parameter                         | Description                                                          | Default Value                             |
-| --------------------------------- | -------------------------------------------------------------------- | ----------------------------------------- |
-| `numModelReplicas`                | The number of replicas for the LLM model.                            | `1`                                       |
-| `runtimeEnvironmentPipPackages`   | A list of pip packages to install in the runtime environment.        | `numpy==1.26.4,vllm==0.9.0,ray==2.46.0`     |
-| `llmModelName`                    | The name of the LLM model from Hugging Face to serve.                | `microsoft/phi-4`                         |
-| `tensorParallelSize`              | The tensor parallel size for the model.                              | `1`                                       |
-| `pipelineParallelSize`            | The pipeline parallel size for the model.                            | `1`                                       |
-| `placementGroupStrategy`          | The placement group strategy for the model.                          | `PACK`                                    |
-| `cpuPerActor`                     | The number of CPUs to allocate per actor.                            | `8`                                       |
-| `gpuPerActor`                     | The number of GPUs to allocate per actor.                            | `1`                                       |
+| Parameter                       | Description                                                          | Default Value                             |
+| ------------------------------- | -------------------------------------------------------------------- | ----------------------------------------- |
+| `numModelReplicas`              | The number of replicas for the LLM model.                            | `1`                                       |
+| `runtimeEnvironmentPipPackages` | A list of pip packages to install in the runtime environment.        | `numpy==1.26.4,vllm==0.9.0,ray==2.46.0`     |
+| `huggingfaceModel`              | The name of the LLM model from Hugging Face to serve.                | `microsoft/phi-4`                         |
+| `tensorParallelSize`            | The tensor parallel size for the model.                              | `1`                                       |
+| `pipelineParallelSize`          | The pipeline parallel size for the model.                            | `1`                                       |
+| `placementGroupStrategy`        | The placement group strategy for the model.                          | `PACK`                                    |
+| `cpuPerActor`                   | The number of CPUs to allocate per actor.                            | `16`                                      |
+| `gpuPerActor`                   | The number of GPUs to allocate per actor.                            | `1`                                       |
 
 ### Resource Configuration
 
-| Parameter             | Description                                       | Default Value |
-| --------------------- | ------------------------------------------------- | ------------- |
-| `cpuCores`            | The number of CPU cores for the Ray head.         | `16`          |
-| `memoryGb`            | The amount of memory in GB for the Ray head.      | `32`          |
-| `gpuCount`            | The number of GPUs for the Ray head.              | `1`           |
-| `podEphemeralStorageGb` | The amount of ephemeral storage in GB for the pod. | `50`          |
+| Parameter          | Description                                       | Default Value |
+| ------------------ | ------------------------------------------------- | ------------- |
+| `cpuCores`         | The number of CPU cores for the Ray head.         | `16`          |
+| `memoryGb`         | The amount of memory in GB for the Ray head.      | `32`          |
+| `gpuCount`         | The number of GPUs for the Ray head.              | `1`           |
+| `ephemeralStorageGb` | The amount of ephemeral storage in GB for the pod. | `50`          |

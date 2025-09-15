@@ -34,9 +34,9 @@ All configurable options are defined in the `values.yaml` file and can be overri
 
 ### Resource Configuration
 
-| Parameter             | Description                                        | Default Value |
-| --------------------- | -------------------------------------------------- | ------------- |
-| `cpuCores`            | The number of CPU cores to allocate.               | `1`           |
-| `memoryGb`            | The amount of memory in GB to allocate.            | `2`           |
-| `gpuCount`            | The number of GPUs to allocate.                    | `0`           |
-| `podEphemeralStorageGb` | The amount of ephemeral storage in GB for the pod. | `10`          |
+| Parameter          | Description                                        | Default Value |
+| ------------------ | -------------------------------------------------- | ------------- |
+| `cpuCores`         | The number of CPU cores to allocate.               | `1`           |
+| `memoryGb`         | The amount of memory in GB to allocate.            | `2`           |
+| `gpuCount`         | The number of GPUs to allocate.                    | `0`           |
+| `ephemeralStorageGb` | The amount of ephemeral storage in GB for the pod. | `10`          |

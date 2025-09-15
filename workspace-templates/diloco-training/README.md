@@ -45,12 +45,12 @@ All configurable options are defined in the `values.yaml` file and can be overri
 
 ### Resource Configuration
 
-| Parameter       | Description                               | Default Value |
-| --------------- | ----------------------------------------- | ------------- |
-| `cpuCores`      | The number of CPU cores to allocate.      | `1`           |
-| `memoryGb`      | The amount of memory in GB to allocate.   | `16`          |
-| `storageGb`     | The amount of storage in GB to allocate.  | `60`          |
-| `gpuCount`      | The number of GPUs to allocate.           | `1`           |
+| Parameter          | Description                               | Default Value |
+| ------------------ | ----------------------------------------- | ------------- |
+| `cpuCores`         | The number of CPU cores to allocate.      | `16`          |
+| `memoryGb`         | The amount of memory in GB to allocate.   | `32`          |
+| `ephemeralStorageGb` | The amount of storage in GB to allocate.  | `100`         |
+| `gpuCount`         | The number of GPUs to allocate.           | `1`           |
 
 ### DiLoCo Training Parameters
 

@@ -45,11 +45,11 @@ All configurable options are defined in the `values.yaml` file and can be overri
 
 ### Resource Configuration
 
-| Parameter             | Description                                                        | Default Value |
-| --------------------- | ------------------------------------------------------------------ | ------------- |
-| `cpuCores`            | The number of CPU cores to allocate.                               | `16`          |
-| `memoryGb`            | The amount of memory in GB to allocate.                            | `32`          |
-| `storageGb`           | The size of the persistent volume for your workspace.              | `50`          |
-| `gpuCount`            | The number of GPUs to allocate.                                    | `1`           |
-| `podEphemeralStorageGb` | The amount of ephemeral storage in GB for the pod.                 | `50`          |
-| `podShmSizeGb`        | The size of shared memory (`/dev/shm`) in GB for the pod.          | `8`           |
+| Parameter          | Description                                                        | Default Value |
+| ------------------ | ------------------------------------------------------------------ | ------------- |
+| `cpuCores`         | The number of CPU cores to allocate.                               | `16`          |
+| `memoryGb`         | The amount of memory in GB to allocate.                            | `32`          |
+| `storageGb`        | The size of the persistent volume for your workspace.              | `50`          |
+| `gpuCount`         | The number of GPUs to allocate.                                    | `1`           |
+| `ephemeralStorageGb` | The amount of ephemeral storage in GB for the pod.                 | `50`          |
+| `shmSizeGb`        | The size of shared memory (`/dev/shm`) in GB for the pod.          | `8`           |
