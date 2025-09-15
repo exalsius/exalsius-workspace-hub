@@ -34,12 +34,12 @@ spec:
               cpu: {{ .Values.cpuCores }}
               memory: {{ .Values.memoryGb }}Gi
               nvidia.com/gpu: {{ .Values.gpuCount }}
-              ephemeral-storage: {{ .Values.storageGb }}Gi
+              ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
             limits:
               cpu: {{ .Values.cpuCores }}
               memory: {{ .Values.memoryGb }}Gi
               nvidia.com/gpu: {{ .Values.gpuCount }}
-              ephemeral-storage: {{ .Values.storageGb }}Gi
+              ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
           ports:
             - containerPort: 8888
               name: notebook

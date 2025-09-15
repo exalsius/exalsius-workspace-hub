@@ -8,8 +8,10 @@ deploymentName: "test-workspace"
 deploymentNamespace: "default"
 deploymentImage: "ubuntu:22.04"
 
+# Ephemeral storage configuration
+ephemeralStorageGb: 10
+
 # Resource configuration
 cpuCores: 1
 memoryGb: 2
-storageGb: 5
 gpuCount: 0

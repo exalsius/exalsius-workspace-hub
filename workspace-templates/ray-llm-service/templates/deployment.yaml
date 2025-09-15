@@ -26,8 +26,8 @@ spec:
           BUILD_APP_ARG_PLACEMENT_GROUP_STRATEGY: "{{ .Values.placementGroupStrategy }}"
           BUILD_APP_ARG_CPU_PER_ACTOR: "{{ .Values.cpuPerActor }}"
           BUILD_APP_ARG_GPU_PER_ACTOR: "{{ .Values.gpuPerActor }}"
-          DYNAMIC_RAY_CLI_ARG_MODEL: "{{ .Values.llmModelName }}"
-          DYNAMIC_RAY_CLI_ARG_SERVED_MODEL_NAME: "{{ .Values.llmModelName }}"
+          DYNAMIC_RAY_CLI_ARG_MODEL: "{{ .Values.huggingfaceModel }}"
+          DYNAMIC_RAY_CLI_ARG_SERVED_MODEL_NAME: "{{ .Values.huggingfaceModel }}"
   rayClusterConfig:
     headGroupSpec:
       rayStartParams:
@@ -61,7 +61,7 @@ spec:
               env:
               - name: PYTHONPATH
                 value: /tmp/files
-{{- if .Values.huggingFaceToken }}
+{{- if .Values.huggingfaceToken }}
               - name: HUGGING_FACE_HUB_TOKEN
                 valueFrom:
                   secretKeyRef:
@@ -73,16 +73,12 @@ spec:
                   cpu: {{ .Values.cpuCores }}
                   memory: {{ .Values.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.gpuCount }}
-{{ if .Values.storageGb }}
-                  ephemeral-storage: {{ .Values.storageGb }}Gi
-{{ end }}
+                  ephemeral-storage: {{ .Values.podEphemeralStorageGb }}Gi
                 requests:
                   cpu: {{ .Values.cpuCores }}
                   memory: {{ .Values.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.gpuCount }}
-{{ if .Values.storageGb }}
-                  ephemeral-storage: {{ .Values.storageGb }}Gi
-{{ end }}
+                  ephemeral-storage: {{ .Values.podEphemeralStorageGb }}Gi
               volumeMounts:
               - mountPath: /tmp/files
                 name: ray-head-files
