@@ -1,0 +1,5 @@
+apiVersion: v2
+name: marimo
+description: A Helm chart for a Marimo workspace
+version: 0.1.0
+type: application

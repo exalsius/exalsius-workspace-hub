@@ -1,0 +1,19 @@
+# Marimo Helm Chart Values
+
+# DO NOT CHANGE THIS PARAMETER
+deploymentNumReplicas: 1
+
+# Deployment configuration
+deploymentName: "my-marimo"
+deploymentNamespace: "default"
+deploymentImage: "ghcr.io/marimo-team/marimo:latest-data"
+enablePvcDeletion: "false"
+
+# Ephemeral storage storage configuration
+ephemeralStorageGb: 50
+
+# Resource configuration (this maps to ResourcePool spec in API, but camelcase)
+cpuCores: 16
+memoryGb: 32
+storageGb: 50
+gpuCount: 1
