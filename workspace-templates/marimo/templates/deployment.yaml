@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deploymentName }}-marimo
+  namespace: {{ .Values.deploymentNamespace | default "default" }}
+  labels:
+    app: {{ .Values.deploymentName }}-marimo
+spec:
+  replicas: {{ .Values.deploymentNumReplicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.deploymentName }}-marimo
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deploymentName }}-marimo
+    spec:
+      securityContext:
+        fsGroup: 0
+{{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) }}
+      runtimeClassName: nvidia
+{{- end }}
+      containers:
+        - name: {{ .Values.deploymentName }}-marimo
+          image: {{ .Values.deploymentImage }}
+          volumeMounts:
+            - name: {{ .Values.deploymentName }}-marimo-storage
+              mountPath: /data
+          resources:
+            requests:
+              cpu: {{ .Values.cpuCores }}
+              memory: {{ .Values.memoryGb }}Gi
+              nvidia.com/gpu: {{ .Values.gpuCount }}
+              ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+            limits:
+              cpu: {{ .Values.cpuCores }}
+              memory: {{ .Values.memoryGb }}Gi
+              nvidia.com/gpu: {{ .Values.gpuCount }}
+              ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+          ports:
+            - containerPort: 8080
+              name: marimo
+      volumes:
+        - name: {{ .Values.deploymentName }}-marimo-storage
+          persistentVolumeClaim:
+            claimName: {{ .Values.deploymentName }}-marimo-pvc

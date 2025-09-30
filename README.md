@@ -14,6 +14,7 @@ A collection of Helm chart templates for deploying containerized AI/ML developme
   - `jupyter-notebook`: Jupyter Notebook environment.
   - `ray-llm-service`: Ray-based LLM service.
   - `diloco-training`: Distributed AI training jobs.
+  - `marimo`: Marimo Notebook environment.
 
 
 ## Quickstart
