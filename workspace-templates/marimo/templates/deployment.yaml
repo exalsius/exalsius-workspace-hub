@@ -32,8 +32,8 @@ spec:
           command: ["sh", "-c"]
           args:
             - >
-              marimo edit --token --token-password="${TOKEN_PASSWORD}" \
-              --port=8080 --host=0.0.0.0
+              marimo edit --token --token-password="${TOKEN_PASSWORD}"
+              -p 8080 --host 0.0.0.0
           volumeMounts:
             - name: {{ .Values.deploymentName }}-marimo-storage
               mountPath: /data
