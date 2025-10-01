@@ -9,6 +9,9 @@ deploymentNamespace: "default"
 deploymentImage: "ghcr.io/marimo-team/marimo:latest-data"
 enablePvcDeletion: "false"
 
+# Marimo configuration
+tokenPassword: "mysecurepassword"
+
 # Ephemeral storage storage configuration
 ephemeralStorageGb: 50
 
