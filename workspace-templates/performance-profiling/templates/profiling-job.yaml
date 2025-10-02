@@ -1,0 +1,112 @@
+apiVersion: batch.volcano.sh/v1alpha1
+kind: Job
+metadata:
+  name: {{ .Values.deploymentName }}
+  namespace: {{ .Values.deploymentNamespace }}
+  labels:
+    job-name: {{ .Values.deploymentName }}
+spec:
+  maxRetry: 3
+  minAvailable: {{ .Values.nodes }}
+  plugins:
+    pytorch:
+      - --master=master
+      - --worker=worker
+      - --port=23456
+    svc: []
+  queue: default
+  schedulerName: volcano
+  tasks:
+    - maxRetry: 3
+      minAvailable: 1
+      name: master
+      policies:
+        - action: CompleteJob
+          event: TaskCompleted
+      replicas: 1
+      template:
+        metadata:
+          annotations:
+            scheduling.k8s.io/group-name: {{ .Values.deploymentName }}
+          labels:
+            job-name: {{ .Values.deploymentName }}
+            role: master
+        spec:
+          containers:
+            - command: ["uv", "run", "/app/entrypoints/volcano_worker.py"]
+              args: []
+              image: {{ .Values.deploymentImage }}
+              imagePullPolicy: IfNotPresent
+              name: master
+              {{ if .Values.extraEnvironmentVariables }}
+              env:
+                {{ range .Values.extraEnvironmentVariables }}
+                - name: {{ .name }}
+                  value: {{ .value }}
+                {{ end }}
+              {{ end }}
+              requests:
+                cpu: {{ .Values.cpuCores }}
+                memory: {{ .Values.memoryGb }}Gi
+                nvidia.com/gpu: {{ .Values.gpuCount }}
+                ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+              limits:
+                cpu: {{ .Values.cpuCores }}
+                memory: {{ .Values.memoryGb }}Gi
+                nvidia.com/gpu: {{ .Values.gpuCount }}
+                ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+              volumeMounts:
+                - name: profiling-config
+                  mountPath: /app/profiling_config.json
+                  subPath: profiling_config.json
+          volumes:
+            - name: profiling-config
+              configMap:
+                name: {{ .Values.deploymentName }}-profiling-config
+          restartPolicy: OnFailure
+          runtimeClassName: nvidia
+    - maxRetry: 3
+      minAvailable: {{ sub .Values.nodes 1 }}
+      name: worker
+      replicas: {{ sub .Values.nodes 1 }}
+      template:
+        metadata:
+          annotations:
+            scheduling.k8s.io/group-name: {{ .Values.deploymentName }}
+          labels:
+            job-name: {{ .Values.deploymentName }}
+            role: worker
+        spec:
+          containers:
+            - command: ["uv", "run", "/app/entrypoints/volcano_worker.py"]
+              args: []
+              image: {{ .Values.deploymentImage }}
+              imagePullPolicy: IfNotPresent
+              name: worker
+              {{ if .Values.extraEnvironmentVariables }}
+              env:
+                {{ range .Values.extraEnvironmentVariables }}
+                - name: {{ .name }}
+                  value: {{ .value }}
+                {{ end }}
+              {{ end }}
+              requests:
+                cpu: {{ .Values.cpuCores }}
+                memory: {{ .Values.memoryGb }}Gi
+                nvidia.com/gpu: {{ .Values.gpuCount }}
+                ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+              limits:
+                cpu: {{ .Values.cpuCores }}
+                memory: {{ .Values.memoryGb }}Gi
+                nvidia.com/gpu: {{ .Values.gpuCount }}
+                ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+              volumeMounts:
+                - name: profiling-config
+                  mountPath: /app/profiling_config.json
+                  subPath: profiling_config.json
+          volumes:
+            - name: profiling-config
+              configMap:
+                name: {{ .Values.deploymentName }}-profiling-config
+          restartPolicy: OnFailure
+          runtimeClassName: nvidia

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: performance-profiling
+description: A workspace which executes a performance profiling job
+version: 0.1.0
+type: application

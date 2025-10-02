@@ -1,0 +1,30 @@
+# Deployment configuration
+deploymentNamespace: "default"
+deploymentImage: ghcr.io/exalsius/exalsius-performance-modeling:dev
+
+# Job configuration
+deploymentName: "performance-profiling-job"
+nodes: 1  # Number of nodes for distributed training
+
+# Ephemeral storage configuration
+ephemeralStorageGb: 100
+
+# Resource configuration
+# the job template does not configure pvc storage
+cpuCores: 16
+memoryGb: 32
+gpuCount: 1
+
+extraEnvironmentVariables:
+  - name: MACHINE_NAME
+    value: my-machine
+  - name: CLOUD_PROVIDER
+    value: my-cloud-provider
+  - name: S3_BUCKET
+    value: my-s3-bucket
+  - name: S3_KEY
+    value: my-s3-key
+  - name: S3_SECRET
+    value: my-s3-secret
+  - name: S3_REGION
+    value: my-s3-region

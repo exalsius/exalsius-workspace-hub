@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.deploymentName }}-profiling-config
+  namespace: {{ .Values.deploymentNamespace }}
+data:
+  profiling_config.json: |
+{{ .Files.Get "files/profiling_config.json" | indent 4 }
