@@ -45,16 +45,17 @@ spec:
                   value: {{ .value }}
                 {{ end }}
               {{ end }}
-              requests:
-                cpu: {{ .Values.cpuCores }}
-                memory: {{ .Values.memoryGb }}Gi
-                nvidia.com/gpu: {{ .Values.gpuCount }}
-                ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
-              limits:
-                cpu: {{ .Values.cpuCores }}
-                memory: {{ .Values.memoryGb }}Gi
-                nvidia.com/gpu: {{ .Values.gpuCount }}
-                ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+              resources:
+                requests:
+                  cpu: {{ .Values.cpuCores }}
+                  memory: {{ .Values.memoryGb }}Gi
+                  nvidia.com/gpu: {{ .Values.gpuCount }}
+                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+                limits:
+                  cpu: {{ .Values.cpuCores }}
+                  memory: {{ .Values.memoryGb }}Gi
+                  nvidia.com/gpu: {{ .Values.gpuCount }}
+                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
               volumeMounts:
                 - name: profiling-config
                   mountPath: /app/profiling_config.json
@@ -90,16 +91,17 @@ spec:
                   value: {{ .value }}
                 {{ end }}
               {{ end }}
-              requests:
-                cpu: {{ .Values.cpuCores }}
-                memory: {{ .Values.memoryGb }}Gi
-                nvidia.com/gpu: {{ .Values.gpuCount }}
-                ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
-              limits:
-                cpu: {{ .Values.cpuCores }}
-                memory: {{ .Values.memoryGb }}Gi
-                nvidia.com/gpu: {{ .Values.gpuCount }}
-                ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+              resources:
+                requests:
+                  cpu: {{ .Values.cpuCores }}
+                  memory: {{ .Values.memoryGb }}Gi
+                  nvidia.com/gpu: {{ .Values.gpuCount }}
+                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+                limits:
+                  cpu: {{ .Values.cpuCores }}
+                  memory: {{ .Values.memoryGb }}Gi
+                  nvidia.com/gpu: {{ .Values.gpuCount }}
+                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
               volumeMounts:
                 - name: profiling-config
                   mountPath: /app/profiling_config.json

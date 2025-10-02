@@ -5,4 +5,4 @@ metadata:
   namespace: {{ .Values.deploymentNamespace }}
 data:
   profiling_config.json: |
-{{ .Files.Get "files/profiling_config.json" | indent 4 }
+{{ .Files.Get "files/profiling_config.json" | indent 4 }}
