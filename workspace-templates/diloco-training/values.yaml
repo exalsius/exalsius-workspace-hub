@@ -48,3 +48,6 @@ diloco:
   wandbLogging: "true"
   wandbUserKey: "XXXXXXXXXXXXXXXXX"
   huggingfaceToken: "hf_XXXXXXXXXXXXXXXXX"
+  compileModel: "false"
+  compileBackend: "inductor"
+  compileMode: "default"
