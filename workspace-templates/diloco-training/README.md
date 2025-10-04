@@ -81,5 +81,8 @@ These parameters configure the DiLoCo training process and are passed as environ
 | `diloco.experimentTags`        | Tags for the experiment.                                                 | `["diloco", "gpt-neo-x", "c4"]`  |
 | `diloco.seed`                  | The random seed for reproducibility.                                     | `42`                           |
 | `diloco.wandbLogging`          | Whether to enable Weights & Biases logging.                              | `true`                         |
+| `diloco.compileModel`          | Whether to compile the model.                                            | `false`                        |
+| `diloco.compileBackend`        | The backend to use for model compilation.                                | `inductor`                     |
+| `diloco.compileMode`           | The compilation mode.                                                    | `default`                      |
 | `diloco.wandbUserKey`          | **Required.** Your Weights & Biases user key.                            | `XXXXXXXXXXXXXXXXX`            |
 | `diloco.huggingfaceToken`      | **Required.** Your Hugging Face token.                                   | `hf_XXXXXXXXXXXXXXXXX`         |
