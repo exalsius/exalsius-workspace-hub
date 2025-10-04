@@ -79,3 +79,12 @@ data:
 {{- if .Values.diloco.huggingfaceToken }}
   HUGGINGFACE_TOKEN: {{ .Values.diloco.huggingfaceToken | quote }}
 {{- end }}
+{{- if .Values.diloco.compileModel }}
+  DILOCO_COMPILE_MODEL: {{ .Values.diloco.compileModel | quote }}
+{{- end }}
+{{- if .Values.diloco.compileBackend }}
+  DILOCO_COMPILE_BACKEND: {{ .Values.diloco.compileBackend | quote }}
+{{- end }}
+{{- if .Values.diloco.compileMode }}
+  DILOCO_COMPILE_MODE: {{ .Values.diloco.compileMode | quote }}
+{{- end }}
