@@ -8,5 +8,6 @@
     "use_amp": [true, false],
     "use_ddp": [true, false],
     "use_fuse": [true, false],
+    "use_lora": [true, false],
     "num_steps": 30
 }
