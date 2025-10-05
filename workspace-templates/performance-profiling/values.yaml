@@ -28,3 +28,5 @@ extraEnvironmentVariables:
     value: my-s3-secret
   - name: S3_REGION
     value: my-s3-region
+  - name: HF_TOKEN
+    value: my-hf-token
