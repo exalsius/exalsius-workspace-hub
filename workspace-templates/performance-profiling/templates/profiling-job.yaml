@@ -36,15 +36,15 @@ spec:
             - command: ["uv", "run", "/app/entrypoints/volcano_worker.py"]
               args: []
               image: {{ .Values.deploymentImage }}
-              imagePullPolicy: IfNotPresent
+              imagePullPolicy: {{ .Values.imagePullPolicy | default "Always" }}
               name: master
-              {{ if .Values.extraEnvironmentVariables }}
               env:
+                - name: VOLCANO_JOB_NAME
+                  value: {{ .Values.deploymentName }}
                 {{ range .Values.extraEnvironmentVariables }}
                 - name: {{ .name }}
                   value: {{ .value }}
                 {{ end }}
-              {{ end }}
               resources:
                 requests:
                   cpu: {{ .Values.cpuCores }}
@@ -82,15 +82,15 @@ spec:
             - command: ["uv", "run", "/app/entrypoints/volcano_worker.py"]
               args: []
               image: {{ .Values.deploymentImage }}
-              imagePullPolicy: IfNotPresent
+              imagePullPolicy: {{ .Values.imagePullPolicy | default "Always" }}
               name: worker
-              {{ if .Values.extraEnvironmentVariables }}
               env:
+                - name: VOLCANO_JOB_NAME
+                  value: {{ .Values.deploymentName }}
                 {{ range .Values.extraEnvironmentVariables }}
                 - name: {{ .name }}
                   value: {{ .value }}
                 {{ end }}
-              {{ end }}
               resources:
                 requests:
                   cpu: {{ .Values.cpuCores }}
