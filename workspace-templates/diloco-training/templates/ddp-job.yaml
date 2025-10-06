@@ -1,10 +1,10 @@
 apiVersion: batch.volcano.sh/v1alpha1
 kind: Job
 metadata:
-  name: {{ .Values.deploymentName }}
+  name: {{ include "diloco-training.jobName" . }}
   namespace: {{ .Values.deploymentNamespace }}
   labels:
-    job-name: {{ .Values.deploymentName }}
+    job-name: {{ include "diloco-training.jobName" . }}
 spec:
   maxRetry: 3
   minAvailable: 2
@@ -27,9 +27,9 @@ spec:
       template:
         metadata:
           annotations:
-            scheduling.k8s.io/group-name: {{ .Values.deploymentName }}
+            scheduling.k8s.io/group-name: {{ include "diloco-training.jobName" . }}
           labels:
-            job-name: {{ .Values.deploymentName }}
+            job-name: {{ include "diloco-training.jobName" . }}
             role: master
         spec:
           containers:
@@ -38,7 +38,7 @@ spec:
                 - /app/diloco_training/training/start_training.py
               envFrom:
                 - configMapRef:
-                    name: {{ .Values.deploymentName }}-config
+                    name: {{ include "diloco-training.configmapName" . }}
               image: {{ .Values.deploymentImage }}
               imagePullPolicy: IfNotPresent
               name: master
@@ -61,9 +61,9 @@ spec:
       template:
         metadata:
           annotations:
-            scheduling.k8s.io/group-name: {{ .Values.deploymentName }}
+            scheduling.k8s.io/group-name: {{ include "diloco-training.jobName" . }}
           labels:
-            job-name: {{ .Values.deploymentName }}
+            job-name: {{ include "diloco-training.jobName" . }}
             role: worker
         spec:
           containers:
@@ -72,7 +72,7 @@ spec:
                 - /app/diloco_training/training/start_training.py
               envFrom:
                 - configMapRef:
-                    name: {{ .Values.deploymentName }}-config
+                    name: {{ include "diloco-training.configmapName" . }}
               image: {{ .Values.deploymentImage }}
               imagePullPolicy: IfNotPresent
               name: worker

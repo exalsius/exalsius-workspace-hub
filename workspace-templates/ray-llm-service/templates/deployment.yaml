@@ -1,7 +1,7 @@
 apiVersion: ray.io/v1
 kind: RayService
 metadata:
-  name: {{ .Values.deploymentName }}-ray-service
+  name: {{ include "ray-llm-service.deploymentName" . }}
   namespace: {{ .Values.deploymentNamespace | default "default" }}
 spec:
   serveConfigV2: |
@@ -37,7 +37,7 @@ spec:
           labels:
             component.type: head
             component.subtype: serve-endpoint
-            ray.name: {{ .Values.deploymentName }}-ray-service
+            ray.name: {{ include "ray-llm-service.deploymentName" . }}
         spec:
 {{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) }}
           runtimeClassName: nvidia
@@ -65,7 +65,7 @@ spec:
               - name: HUGGING_FACE_HUB_TOKEN
                 valueFrom:
                   secretKeyRef:
-                    name: {{ .Values.deploymentName }}-ray-hf-secret
+                    name: {{ include "ray-llm-service.secretName" . }}
                     key: hf_api_token
 {{- end }}
               resources:
@@ -85,5 +85,5 @@ spec:
           volumes:
           - name: ray-head-files
             configMap:
-              name: {{ .Values.deploymentName }}-ray-config
+              name: {{ include "ray-llm-service.configmapName" . }}
   

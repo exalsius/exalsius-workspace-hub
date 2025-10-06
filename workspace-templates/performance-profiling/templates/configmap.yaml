@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.deploymentName }}-profiling-config
+  name: {{ include "performance-profiling.configmapName" . }}
   namespace: {{ .Values.deploymentNamespace }}
 data:
   profiling_config.json: |

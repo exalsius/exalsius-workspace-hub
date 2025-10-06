@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.deploymentName }}-marimo
+  name: {{ include "marimo.serviceName" . }}
   namespace: {{ .Values.deploymentNamespace | default "default" }}
   labels:
-    app: {{ .Values.deploymentName }}-marimo
+    app: {{ include "marimo.deploymentName" . }}
   annotations:
     workspace.exalsius.ai/access-info: "true"
     workspace.exalsius.ai/access-type: "nodeport"
@@ -17,4 +17,4 @@ spec:
       name: http
       targetPort: 8080
   selector:
-    app: {{ .Values.deploymentName }}-marimo
+    app: {{ include "marimo.deploymentName" . }}
