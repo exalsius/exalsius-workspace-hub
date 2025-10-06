@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ .Values.deploymentName }}-marimo-pvc
+  name: {{ include "marimo.pvcName" . }}
   namespace: {{ .Values.deploymentNamespace | default "default" }}
 spec:
   accessModes:

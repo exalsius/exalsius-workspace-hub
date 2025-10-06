@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ .Values.deploymentName }}-code-pvc
+  name: {{ include "vscode-devcontainer.pvcName" . }}
   namespace: {{ .Values.deploymentNamespace }}
 spec:
   accessModes:

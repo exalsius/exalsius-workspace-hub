@@ -1,10 +1,10 @@
 apiVersion: batch.volcano.sh/v1alpha1
 kind: Job
 metadata:
-  name: {{ .Values.deploymentName }}
+  name: {{ include "performance-profiling.jobName" . }}
   namespace: {{ .Values.deploymentNamespace }}
   labels:
-    job-name: {{ .Values.deploymentName }}
+    job-name: {{ include "performance-profiling.jobName" . }}
 spec:
   maxRetry: 3
   minAvailable: {{ .Values.nodes }}
@@ -27,9 +27,9 @@ spec:
       template:
         metadata:
           annotations:
-            scheduling.k8s.io/group-name: {{ .Values.deploymentName }}
+            scheduling.k8s.io/group-name: {{ include "performance-profiling.jobName" . }}
           labels:
-            job-name: {{ .Values.deploymentName }}
+            job-name: {{ include "performance-profiling.jobName" . }}
             role: master
         spec:
           containers:
@@ -40,7 +40,7 @@ spec:
               name: master
               env:
                 - name: VOLCANO_JOB_NAME
-                  value: {{ .Values.deploymentName }}
+                  value: {{ include "performance-profiling.jobName" . }}
                 {{ range .Values.extraEnvironmentVariables }}
                 - name: {{ .name }}
                   value: {{ .value }}
@@ -63,7 +63,7 @@ spec:
           volumes:
             - name: profiling-config
               configMap:
-                name: {{ .Values.deploymentName }}-profiling-config
+                name: {{ include "performance-profiling.configmapName" . }}
           restartPolicy: OnFailure
           runtimeClassName: nvidia
     - maxRetry: 3
@@ -73,9 +73,9 @@ spec:
       template:
         metadata:
           annotations:
-            scheduling.k8s.io/group-name: {{ .Values.deploymentName }}
+            scheduling.k8s.io/group-name: {{ include "performance-profiling.jobName" . }}
           labels:
-            job-name: {{ .Values.deploymentName }}
+            job-name: {{ include "performance-profiling.jobName" . }}
             role: worker
         spec:
           containers:
@@ -86,7 +86,7 @@ spec:
               name: worker
               env:
                 - name: VOLCANO_JOB_NAME
-                  value: {{ .Values.deploymentName }}
+                  value: {{ include "performance-profiling.jobName" . }}
                 {{ range .Values.extraEnvironmentVariables }}
                 - name: {{ .name }}
                   value: {{ .value }}
@@ -109,6 +109,6 @@ spec:
           volumes:
             - name: profiling-config
               configMap:
-                name: {{ .Values.deploymentName }}-profiling-config
+                name: {{ include "performance-profiling.configmapName" . }}
           restartPolicy: OnFailure
           runtimeClassName: nvidia

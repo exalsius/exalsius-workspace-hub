@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.deploymentName }}-code
+  name: {{ include "vscode-devcontainer.deploymentName" . }}
   namespace: {{ .Values.deploymentNamespace }}
   labels:
-    app: {{ .Values.deploymentName }}-code
+    app: {{ include "vscode-devcontainer.deploymentName" . }}
 spec:
   replicas: {{ .Values.deploymentNumReplicas }}
   selector:
@@ -23,7 +23,7 @@ spec:
           image: {{ .Values.deploymentImage }}
           command: ["sleep", "infinity"]
           volumeMounts:
-            - name: {{ .Values.deploymentName }}-code-storage
+            - name: {{ include "vscode-devcontainer.storageVolumeName" . }}
               mountPath: /workspace
             - name: dshm
               mountPath: /dev/shm
@@ -39,9 +39,9 @@ spec:
               nvidia.com/gpu: {{ .Values.gpuCount }}
               ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
       volumes:
-        - name: {{ .Values.deploymentName }}-code-storage
+        - name: {{ include "vscode-devcontainer.storageVolumeName" . }}
           persistentVolumeClaim:
-            claimName: {{ .Values.deploymentName }}-code-pvc
+            claimName: {{ include "vscode-devcontainer.pvcName" . }}
         - name: dshm
           emptyDir:
             medium: Memory

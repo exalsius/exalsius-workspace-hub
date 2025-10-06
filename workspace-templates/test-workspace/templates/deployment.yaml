@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.deploymentName }}
+  name: {{ include "test-workspace.deploymentName" . }}
   namespace: {{ .Values.deploymentNamespace | default "default" }}
   labels:
-    app: {{ .Values.deploymentName }}
+    app: {{ include "test-workspace.deploymentName" . }}
 spec:
   replicas: {{ .Values.deploymentNumReplicas }}
   selector:
@@ -16,7 +16,7 @@ spec:
         app: {{ .Values.deploymentName }}
     spec:
       containers:
-        - name: {{ .Values.deploymentName }}
+        - name: {{ include "test-workspace.deploymentName" . }}
           image: {{ .Values.deploymentImage }}
           command: ["sleep", "infinity"]
           resources:
