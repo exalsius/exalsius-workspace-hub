@@ -6,7 +6,7 @@ deploymentNumReplicas: 1
 # Deployment configuration
 
 deploymentNamespace: "default"
-deploymentImage: "srnbckr/diloco-training:latest"
+deploymentImage: "ghcr.io/exalsius/diloco-training:dev-88d3732d2da47a3e02a86ee620c2c4670c2e4791"
 
 # Job configuration
 deploymentName: "diloco-training-job"
