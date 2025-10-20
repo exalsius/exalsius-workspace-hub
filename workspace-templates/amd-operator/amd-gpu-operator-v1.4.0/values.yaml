@@ -123,8 +123,7 @@ exlsConfig:
       # -- metrics exporter node selector, if not specified it will reuse spec.selector
       selector: {}
       # -- kubelet configuration for metrics exporter
-      kubelet:
-        podResourceAPISocketPath: "/var/lib/k0s/kubelet/pod-resources"
+      podResourceAPISocketPath: "/var/lib/k0s/kubelet/pod-resources"
       upgradePolicy:
         # -- the type of daemonset upgrade, RollingUpdate or OnDelete
         upgradeStrategy: "RollingUpdate"
