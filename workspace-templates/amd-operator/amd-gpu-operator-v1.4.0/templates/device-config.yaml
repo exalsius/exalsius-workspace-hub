@@ -226,9 +226,8 @@ spec:
       {{- toYaml . | nindent 6 }}
     {{- end }}
 
-    {{- with .kubelet }}
-    kubelet:
-      {{- toYaml . | nindent 6 }}
+    {{- with .podResourceAPISocketPath }}
+    podResourceAPISocketPath: {{ . }}
     {{- end }}
 
     {{- with .rbacConfig }}
