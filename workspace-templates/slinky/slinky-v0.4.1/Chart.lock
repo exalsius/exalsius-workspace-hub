@@ -1,0 +1,9 @@
+dependencies:
+- name: slurm-operator-crds
+  repository: oci://ghcr.io/slinkyproject/charts
+  version: 0.4.1
+- name: slurm-operator
+  repository: oci://ghcr.io/slinkyproject/charts
+  version: 0.4.1
+digest: sha256:f2bd2f1af48b8c32ba2d6c70d4c61c6e8754c4281a30d7a403e1ba2b0e091d52
+generated: "2025-10-20T20:08:02.393338078+02:00"

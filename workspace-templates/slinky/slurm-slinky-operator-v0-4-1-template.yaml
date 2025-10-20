@@ -1,0 +1,17 @@
+---
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ServiceTemplate
+metadata:
+  name: slurm-slinky-v0-4-1
+  namespace: kcm-system
+  labels:
+    app: slurm-operator
+spec:
+  helm:
+    chartSpec:
+      chart: workspace-templates/slinky/slinky-v0.4.1
+      version: "0.1.0"
+      interval: 10m
+      sourceRef:
+        kind: GitRepository
+        name: exalsius-workspace-hub

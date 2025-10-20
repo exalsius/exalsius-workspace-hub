@@ -1,0 +1,12 @@
+apiVersion: v2
+name: slinky
+description: A Helm chart for Slinky with Slurm operator dependencies
+version: 0.4.1
+type: application
+dependencies:
+  - name: slurm-operator-crds
+    version: 0.4.1
+    repository: oci://ghcr.io/slinkyproject/charts
+  - name: slurm-operator
+    version: 0.4.1
+    repository: oci://ghcr.io/slinkyproject/charts
