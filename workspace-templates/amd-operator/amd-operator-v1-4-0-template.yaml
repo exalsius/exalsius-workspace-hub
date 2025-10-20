@@ -1,0 +1,20 @@
+---
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ServiceTemplate
+metadata:
+  name: amd-gpu-operator-v1-4-0
+  namespace: kcm-system
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    helm.toolkit.fluxcd.io/name: amd-gpu-operator-service-template
+    helm.toolkit.fluxcd.io/namespace: kcm-system
+    k0rdent.mirantis.com/component: kcm
+spec:
+  helm:
+    chartSpec:
+      chart: workspace-templates/amd-operator/amd-gpu-operator-v1.4.0
+      version: "0.1.0"
+      interval: 10m
+      sourceRef:
+        kind: GitRepository
+        name: exalsius-workspace-hub
