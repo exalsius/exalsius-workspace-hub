@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Marimo Helm Chart Values",
+  "description": "Schema for validating marimo Helm chart values",
+  "type": "object",
+  "properties": {
+    "deploymentNumReplicas": {
+      "type": "integer",
+      "description": "Number of deployment replicas. DO NOT CHANGE THIS PARAMETER",
+      "const": 1,
+      "default": 1
+    },
+    "deploymentName": {
+      "type": "string",
+      "description": "Name of the deployment",
+      "default": "my-marimo",
+      "minLength": 1
+    },
+    "deploymentNamespace": {
+      "type": "string",
+      "description": "Kubernetes namespace for the deployment",
+      "default": "default",
+      "minLength": 1
+    },
+    "deploymentImage": {
+      "type": "string",
+      "description": "Container image for the marimo deployment",
+      "default": "ghcr.io/marimo-team/marimo:latest-data",
+      "minLength": 1
+    },
+    "enablePvcDeletion": {
+      "type": "string",
+      "description": "Enable PVC deletion (string value)",
+      "enum": ["true", "false"],
+      "default": "false"
+    },
+    "tokenPassword": {
+      "type": "string",
+      "description": "Password for marimo token authentication",
+      "default": "mysecurepassword",
+      "minLength": 1
+    },
+    "ephemeralStorageGb": {
+      "type": "number",
+      "description": "Ephemeral storage size in gigabytes",
+      "minimum": 1,
+      "default": 50
+    },
+    "gpuType": {
+      "type": "string",
+      "description": "GPU type configuration",
+      "enum": ["nvidia", "amd"],
+      "default": "nvidia"
+    },
+    "cpuCores": {
+      "type": "number",
+      "description": "Number of CPU cores to allocate",
+      "minimum": 0.1,
+      "default": 16
+    },
+    "memoryGb": {
+      "type": "number",
+      "description": "Memory allocation in gigabytes",
+      "minimum": 0.1,
+      "default": 32
+    },
+    "storageGb": {
+      "type": "number",
+      "description": "Persistent storage size in gigabytes",
+      "minimum": 1,
+      "default": 50
+    },
+    "gpuCount": {
+      "type": "number",
+      "description": "Number of GPUs to allocate",
+      "minimum": 0,
+      "default": 1
+    }
+  },
+  "required": [
+    "deploymentNumReplicas",
+    "deploymentName",
+    "deploymentNamespace",
+    "deploymentImage",
+    "enablePvcDeletion",
+    "tokenPassword",
+    "ephemeralStorageGb",
+    "gpuType",
+    "cpuCores",
+    "memoryGb",
+    "storageGb",
+    "gpuCount"
+  ],
+  "additionalProperties": false
+}
