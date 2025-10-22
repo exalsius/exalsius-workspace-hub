@@ -23,6 +23,7 @@ spec:
       containers:
         - name: {{ include "marimo.deploymentName" . }}
           image: {{ .Values.deploymentImage }}
+          workingDir: /data
           env:
             - name: TOKEN_PASSWORD
               valueFrom:
