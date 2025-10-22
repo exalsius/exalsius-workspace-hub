@@ -17,7 +17,7 @@ spec:
     spec:
       securityContext:
         fsGroup: 0
-{{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) }}
+{{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) (eq .Values.gpuType "nvidia") }}
       runtimeClassName: nvidia
 {{- end }}
       containers:
@@ -42,12 +42,20 @@ spec:
             requests:
               cpu: {{ .Values.cpuCores }}
               memory: {{ .Values.memoryGb }}Gi
+{{- if eq .Values.gpuType "nvidia" }}
               nvidia.com/gpu: {{ .Values.gpuCount }}
+{{- else if eq .Values.gpuType "amd" }}
+              amd.com/gpu: {{ .Values.gpuCount }}
+{{- end }}
               ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
             limits:
               cpu: {{ .Values.cpuCores }}
               memory: {{ .Values.memoryGb }}Gi
+{{- if eq .Values.gpuType "nvidia" }}
               nvidia.com/gpu: {{ .Values.gpuCount }}
+{{- else if eq .Values.gpuType "amd" }}
+              amd.com/gpu: {{ .Values.gpuCount }}
+{{- end }}
               ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
           ports:
             - containerPort: 8080
