@@ -49,8 +49,8 @@
     "gpuVendor": {
       "type": "string",
       "description": "GPU vendor configuration",
-      "enum": ["nvidia", "amd"],
-      "default": "nvidia"
+      "enum": ["NVIDIA", "AMD"],
+      "default": "NVIDIA"
     },
     "cpuCores": {
       "type": "number",
