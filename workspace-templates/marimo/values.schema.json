@@ -46,9 +46,9 @@
       "minimum": 1,
       "default": 50
     },
-    "gpuType": {
+    "gpuVendor": {
       "type": "string",
-      "description": "GPU type configuration",
+      "description": "GPU vendor configuration",
       "enum": ["nvidia", "amd"],
       "default": "nvidia"
     },
@@ -85,7 +85,7 @@
     "enablePvcDeletion",
     "tokenPassword",
     "ephemeralStorageGb",
-    "gpuType",
+    "gpuVendor",
     "cpuCores",
     "memoryGb",
     "storageGb",

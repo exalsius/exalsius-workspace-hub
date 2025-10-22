@@ -15,8 +15,8 @@ tokenPassword: "mysecurepassword"
 # Ephemeral storage storage configuration
 ephemeralStorageGb: 50
 
-# GPU type configuration - valid values: "nvidia" or "amd"
-gpuType: "nvidia"
+# GPU vendor configuration - valid values: "nvidia" or "amd"
+gpuVendor: "nvidia"
 
 # Resource configuration (this maps to ResourcePool spec in API, but camelcase)
 cpuCores: 16
