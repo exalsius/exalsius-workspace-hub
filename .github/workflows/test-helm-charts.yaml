@@ -50,6 +50,7 @@ jobs:
       - name: Add Helm repositories (if needed)
         run: |
           # Add any required Helm repos here
+          helm repo add rocm-gpu-operator https://rocm.github.io/gpu-operator
           helm repo update || true
 
       - name: Lint Helm chart
@@ -61,8 +62,14 @@ jobs:
         run: |
           echo "Validating dependencies for: ${{ matrix.chart-path }}"
           if [ -f "${{ matrix.chart-path }}/Chart.yaml" ] && grep -q "dependencies:" "${{ matrix.chart-path }}/Chart.yaml"; then
-            helm dependency update ${{ matrix.chart-path }}
-            helm dependency build ${{ matrix.chart-path }}
+            if [ -d "${{ matrix.chart-path }}/charts" ] && [ "$(ls -A ${{ matrix.chart-path }}/charts)" ]; then
+              echo "Pre-downloaded dependencies found, skipping dependency update"
+              helm dependency build ${{ matrix.chart-path }}
+            else
+              echo "No pre-downloaded dependencies, updating from remote"
+              helm dependency update ${{ matrix.chart-path }}
+              helm dependency build ${{ matrix.chart-path }}
+            fi
           else
             echo "No dependencies found, skipping"
           fi
