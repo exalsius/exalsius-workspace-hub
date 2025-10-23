@@ -1,16 +1,4 @@
-# Default values for slinky
-# This is a YAML-formatted file.
-
-# Global settings
-global:
-  # Namespace for the slurm-operator
-  namespace: slinky
-
-# slurm-operator-crds configuration
 slurm-operator-crds:
-  # No specific values needed for CRDs
-
-# slurm-operator configuration  
+  enabled: true
 slurm-operator:
-  # Basic configuration for the slurm operator
-  # You can add specific values here as needed
+  enabled: true
