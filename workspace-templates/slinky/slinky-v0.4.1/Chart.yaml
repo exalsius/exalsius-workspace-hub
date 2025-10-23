@@ -7,6 +7,8 @@ dependencies:
   - name: slurm-operator-crds
     version: 0.4.1
     repository: oci://ghcr.io/slinkyproject/charts
+    condition: slurm-operator-crds.enabled
   - name: slurm-operator
     version: 0.4.1
     repository: oci://ghcr.io/slinkyproject/charts
+    condition: slurm-operator.enabled
