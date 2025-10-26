@@ -1,0 +1,27 @@
+{{- /*
+SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if .Values.slurm.nodesets }}
+{{- range $nodesetName, $nodeset := .Values.slurm.nodesets }}
+{{- if and $nodeset.enabled $nodeset.shared }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "slurm.fullname" $ }}-{{ $nodesetName }}-shared
+  namespace: {{ include "slurm.namespace" $ }}
+  labels:
+    {{- include "slurm.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: nodeset-{{ $nodesetName }}
+spec:
+  storageClassName: {{ $nodeset.shared.storageClassName }}
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ $nodeset.shared.size }}
+{{- end }}
+{{- end }}
+{{- end }}

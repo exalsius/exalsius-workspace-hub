@@ -1,0 +1,17 @@
+apiVersion: v2
+name: slurm
+description: A Helm chart to create a Slurm cluster with sensible defaults
+version: 0.1.0
+type: application
+dependencies:
+  - name: slurm
+    version: 0.4.1
+    repository: oci://ghcr.io/slinkyproject/charts
+  - name: mariadb-operator-crds
+    version: 25.10.1
+    repository: https://helm.mariadb.com/mariadb-operator
+    condition: mariadb-operator-crds.enabled
+  - name: mariadb-operator
+    version: 25.10.1
+    repository: https://helm.mariadb.com/mariadb-operator
+    condition: mariadb-operator.enabled

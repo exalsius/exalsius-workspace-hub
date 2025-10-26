@@ -1,0 +1,430 @@
+# Hackathon Slurm Cluster Configuration
+# This file configures a production-ready Slurm cluster for hackathon use
+# with GPU/CPU partitions, MariaDB accounting, REST API, and QoS limits.
+
+# Configuration for the Slurm dependency chart
+slurm:
+  # -- Cluster identification
+  clusterName: "hackathon-cluster"
+  
+  # -- Set the image pull policy
+  imagePullPolicy: IfNotPresent
+  
+  # -- Set the secrets for image pull
+  imagePullSecrets: []
+  
+  # Slurm controller (slurmctld) configuration
+  controller:
+    # Enable persistence using Persistent Volume Claims
+    persistence:
+      enabled: true
+      storageClassName: "openebs-hostpath"
+      resources:
+        requests:
+          storage: 4Gi
+    
+    # -- Extra Slurm configuration lines appended to `slurm.conf`
+    extraConf: |-
+      # Priority and fairness configuration
+      PriorityType=priority/multifactor
+      PriorityWeightFairshare=100000
+      PriorityDecayHalfLife=14-0
+      PriorityCalcPeriod=5
+
+  # Slurm REST API (slurmrestd) configuration
+  restapi:
+    # -- Number of replicas to deploy
+    replicas: 1
+    # slurmrestd container configurations
+    slurmrestd:
+      # -- The image to use
+      image:
+        repository: ghcr.io/slinkyproject/slurmrestd
+        tag: 25.05-ubuntu24.04
+      # -- Environment variables
+      env: []
+      # -- Arguments passed to the image
+      args: []
+      # -- Resource limits and requests
+      resources:
+        limits:
+          cpu: "1"
+          memory: "1Gi"
+        requests:
+          cpu: "100m"
+          memory: "256Mi"
+    # -- Service configuration
+    service:
+      spec:
+        type: ClusterIP
+        port: 6820
+
+  # Slurm NodeSet (slurmd) configurations
+  nodesets:
+    # Default compute nodes (disabled for hackathon)
+    default:
+      # -- Enable use of this NodeSet
+      enabled: false
+      # -- Number of replicas to deploy
+      replicas: 2
+      
+      # slurmd container configurations
+      slurmd:
+        # -- The container resource limits and requests
+        resources:
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+          requests:
+            cpu: "2"
+            memory: "4Gi"
+      
+      # LogFile sidecar configurations
+      logfile:
+        image:
+          repository: docker.io/library/alpine
+          tag: latest
+        resources: {}
+      
+      # -- Extra configuration added to the `--conf` argument
+      extraConf: null
+      extraConfMap: {}
+      
+      # -- Enable propagation of container `resources.limits` into slurmd
+      useResourceLimits: true
+      
+      # -- Labels and annotations
+      metadata: {}
+      
+      # -- (corev1.PodSpec) Extend the pod template
+      podSpec:
+        nodeSelector: {}
+        tolerations: []
+      
+      # Partition configuration for this NodeSet
+      partition:
+        enabled: true
+        configMap: {}
+
+    # GPU compute nodes
+    gpu-workers:
+      # -- Enable use of this NodeSet
+      enabled: true
+      # -- Number of replicas to deploy
+      replicas: 4
+      
+      # slurmd container configurations
+      slurmd:
+        # -- The image to use for GPU nodes with ROCm support
+        image:
+          repository: ghcr.io/exalsius/slurmd
+          tag: 25.05.3-ubuntu24.04-rocm
+        # -- Arguments passed to the image
+        args: []
+        # -- The container resource limits and requests
+        resources:
+          limits:
+            cpu: "30"
+            memory: "400Gi"
+            amd.com/gpu: "2"
+          requests:
+            cpu: "30"
+            memory: "400Gi"
+        # -- Volume mounts for shared storage
+        volumeMounts:
+          - name: shared
+            mountPath: /shared
+      
+      # LogFile sidecar configurations
+      logfile:
+        # -- The image to use, `${repository}:${tag}`.
+        # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
+        image:
+          repository: docker.io/library/alpine
+          tag: latest
+        # -- The container resource limits and requests.
+        # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+        resources: {}
+          # limits:
+          #   cpu: 500m
+          #   memory: 100Mi
+      
+      # -- Extra configuration added to the `--conf` argument.
+      # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
+      extraConf: null
+      # -- (map[string]string \| map[string][]string) Extra configuration added to the `--conf` argument.
+      # If `extraConf` is not empty, it takes precedence.
+      # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
+      extraConfMap: {}
+        # Features: []
+        # Gres: []
+        # Weight: 1
+      
+      # -- Enable propagation of container `resources.limits` into slurmd.
+      useResourceLimits: true
+      
+      # -- Labels and annotations.
+      # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+      metadata: {}
+        # annotations: {}
+        # labels: {}
+      
+      # -- (corev1.PodSpec) Extend the pod template
+      podSpec:
+        # -- (map[string]string) Node label selector for pod assignment
+        nodeSelector: {}
+        # -- Tolerations for pod assignment
+        tolerations: []
+          # Example for GPU nodes:
+          # - key: amd.com/gpu
+        # -- Volumes for shared storage
+        volumes:
+          - name: shared
+            persistentVolumeClaim:
+              claimName: hackathon-cluster-slurm-gpu-workers-shared
+      # -- Shared storage configuration
+      shared:
+        storageClassName: openebs-hostpath
+        size: 500Gi
+      
+      # -- Disable per-nodeset partition (we define partitions globally)
+      partition:
+        enabled: false
+
+    # CPU compute nodes
+    cpu-workers:
+      # -- Enable use of this NodeSet
+      enabled: true
+      # -- Number of replicas to deploy
+      replicas: 4
+      
+      # slurmd container configurations
+      slurmd:
+        # -- The image to use for CPU nodes
+        image:
+          repository: ghcr.io/exalsius/slurmd
+          tag: 25.05.3-ubuntu24.04
+        # -- Arguments passed to the image
+        args: []
+        # -- The container resource limits and requests
+        resources:
+          limits:
+            cpu: "10"
+            memory: "80Gi"
+          requests:
+            cpu: "10"
+            memory: "80Gi"
+        # -- Volume mounts for shared storage
+        volumeMounts:
+          - name: shared
+            mountPath: /shared
+      
+      # LogFile sidecar configurations
+      logfile:
+        # -- The image to use, `${repository}:${tag}`.
+        # Ref: https://kubernetes.io/docs/concepts/containers/images/#image-names
+        image:
+          repository: docker.io/library/alpine
+          tag: latest
+        # -- The container resource limits and requests.
+        # Ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container
+        resources: {}
+          # limits:
+          #   cpu: 500m
+          #   memory: 100Mi
+      
+      # -- Extra configuration added to the `--conf` argument.
+      # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
+      extraConf: null
+      # -- (map[string]string \| map[string][]string) Extra configuration added to the `--conf` argument.
+      # If `extraConf` is not empty, it takes precedence.
+      # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
+      extraConfMap: {}
+        # Features: []
+        # Gres: []
+        # Weight: 1
+      
+      # -- Enable propagation of container `resources.limits` into slurmd.
+      useResourceLimits: true
+      
+      # -- Labels and annotations.
+      # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+      metadata: {}
+        # annotations: {}
+        # labels: {}
+      
+      # -- (corev1.PodSpec) Extend the pod template
+      podSpec:
+        # -- (map[string]string) Node label selector for pod assignment
+        nodeSelector: {}
+        # -- Tolerations for pod assignment
+        tolerations: []
+        # -- Volumes for shared storage
+        volumes:
+          - name: shared
+            persistentVolumeClaim:
+              claimName: hackathon-cluster-slurm-cpu-workers-shared
+      
+      # -- Shared storage configuration
+      shared:
+        storageClassName: openebs-hostpath
+        size: 500Gi
+      
+      # -- Disable per-nodeset partition (we define partitions globally)
+      partition:
+        enabled: false
+
+  # Slurm partition configurations
+  partitions:
+    # GPU partition
+    gpu:
+      # -- Enable use of this partition
+      enabled: true
+      # -- NodeSets to associate with this partition
+      nodesets:
+        - gpu-workers
+      # -- The Slurm partition configuration options
+      configMap:
+        State: UP
+        Default: "NO"
+        MaxTime: "3-00:00:00"
+    
+    # CPU partition (default)
+    cpu:
+      # -- Enable use of this partition
+      enabled: true
+      # -- NodeSets to associate with this partition
+      nodesets:
+        - cpu-workers
+      # -- The Slurm partition configuration options
+      configMap:
+        State: UP
+        Default: "YES"
+        MaxTime: "3-00:00:00"
+
+  # Slurm accounting (slurmdbd) configuration
+  accounting:
+    # -- Enables Slurm accounting subsystem, stores job/step historical records
+    enabled: true
+    
+    # The storage configuration (only used if accounting.enabled=true)
+    storageConfig:
+      # -- The name of the host where the database is running
+      host: mariadb.slurm.svc.cluster.local
+      # -- The port number to communicate with the database
+      port: 3306
+      # -- The name of the database where records are written
+      database: slurm_acct_db
+      # -- The name of the user used to connect to the database
+      username: slurm
+      # -- (secretKeyRef) The password used to connect to the database
+      passwordKeyRef:
+        name: mariadb-password
+        key: password
+
+  # Slurm LoginSet (sackd, sshd, sssd) configurations
+  loginsets:
+    # SSH login node
+    slinky:
+      # -- Enable use of this LoginSet
+      enabled: true
+      # -- Number of replicas to deploy
+      replicas: 1
+      
+      # login container configurations
+      login:
+        # -- The image to use
+        image:
+          repository: ghcr.io/slinkyproject/login
+          tag: 25.05-ubuntu24.04
+        # -- The container resource limits and requests
+        resources:
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+        # -- SSH public keys to write into `/root/.ssh/authorized_keys`
+        # Add your SSH public key here
+        rootSshAuthorizedKeys: |
+          # ssh-ed25519 AAAA... your-key-here
+          # ssh-rsa AAAA... your-key-here
+      
+      # -- (corev1.PodSpec) Extend the pod template
+      podSpec:
+        # -- (map[string]string) Node label selector for pod assignment
+        nodeSelector: {}
+        # -- Tolerations for pod assignment
+        tolerations: []
+      
+      # -- Service configuration for SSH access
+      service:
+        spec:
+          type: LoadBalancer
+          port: 22
+
+  # `slinky/slurm-exporter` subchart configurations
+  slurm-exporter:
+    # -- Enable Prometheus metrics collection
+    enabled: true
+    exporter:
+      enabled: true
+      secretName: "slurm-token-exporter"
+      nodeSelector:
+        kubernetes.io/os: linux
+      affinity: {}
+      tolerations: []
+    # -- ServiceMonitor configuration for Prometheus operator
+    serviceMonitor:
+      enabled: true
+      interval: "30s"
+      scrapeTimeout: "10s"
+      labels: {}
+
+  # -- Extra Slurm config files to be mounted to `/etc/slurm`
+  configFiles:
+    # GRES configuration for GPU nodes
+    gres.conf: |
+      NodeName=gpu-workers[0-3] Gres=gpu:2
+
+# MariaDB operator configuration
+# These dependencies are automatically enabled when slurm.accounting.enabled is true
+mariadb-operator-crds:
+  # -- Enable MariaDB operator CRDs installation
+  enabled: true
+
+mariadb-operator:
+  # -- Enable MariaDB operator installation
+  enabled: true
+  # -- Install operator in same namespace as Slurm cluster (explicit empty override)
+  namespaceOverride: ""
+
+# MariaDB instance configuration
+mariadb:
+  # -- Storage configuration for MariaDB instance
+  storage:
+    # -- Size of the persistent volume for MariaDB data
+    size: 2Gi
+    # -- Storage class for the persistent volume
+    storageClassName: ""
+  
+  # -- MariaDB configuration parameters
+  config:
+    # -- InnoDB buffer pool size
+    innodbBufferPoolSize: "4096M"
+    # -- InnoDB lock wait timeout in seconds
+    innodbLockWaitTimeout: "900"
+    # -- InnoDB log file size
+    innodbLogFileSize: "512M"
+    # -- Maximum allowed packet size
+    maxAllowedPacket: "256M"
+  
+  # -- Resource limits and requests for MariaDB instance
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+    limits:
+      cpu: "2000m"
+      memory: "4Gi"

@@ -1,0 +1,20 @@
+---
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ServiceTemplate
+metadata:
+  name: slurm-v25-05
+  namespace: kcm-system
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    helm.toolkit.fluxcd.io/name: slurm-service-template
+    helm.toolkit.fluxcd.io/namespace: kcm-system
+    k0rdent.mirantis.com/component: kcm
+spec:
+  helm:
+    chartSpec:
+      chart: workspace-templates/slurm/slurm-v25.05
+      version: "0.1.0"
+      interval: 10m
+      sourceRef:
+        kind: GitRepository
+        name: exalsius-workspace-hub

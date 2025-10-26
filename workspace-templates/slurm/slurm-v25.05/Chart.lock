@@ -1,0 +1,12 @@
+dependencies:
+- name: slurm
+  repository: oci://ghcr.io/slinkyproject/charts
+  version: 0.4.1
+- name: mariadb-operator-crds
+  repository: https://helm.mariadb.com/mariadb-operator
+  version: 25.10.1
+- name: mariadb-operator
+  repository: https://helm.mariadb.com/mariadb-operator
+  version: 25.10.1
+digest: sha256:35a7bd60f880591e2e6ed7983d013058708753ec1dbf1c14b66b3ea428090220
+generated: "2025-10-26T15:17:48.039261638+01:00"

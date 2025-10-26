@@ -1,0 +1,183 @@
+# Default values for slurm chart
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Configuration for the Slurm dependency chart
+slurm:
+  # -- The cluster name, which uniquely identifies the Slurm cluster
+  clusterName: "hackathon-testcluster"
+  
+  # -- Set the image pull policy
+  imagePullPolicy: IfNotPresent
+  
+  # -- Set the secrets for image pull
+  imagePullSecrets: []
+    # - name: regcred
+
+  # Slurm controller (slurmctld) configuration
+  controller:
+    # Enable persistence using Persistent Volume Claims
+    persistence:
+      # -- Enable persistence for slurmctld, retain save-state across recreations
+      enabled: true
+      # -- (string) The name of the `StorageClass` for the created `PersistentVolumeClaim`
+      storageClassName: ""
+      # -- The minimum resources for the `PersistentVolumeClaim` to be created with
+      resources:
+        requests:
+          storage: 4Gi
+    
+    # -- Extra Slurm configuration lines appended to `slurm.conf`
+    extraConf: |-
+      # Add custom slurm.conf settings here
+      # Example:
+      # SchedulerParameters=batch_sched_delay=20
+      # DefMemPerCPU=1
+
+  # Slurm NodeSet (slurmd) configurations
+  nodesets:
+    # Default compute nodes
+    default:
+      # -- Enable use of this NodeSet
+      enabled: true
+      # -- Number of replicas to deploy
+      replicas: 2
+      
+      # slurmd container configurations
+      slurmd:
+        # -- The container resource limits and requests
+        resources:
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+          requests:
+            cpu: "2"
+            memory: "4Gi"
+      
+      # -- (corev1.PodSpec) Extend the pod template
+      podSpec:
+        # -- (map[string]string) Node label selector for pod assignment
+        nodeSelector: {}
+        # -- Tolerations for pod assignment
+        tolerations: []
+          # Example for GPU nodes:
+          # - key: nvidia.com/gpu
+          #   effect: NoSchedule
+
+  # Slurm partition configurations
+  partitions:
+    # Main partition containing all NodeSets
+    main:
+      # -- Enable use of this partition
+      enabled: true
+      # -- NodeSets to associate with this partition
+      nodesets:
+        - ALL
+      # -- The Slurm partition configuration options
+      configMap:
+        State: UP
+        Default: "YES"
+        MaxTime: UNLIMITED
+
+  # Slurm accounting (slurmdbd) configuration
+  accounting:
+    # -- Enables Slurm accounting subsystem, stores job/step historical records
+    enabled: false
+    
+    # The storage configuration (only used if accounting.enabled=true)
+    storageConfig:
+      # -- The name of the host where the database is running
+      host: mariadb
+      # -- The port number to communicate with the database
+      port: 3306
+      # -- The name of the database where records are written
+      database: slurm_acct_db
+      # -- The name of the user used to connect to the database
+      username: slurm
+      # -- (secretKeyRef) The password used to connect to the database
+      passwordKeyRef:
+        name: mariadb-password
+        key: password
+
+  # Slurm LoginSet (sackd, sshd, sssd) configurations
+  loginsets:
+    # Example login node
+    login:
+      # -- Enable use of this LoginSet
+      enabled: false
+      # -- Number of replicas to deploy
+      replicas: 1
+      
+      # login container configurations
+      login:
+        # -- The container resource limits and requests
+        resources:
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+      
+      # -- (corev1.PodSpec) Extend the pod template
+      podSpec:
+        # -- (map[string]string) Node label selector for pod assignment
+        nodeSelector: {}
+        # -- Tolerations for pod assignment
+        tolerations: []
+
+  # `slinky/slurm-exporter` subchart configurations
+  slurm-exporter:
+    # -- Enable Prometheus metrics collection
+    enabled: true
+    exporter:
+      enabled: true
+      secretName: "slurm-token-exporter"
+      nodeSelector:
+        kubernetes.io/os: linux
+      affinity: {}
+      tolerations: []
+
+# MariaDB operator configuration
+# IMPORTANT: Set both mariadb-operator-crds.enabled and mariadb-operator.enabled to true
+# when slurm.accounting.enabled is true to automatically provision a MariaDB database
+mariadb-operator-crds:
+  # -- Enable MariaDB operator CRDs installation
+  # Set to true when slurm.accounting.enabled is true
+  enabled: false
+
+mariadb-operator:
+  # -- Enable MariaDB operator installation  
+  # Set to true when slurm.accounting.enabled is true
+  enabled: false
+  # -- Override the namespace for MariaDB operator installation
+  namespaceOverride: mariadb
+
+# MariaDB instance configuration
+mariadb:
+  # -- Storage configuration for MariaDB instance
+  storage:
+    # -- Size of the persistent volume for MariaDB data
+    size: 1Gi
+    # -- Storage class for the persistent volume
+    storageClassName: ""
+  
+  # -- MariaDB configuration parameters
+  config:
+    # -- InnoDB buffer pool size
+    innodbBufferPoolSize: "4096M"
+    # -- InnoDB lock wait timeout in seconds
+    innodbLockWaitTimeout: "900"
+    # -- InnoDB log file size
+    innodbLogFileSize: "1024M"
+    # -- Maximum allowed packet size
+    maxAllowedPacket: "256M"
+  
+  # -- Resource limits and requests for MariaDB instance
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"

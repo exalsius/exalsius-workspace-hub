@@ -1,0 +1,47 @@
+{{- if .Values.slurm.accounting.enabled }}
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata:
+  name: mariadb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "slurm.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: mariadb
+    app.kubernetes.io/part-of: {{ include "slurm.name" . }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  rootPasswordSecretKeyRef:
+    name: mariadb-root
+    key: password
+    generate: true
+  username: {{ .Values.slurm.accounting.storageConfig.username | default "slurm" }}
+  database: {{ .Values.slurm.accounting.storageConfig.database | default "slurm_acct_db" }}
+  passwordSecretKeyRef:
+    name: {{ .Values.slurm.accounting.storageConfig.passwordKeyRef.name | default "mariadb-password" }}
+    key: {{ .Values.slurm.accounting.storageConfig.passwordKeyRef.key | default "password" }}
+    generate: true
+  storage:
+    size: {{ .Values.mariadb.storage.size | default "1Gi" }}
+    storageClassName: {{ .Values.mariadb.storage.storageClassName | default "" }}
+  myCnf: |
+    [mariadb]
+    bind-address=*
+    default_storage_engine=InnoDB
+    binlog_format=row
+    innodb_autoinc_lock_mode=2
+    innodb_buffer_pool_size={{ .Values.mariadb.config.innodbBufferPoolSize | default "4096M" }}
+    innodb_lock_wait_timeout={{ .Values.mariadb.config.innodbLockWaitTimeout | default "900" }}
+    innodb_log_file_size={{ .Values.mariadb.config.innodbLogFileSize | default "1024M" }}
+    max_allowed_packet={{ .Values.mariadb.config.maxAllowedPacket | default "256M" }}
+  resources:
+    requests:
+      cpu: {{ .Values.mariadb.resources.requests.cpu | default "100m" }}
+      memory: {{ .Values.mariadb.resources.requests.memory | default "256Mi" }}
+    limits:
+      cpu: {{ .Values.mariadb.resources.limits.cpu | default "1000m" }}
+      memory: {{ .Values.mariadb.resources.limits.memory | default "1Gi" }}
+{{- end }}
