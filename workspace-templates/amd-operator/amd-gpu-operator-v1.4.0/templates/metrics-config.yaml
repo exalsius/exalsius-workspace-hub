@@ -8,7 +8,7 @@ data:
     {
       "GPUConfig": {
         "CustomLabels" : {
-          "CLUSTER_NAME" : "{{ .Values.clusterName | quote }}"
+          "CLUSTER_NAME" : {{ .Values.clusterName | quote }}
         }
       }
     }
