@@ -15,3 +15,7 @@ dependencies:
     version: 25.10.1
     repository: https://helm.mariadb.com/mariadb-operator
     condition: mariadb-operator.enabled
+  - name: csi-driver-nfs
+    version: 4.12.1
+    repository: https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
+    condition: nfs.enabled

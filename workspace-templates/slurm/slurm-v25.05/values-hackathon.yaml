@@ -61,6 +61,8 @@ slurm:
 
   # Slurm NodeSet (slurmd) configurations
   nodesets:
+    slinky:
+      enabled: false
     # Default compute nodes (disabled for hackathon)
     default:
       # -- Enable use of this NodeSet
@@ -124,12 +126,12 @@ slurm:
         # -- The container resource limits and requests
         resources:
           limits:
-            cpu: "30"
-            memory: "400Gi"
+            cpu: "20"
+            memory: "200Gi"
             amd.com/gpu: "2"
           requests:
-            cpu: "30"
-            memory: "400Gi"
+            cpu: "20"
+            memory: "200Gi"
         # -- Volume mounts for shared storage
         volumeMounts:
           - name: shared
@@ -182,10 +184,11 @@ slurm:
           - name: shared
             persistentVolumeClaim:
               claimName: hackathon-cluster-slurm-gpu-workers-shared
+
       # -- Shared storage configuration
       shared:
-        storageClassName: openebs-hostpath
-        size: 500Gi
+        storageClassName: nfs-csi
+        size: 10Gi
       
       # -- Disable per-nodeset partition (we define partitions globally)
       partition:
@@ -267,8 +270,8 @@ slurm:
       
       # -- Shared storage configuration
       shared:
-        storageClassName: openebs-hostpath
-        size: 500Gi
+        storageClassName: nfs-csi
+        size: 10Gi
       
       # -- Disable per-nodeset partition (we define partitions globally)
       partition:
@@ -386,7 +389,58 @@ slurm:
   configFiles:
     # GRES configuration for GPU nodes
     gres.conf: |
-      NodeName=gpu-workers[0-3] Gres=gpu:2
+      Name=gpu Count=2
+
+# NFS Server and CSI Driver configuration
+nfs:
+  # -- Enable NFS server and CSI driver deployment
+  enabled: true
+  
+  # -- NFS server configuration
+  server:
+    # -- Namespace for NFS server
+    namespace: nfs-server
+    # -- NFS server image configuration
+    image:
+      repository: itsthenetwork/nfs-server-alpine
+      tag: latest
+    # -- Storage configuration for NFS server
+    storage:
+      # -- Size of the persistent volume for NFS server
+      size: 300Gi
+      # -- Storage class for the persistent volume
+      storageClassName: openebs-hostpath
+    # -- Resource limits and requests for NFS server
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+
+# NFS CSI Driver configuration
+csi-driver-nfs:
+  # -- Storage class configuration
+  storageClass:
+    # -- Create storage class
+    create: true
+    # -- Name of the storage class
+    name: nfs-csi
+    # -- Storage class parameters
+    parameters:
+      server: nfs-server.nfs-server.svc.cluster.local
+      share: /
+    # -- Reclaim policy
+    reclaimPolicy: Delete
+    # -- Volume binding mode
+    volumeBindingMode: Immediate
+    # -- Mount options
+    mountOptions:
+      - nfsvers=4.1
+  
+  # -- Kubelet directory (specific to k0s)
+  kubeletDir: /var/lib/k0s/kubelet
 
 # MariaDB operator configuration
 # These dependencies are automatically enabled when slurm.accounting.enabled is true
