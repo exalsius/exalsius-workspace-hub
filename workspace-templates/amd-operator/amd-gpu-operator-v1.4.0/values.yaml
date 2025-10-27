@@ -1,3 +1,4 @@
+clusterName: "unknown"
 # This disables the automatic creation of the DeviceConfig, so that
 # we can create it with this umbrella chart and based on the values below
 gpu-operator-charts:
@@ -115,7 +116,8 @@ exlsConfig:
       # -- metrics exporter image pull policy
       imagePullPolicy: "IfNotPresent"
       # -- name of the metrics exporter config map, e.g. {"name": "metricConfigMapName"}
-      config: {}
+      config:
+        name: metrics-config
       # -- metrics exporter tolerations
       tolerations: []
       # -- metrics exporter image pull secret, e.g. {"name": "pullSecretName"}

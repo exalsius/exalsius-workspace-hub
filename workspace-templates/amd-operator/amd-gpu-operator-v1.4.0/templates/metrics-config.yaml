@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metrics-config
+  namespace: {{ .Values.exlsConfig.deviceConfig.namespace | default .Release.Namespace }}
+data:
+  config.json: |
+    {
+      "GPUConfig": {
+        "CustomLabels" : {
+          "CLUSTER_NAME" : "{{ .Values.clusterName | quote }}"
+        }
+      }
+    }
+
