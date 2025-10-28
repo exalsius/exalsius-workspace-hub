@@ -183,7 +183,7 @@ slurm:
         volumes:
           - name: shared
             persistentVolumeClaim:
-              claimName: hackathon-3node-cluster-slurm-gpu-workers-shared
+              claimName: hackathon-cluster-slurm-gpu-workers-shared
 
       # -- Shared storage configuration
       shared:
