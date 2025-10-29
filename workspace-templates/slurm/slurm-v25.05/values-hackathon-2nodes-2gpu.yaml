@@ -121,6 +121,7 @@ slurm:
         image:
           repository: ghcr.io/exalsius/slurmd
           tag: 25.05.3-ubuntu24.04-rocm
+        imagePullPolicy: Always
         # -- Arguments passed to the image
         args: []
         # -- The container resource limits and requests (15 vCPU, 200GB RAM, 1 GPU)
@@ -427,9 +428,9 @@ slurm:
 
   # -- Extra Slurm config files to be mounted to `/etc/slurm`
   configFiles:
-    # GRES configuration for GPU nodes (1 GPU per node)
+    # GRES configuration for GPU nodes with ROCm auto-detection
     gres.conf: |
-      Name=gpu Count=1
+      AutoDetect=rsmi
 
 # NFS configuration removed - now handled by slinky chart
 # The slurm chart now only creates PVCs that consume the NFS storage class
