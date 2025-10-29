@@ -6,13 +6,13 @@
 slurm:
   # -- Cluster identification
   clusterName: "hackathon-cluster"
-  
+
   # -- Set the image pull policy
   imagePullPolicy: IfNotPresent
-  
+
   # -- Set the secrets for image pull
   imagePullSecrets: []
-  
+
   # Slurm controller (slurmctld) configuration
   controller:
     # Enable persistence using Persistent Volume Claims
@@ -22,7 +22,7 @@ slurm:
       resources:
         requests:
           storage: 4Gi
-    
+
     # -- Extra Slurm configuration lines appended to `slurm.conf`
     extraConf: |-
       # Priority and fairness configuration
@@ -69,7 +69,7 @@ slurm:
       enabled: false
       # -- Number of replicas to deploy
       replicas: 2
-      
+
       # slurmd container configurations
       slurmd:
         # -- The container resource limits and requests
@@ -80,29 +80,29 @@ slurm:
           requests:
             cpu: "2"
             memory: "4Gi"
-      
+
       # LogFile sidecar configurations
       logfile:
         image:
           repository: docker.io/library/alpine
           tag: latest
         resources: {}
-      
+
       # -- Extra configuration added to the `--conf` argument
       extraConf: null
       extraConfMap: {}
-      
+
       # -- Enable propagation of container `resources.limits` into slurmd
       useResourceLimits: true
-      
+
       # -- Labels and annotations
       metadata: {}
-      
+
       # -- (corev1.PodSpec) Extend the pod template
       podSpec:
         nodeSelector: {}
         tolerations: []
-      
+
       # Partition configuration for this NodeSet
       partition:
         enabled: true
@@ -114,7 +114,7 @@ slurm:
       enabled: true
       # -- Number of replicas to deploy (2 nodes)
       replicas: 2
-      
+
       # slurmd container configurations
       slurmd:
         # -- The image to use for GPU nodes with ROCm support
@@ -135,8 +135,8 @@ slurm:
         # -- Volume mounts for shared storage
         volumeMounts:
           - name: shared
-            mountPath: /shared
-      
+            mountPath: /home
+
       # LogFile sidecar configurations
       logfile:
         # -- The image to use, `${repository}:${tag}`.
@@ -150,7 +150,7 @@ slurm:
           # limits:
           #   cpu: 500m
           #   memory: 100Mi
-      
+
       # -- Extra configuration added to the `--conf` argument.
       # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
       extraConf: null
@@ -161,16 +161,16 @@ slurm:
         Gres: "gpu:1"
         # Features: []
         # Weight: 1
-      
+
       # -- Enable propagation of container `resources.limits` into slurmd.
       useResourceLimits: true
-      
+
       # -- Labels and annotations.
       # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
       metadata: {}
         # annotations: {}
         # labels: {}
-      
+
       # -- (corev1.PodSpec) Extend the pod template
       podSpec:
         # -- (map[string]string) Node label selector for pod assignment
@@ -183,13 +183,14 @@ slurm:
         volumes:
           - name: shared
             persistentVolumeClaim:
-              claimName: hackathon-cluster-slurm-gpu-workers-shared
+              claimName: hackathon-home-dirs
 
       # -- Shared storage configuration
       shared:
+        name: hackathon-home-dirs
         storageClassName: nfs-csi
         size: 500Gi
-      
+
       # -- Disable per-nodeset partition (we define partitions globally)
       partition:
         enabled: false
@@ -200,7 +201,7 @@ slurm:
       enabled: false
       # -- Number of replicas to deploy
       replicas: 4
-      
+
       # slurmd container configurations
       slurmd:
         # -- The image to use for CPU nodes
@@ -221,7 +222,7 @@ slurm:
         volumeMounts:
           - name: shared
             mountPath: /shared
-      
+
       # LogFile sidecar configurations
       logfile:
         # -- The image to use, `${repository}:${tag}`.
@@ -235,7 +236,7 @@ slurm:
           # limits:
           #   cpu: 500m
           #   memory: 100Mi
-      
+
       # -- Extra configuration added to the `--conf` argument.
       # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
       extraConf: null
@@ -246,16 +247,16 @@ slurm:
         # Features: []
         # Gres: []
         # Weight: 1
-      
+
       # -- Enable propagation of container `resources.limits` into slurmd.
       useResourceLimits: true
-      
+
       # -- Labels and annotations.
       # Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
       metadata: {}
         # annotations: {}
         # labels: {}
-      
+
       # -- (corev1.PodSpec) Extend the pod template
       podSpec:
         # -- (map[string]string) Node label selector for pod assignment
@@ -266,13 +267,13 @@ slurm:
         volumes:
           - name: shared
             persistentVolumeClaim:
-              claimName: hackathon-cluster-slurm-cpu-workers-shared
-      
+              claimName: hackathon-home-dirs
+
       # -- Shared storage configuration
       shared:
         storageClassName: nfs-csi
         size: 10Gi
-      
+
       # -- Disable per-nodeset partition (we define partitions globally)
       partition:
         enabled: false
@@ -296,7 +297,7 @@ slurm:
   accounting:
     # -- Enables Slurm accounting subsystem, stores job/step historical records
     enabled: true
-    
+
     # The storage configuration (only used if accounting.enabled=true)
     storageConfig:
       # -- The name of the host where the database is running
@@ -320,7 +321,7 @@ slurm:
       enabled: true
       # -- Number of replicas to deploy
       replicas: 1
-      
+
       # login container configurations
       login:
         # -- The image to use
@@ -330,29 +331,81 @@ slurm:
         # -- The container resource limits and requests
         resources:
           limits:
-            cpu: "2"
+            cpu: "8"
             memory: "4Gi"
           requests:
-            cpu: "1"
+            cpu: "4"
             memory: "2Gi"
-        # -- SSH public keys to write into `/root/.ssh/authorized_keys`
-        # Add your SSH public key here
-        rootSshAuthorizedKeys: |
-          # ssh-ed25519 AAAA... your-key-here
-          # ssh-rsa AAAA... your-key-here
-      
+        # -- Volume mounts for shared storage (home directories)
+        volumeMounts:
+          - name: shared
+            mountPath: /home
+
+      extraSshdConfig: | 
+        PasswordAuthentication yes
+        KbdInteractiveAuthentication yes
+  
+      sssdConf: |
+        [sssd]
+        config_file_version = 2
+        services = nss, pam, ssh
+        domains = DEFAULT
+
+        [nss]
+        filter_groups = root,slurm
+        filter_users  = root,slurm
+
+        [pam]
+
+        [domain/DEFAULT]
+        id_provider   = ldap
+        auth_provider = ldap
+
+        ldap_uri = ldap://ldap.ldap.svc.cluster.local
+
+        # Base DNs (use the exact case from your tree)
+        ldap_search_base       = dc=exalsius,dc=ai
+        ldap_user_search_base  = ou=users,dc=exalsius,dc=ai
+        ldap_group_search_base = ou=groups,dc=exalsius,dc=ai
+
+        ldap_default_bind_dn     = cn=admin,dc=exalsius,dc=ai
+        ldap_default_authtok_type = password
+        ldap_default_authtok     = Not@SecurePassw0rd
+
+        enumerate        = False
+        cache_credentials = True
+        entry_cache_timeout = 600
+        fallback_homedir = /home/%u
+        access_provider  = permit
+        default_shell = /bin/bash
+
+
+      # -- SSH public keys to write into `/root/.ssh/authorized_keys`
+      # Add your SSH public key here
+      rootSshAuthorizedKeys: |
+        ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAID+ijdxmLt77wDFELPjxvGy6GHmW92lsdgA6/Y+bibPt soeren@tux
+        # ssh-rsa AAAA... your-key-here
+
+
+      # -- Labels and annotations.
+
       # -- (corev1.PodSpec) Extend the pod template
       podSpec:
         # -- (map[string]string) Node label selector for pod assignment
         nodeSelector: {}
         # -- Tolerations for pod assignment
         tolerations: []
-      
+        # -- Volumes for shared storage (home directories)
+        volumes:
+          - name: shared
+            persistentVolumeClaim:
+              claimName: hackathon-home-dirs
+
       # -- Service configuration for SSH access
       service:
         spec:
-          type: LoadBalancer
-          port: 22
+          type: NodePort
+          port: 32222
 
   # `slinky/slurm-exporter` subchart configurations
   slurm-exporter:
@@ -403,7 +456,7 @@ mariadb:
     size: 2Gi
     # -- Storage class for the persistent volume
     storageClassName: ""
-  
+
   # -- MariaDB configuration parameters
   config:
     # -- InnoDB buffer pool size
@@ -414,7 +467,7 @@ mariadb:
     innodbLogFileSize: "512M"
     # -- Maximum allowed packet size
     maxAllowedPacket: "256M"
-  
+
   # -- Resource limits and requests for MariaDB instance
   resources:
     requests:

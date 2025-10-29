@@ -8,8 +8,5 @@ dependencies:
 - name: mariadb-operator
   repository: https://helm.mariadb.com/mariadb-operator
   version: 25.10.1
-- name: csi-driver-nfs
-  repository: https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
-  version: 4.12.1
-digest: sha256:dfe096c1797d2de1fefd9dfdbc8752fb5e0728285e5db060b7af683fc4844b6e
-generated: "2025-10-27T15:55:26.570408491+01:00"
+digest: sha256:35a7bd60f880591e2e6ed7983d013058708753ec1dbf1c14b66b3ea428090220
+generated: "2025-10-29T13:23:00.27928541+01:00"

@@ -10,8 +10,8 @@ SPDX-License-Identifier: Apache-2.0
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "slurm.fullname" $ }}-{{ $nodesetName }}-shared
-  namespace: {{ include "slurm.namespace" $ }}
+  name: {{ $nodeset.shared.name | default (printf "%s-%s-shared" (include "slurm.fullname" $) $nodesetName) }}
+  namespace: {{ $.Release.Namespace }}
   labels:
     {{- include "slurm.labels" $ | nindent 4 }}
     app.kubernetes.io/component: nodeset-{{ $nodesetName }}
