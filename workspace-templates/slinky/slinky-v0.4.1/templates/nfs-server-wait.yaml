@@ -1,0 +1,54 @@
+{{- /*
+SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if .Values.nfs.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "slinky.fullname" $ }}-nfs-server-wait
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "slinky.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: nfs-server-wait
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "slinky.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: nfs-server-wait
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: nfs-server-wait
+        image: docker.io/library/busybox:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          echo "Waiting for NFS server to be ready..."
+          
+          # Wait for NFS server service to be available
+          echo "Testing NFS server connectivity..."
+          timeout 300 sh -c 'until nc -z nfs-server.{{ .Values.nfs.server.namespace }}.svc.cluster.local 2049; do echo "Waiting for NFS server..."; sleep 5; done'
+          
+          # Additional wait to ensure NFS is fully ready
+          echo "NFS server is reachable, waiting additional 10 seconds for full readiness..."
+          sleep 10
+          
+          echo "NFS server is ready!"
+        resources:
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+{{- end }}

@@ -1,0 +1,26 @@
+{{- /*
+SPDX-FileCopyrightText: Copyright (C) SchedMD LLC.
+SPDX-License-Identifier: Apache-2.0
+*/}}
+
+{{- if .Values.nfs.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-server-claim
+  namespace: {{ .Values.nfs.server.namespace }}
+  labels:
+    {{- include "slinky.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: nfs-server
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.nfs.server.storage.size }}
+  storageClassName: {{ .Values.nfs.server.storage.storageClassName }}
+{{- end }}

@@ -12,3 +12,7 @@ dependencies:
     version: 0.4.1
     repository: oci://ghcr.io/slinkyproject/charts
     condition: slurm-operator.enabled
+  - name: csi-driver-nfs
+    version: 4.12.1
+    repository: https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
+    condition: nfs.enabled

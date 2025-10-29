@@ -5,5 +5,8 @@ dependencies:
 - name: slurm-operator
   repository: oci://ghcr.io/slinkyproject/charts
   version: 0.4.1
-digest: sha256:e4f4809cfcedf8ed7b472be312e9d1ee6b78f516d9a42febc28dd4267de43d01
-generated: "2025-10-23T14:17:20.859980806+02:00"
+- name: csi-driver-nfs
+  repository: https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
+  version: 4.12.1
+digest: sha256:439d1e1484200c9b52a1db317c7fb22b49134eb3fcc7f9a174032ebff676cdb0
+generated: "2025-10-29T09:06:57.639479179+01:00"

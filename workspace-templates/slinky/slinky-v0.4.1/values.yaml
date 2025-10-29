@@ -2,3 +2,68 @@ slurm-operator-crds:
   enabled: true
 slurm-operator:
   enabled: true
+
+# NFS Server and CSI Driver configuration
+nfs:
+  # -- Enable NFS server and CSI driver deployment
+  enabled: false
+  
+  # -- NFS server configuration
+  server:
+    # -- Namespace for NFS server
+    namespace: nfs-server
+    # -- NFS server image configuration
+    image:
+      repository: itsthenetwork/nfs-server-alpine
+      tag: latest
+    # -- Storage configuration for NFS server
+    storage:
+      # -- Size of the persistent volume for NFS server
+      size: 500Gi
+      # -- Storage class for the persistent volume (underlying storage)
+      storageClassName: openebs-hostpath
+    # -- Resource limits and requests for NFS server
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+    # -- Node selector for NFS server pod placement
+    # If empty {}, NFS server will be scheduled on any available node
+    nodeSelector: {}
+      # Example to pin to specific node:
+      # kubernetes.io/hostname: node-1
+      # Or to schedule on nodes with specific label:
+      # storage-node: "true"
+    # -- Tolerations for NFS server pod
+    tolerations: []
+      # Example:
+      # - key: "node-role"
+      #   operator: "Equal"
+      #   value: "storage"
+      #   effect: "NoSchedule"
+
+# NFS CSI Driver configuration
+csi-driver-nfs:
+  # -- Storage class configuration
+  storageClass:
+    # -- Create storage class
+    create: true
+    # -- Name of the storage class
+    name: nfs-csi
+    # -- Storage class parameters
+    parameters:
+      server: nfs-server.nfs-server.svc.cluster.local
+      share: /
+    # -- Reclaim policy
+    reclaimPolicy: Delete
+    # -- Volume binding mode
+    volumeBindingMode: Immediate
+    # -- Mount options
+    mountOptions:
+      - nfsvers=4.1
+  
+  # -- Kubelet directory (specific to k0s)
+  kubeletDir: /var/lib/k0s/kubelet
