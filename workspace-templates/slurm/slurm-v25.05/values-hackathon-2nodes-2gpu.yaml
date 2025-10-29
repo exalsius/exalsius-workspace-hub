@@ -1,4 +1,4 @@
-# Hackathon 3-Node MI300X Slurm Cluster Configuration
+# Hackathon 2-Node MI300X Slurm Cluster Configuration
 # This file configures a production-ready Slurm cluster for hackathon use
 # with MI300X GPU nodes, MariaDB accounting, REST API, and QoS limits.
 
@@ -112,8 +112,8 @@ slurm:
     gpu-workers:
       # -- Enable use of this NodeSet
       enabled: true
-      # -- Number of replicas to deploy (3 nodes)
-      replicas: 3
+      # -- Number of replicas to deploy (2 nodes)
+      replicas: 2
       
       # slurmd container configurations
       slurmd:
@@ -157,9 +157,9 @@ slurm:
       # -- (map[string]string \| map[string][]string) Extra configuration added to the `--conf` argument.
       # If `extraConf` is not empty, it takes precedence.
       # Ref: https://slurm.schedmd.com/slurm.conf.html#SECTION_NODE-CONFIGURATION
-      extraConfMap: {}
+      extraConfMap:
+        Gres: "gpu:1"
         # Features: []
-        # Gres: []
         # Weight: 1
       
       # -- Enable propagation of container `resources.limits` into slurmd.
@@ -188,7 +188,7 @@ slurm:
       # -- Shared storage configuration
       shared:
         storageClassName: nfs-csi
-        size: 10Gi
+        size: 500Gi
       
       # -- Disable per-nodeset partition (we define partitions globally)
       partition:
@@ -279,7 +279,7 @@ slurm:
 
   # Slurm partition configurations
   partitions:
-    # GPU partition (default for 3-node setup)
+    # GPU partition (default for 2-node setup)
     gpu:
       # -- Enable use of this partition
       enabled: true
@@ -378,56 +378,10 @@ slurm:
     gres.conf: |
       Name=gpu Count=1
 
-# NFS Server and CSI Driver configuration
-nfs:
-  # -- Enable NFS server and CSI driver deployment
-  enabled: true
-  
-  # -- NFS server configuration
-  server:
-    # -- Namespace for NFS server
-    namespace: nfs-server
-    # -- NFS server image configuration
-    image:
-      repository: itsthenetwork/nfs-server-alpine
-      tag: latest
-    # -- Storage configuration for NFS server (500GB for 3-node setup)
-    storage:
-      # -- Size of the persistent volume for NFS server
-      size: 500Gi
-      # -- Storage class for the persistent volume
-      storageClassName: openebs-hostpath
-    # -- Resource limits and requests for NFS server
-    resources:
-      limits:
-        cpu: "500m"
-        memory: "512Mi"
-      requests:
-        cpu: "100m"
-        memory: "128Mi"
-
-# NFS CSI Driver configuration
-csi-driver-nfs:
-  # -- Storage class configuration
-  storageClass:
-    # -- Create storage class
-    create: true
-    # -- Name of the storage class
-    name: nfs-csi
-    # -- Storage class parameters
-    parameters:
-      server: nfs-server.nfs-server.svc.cluster.local
-      share: /
-    # -- Reclaim policy
-    reclaimPolicy: Delete
-    # -- Volume binding mode
-    volumeBindingMode: Immediate
-    # -- Mount options
-    mountOptions:
-      - nfsvers=4.1
-  
-  # -- Kubelet directory (specific to k0s)
-  kubeletDir: /var/lib/k0s/kubelet
+# NFS configuration removed - now handled by slinky chart
+# The slurm chart now only creates PVCs that consume the NFS storage class
+# created by the slinky chart. Make sure to install slinky chart first with:
+# helm install slinky ./slinky-v0.4.1 --set nfs.enabled=true
 
 # MariaDB operator configuration
 # These dependencies are automatically enabled when slurm.accounting.enabled is true

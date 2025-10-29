@@ -17,6 +17,7 @@ This chart wraps the official slinkyproject/slurm Helm chart (v0.4.1) and provid
 - Helm 3.0+
 - A storage class for persistent volumes (controller state persistence)
 - Sufficient cluster resources for your compute nodes
+- **NFS Storage**: For shared storage across compute nodes, install the slinky chart with NFS enabled first
 
 ## Installation
 
@@ -29,6 +30,33 @@ helm install my-slurm-cluster . --namespace slurm --create-namespace
 # Install with custom values
 helm install my-slurm-cluster . -f my-values.yaml --namespace slurm --create-namespace
 ```
+
+### Installation with NFS Shared Storage
+
+If you need shared storage across compute nodes (recommended for multi-node clusters):
+
+1. **First, install the slinky chart with NFS enabled**:
+   ```bash
+   helm install slinky ./slinky-v0.4.1 \
+     --namespace slinky \
+     --create-namespace \
+     --set nfs.enabled=true
+   ```
+
+2. **Wait for NFS to be ready**:
+   ```bash
+   kubectl wait --for=condition=ready pod -l role=nfs-server -n nfs-server
+   ```
+
+3. **Then install the slurm chart**:
+   ```bash
+   helm install my-slurm-cluster . \
+     --namespace slurm \
+     --create-namespace \
+     -f my-values.yaml
+   ```
+
+The slurm chart will automatically create PVCs using the `nfs-csi` storage class created by the slinky chart.
 
 ### Using the ServiceTemplate
 

@@ -138,56 +138,10 @@ slurm:
       affinity: {}
       tolerations: []
 
-# NFS Server and CSI Driver configuration
-nfs:
-  # -- Enable NFS server and CSI driver deployment
-  enabled: false
-  
-  # -- NFS server configuration
-  server:
-    # -- Namespace for NFS server
-    namespace: nfs-server
-    # -- NFS server image configuration
-    image:
-      repository: itsthenetwork/nfs-server-alpine
-      tag: latest
-    # -- Storage configuration for NFS server
-    storage:
-      # -- Size of the persistent volume for NFS server
-      size: 300Gi
-      # -- Storage class for the persistent volume
-      storageClassName: openebs-hostpath
-    # -- Resource limits and requests for NFS server
-    resources:
-      limits:
-        cpu: "500m"
-        memory: "512Mi"
-      requests:
-        cpu: "100m"
-        memory: "128Mi"
-
-# NFS CSI Driver configuration
-csi-driver-nfs:
-  # -- Storage class configuration
-  storageClass:
-    # -- Create storage class
-    create: true
-    # -- Name of the storage class
-    name: nfs-csi
-    # -- Storage class parameters
-    parameters:
-      server: nfs-server.nfs-server.svc.cluster.local
-      share: /
-    # -- Reclaim policy
-    reclaimPolicy: Delete
-    # -- Volume binding mode
-    volumeBindingMode: Immediate
-    # -- Mount options
-    mountOptions:
-      - nfsvers=4.1
-  
-  # -- Kubelet directory (specific to k0s)
-  kubeletDir: /var/lib/k0s/kubelet
+# NFS configuration removed - now handled by slinky chart
+# The slurm chart now only creates PVCs that consume the NFS storage class
+# created by the slinky chart. Make sure to install slinky chart first with:
+# helm install slinky ./slinky-v0.4.1 --set nfs.enabled=true
 
 # MariaDB operator configuration
 # IMPORTANT: Set both mariadb-operator-crds.enabled and mariadb-operator.enabled to true
