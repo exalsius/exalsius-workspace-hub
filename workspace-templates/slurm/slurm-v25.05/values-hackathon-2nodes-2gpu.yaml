@@ -292,7 +292,7 @@ slurm:
       configMap:
         State: UP
         Default: "YES"
-        MaxTime: "08:00:00"
+        MaxTime: "00:30:00"
         MaxNodes: "1"
 
     cpu:
@@ -305,7 +305,7 @@ slurm:
       configMap:
         State: UP
         Default: "NO"
-        MaxTime: "08:00:00"
+        MaxTime: "00:30:00"
         MaxNodes: "1"
         OverSubscribe: "YES"
 
