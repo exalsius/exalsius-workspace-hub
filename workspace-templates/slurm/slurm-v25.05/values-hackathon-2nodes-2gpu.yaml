@@ -190,7 +190,7 @@ slurm:
       shared:
         name: hackathon-home-dirs
         storageClassName: nfs-csi
-        size: 500Gi
+        size: 4Ti
 
       # -- Disable per-nodeset partition (we define partitions globally)
       partition:
@@ -273,7 +273,7 @@ slurm:
       # -- Shared storage configuration
       shared:
         storageClassName: nfs-csi
-        size: 10Gi
+        size: 4Ti
 
       # -- Disable per-nodeset partition (we define partitions globally)
       partition:
@@ -350,7 +350,7 @@ slurm:
         [sssd]
         config_file_version = 2
         services = nss, pam, ssh
-        domains = DEFAULT
+        domains = ldap
 
         [nss]
         filter_groups = root,slurm
@@ -358,20 +358,24 @@ slurm:
 
         [pam]
 
-        [domain/DEFAULT]
+        [domain/ldap]
         id_provider   = ldap
         auth_provider = ldap
+        chpass_provider = ldap
 
         ldap_uri = ldap://ldap.ldap.svc.cluster.local
 
-        # Base DNs (use the exact case from your tree)
+        ldap_schema = rfc2307
         ldap_search_base       = dc=exalsius,dc=ai
         ldap_user_search_base  = ou=users,dc=exalsius,dc=ai
         ldap_group_search_base = ou=groups,dc=exalsius,dc=ai
+        ldap_tls_reqcert = never
 
         ldap_default_bind_dn     = cn=admin,dc=exalsius,dc=ai
         ldap_default_authtok_type = password
         ldap_default_authtok     = Not@SecurePassw0rd
+
+        ldap_id_mapping = false
 
         enumerate        = False
         cache_credentials = True
