@@ -130,7 +130,7 @@ slurm:
             cpu: "12"
             memory: "200Gi"
             amd.com/gpu: "1"
-          requests:
+          requests: 
             cpu: "12"
             memory: "200Gi"
         # -- Volume mounts for shared storage
@@ -487,3 +487,18 @@ mariadb:
     limits:
       cpu: "2000m"
       memory: "4Gi"
+
+# OpenLDAP Stack HA configuration
+openldap-stack-ha:
+  # -- Enable OpenLDAP Stack HA deployment
+  enabled: true
+  
+  global:
+    imageRegistry: ""
+    ldapDomain: "exalsius.ai"
+    adminUser: "admin"
+    adminPassword: Not@SecurePassw0rd
+    configUser: "admin"
+    configPassword: Not@SecurePassw0rd
+    ldapPort: 389
+    sslLdapPort: 636

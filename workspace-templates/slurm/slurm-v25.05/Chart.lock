@@ -8,5 +8,8 @@ dependencies:
 - name: mariadb-operator
   repository: https://helm.mariadb.com/mariadb-operator
   version: 25.10.1
-digest: sha256:35a7bd60f880591e2e6ed7983d013058708753ec1dbf1c14b66b3ea428090220
-generated: "2025-10-29T13:23:00.27928541+01:00"
+- name: openldap-stack-ha
+  repository: https://jp-gouin.github.io/helm-openldap/
+  version: 4.3.3
+digest: sha256:e55d11cb52c51da4402e6a08fd93df2625aa6e284c4bc793688e5dfbed968e3c
+generated: "2025-11-04T12:36:13.742482278+01:00"

@@ -186,3 +186,27 @@ mariadb:
     limits:
       cpu: "1000m"
       memory: "1Gi"
+
+# OpenLDAP Stack HA configuration
+openldap-stack-ha:
+  # -- Enable OpenLDAP Stack HA deployment
+  enabled: false
+  
+  global:
+    imageRegistry: ""
+    ## E.g.
+    ## imagePullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    #imagePullSecrets: [""]
+    ## ldapDomain , can be explicit (e.g dc=toto,c=ca) or domain based (e.g example.com)
+    ldapDomain: "exalsius.ai"
+    # Specifies an existing secret to be used for admin and config user passwords. The expected key are LDAP_ADMIN_PASSWORD and LDAP_CONFIG_ADMIN_PASSWORD.
+    # existingSecret: ""
+    ## Default Passwords to use, stored as a secret. Not used if existingSecret is set.
+    adminUser: "admin"
+    adminPassword: Not@SecurePassw0rd
+    configUser: "admin"
+    configPassword: Not@SecurePassw0rd
+    ldapPort: 389
+    sslLdapPort: 636
