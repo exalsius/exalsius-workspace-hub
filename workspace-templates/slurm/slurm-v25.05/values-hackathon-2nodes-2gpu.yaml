@@ -127,16 +127,18 @@ slurm:
         # -- The container resource limits and requests (15 vCPU, 200GB RAM, 1 GPU)
         resources:
           limits:
-            cpu: "15"
+            cpu: "12"
             memory: "200Gi"
             amd.com/gpu: "1"
           requests:
-            cpu: "15"
+            cpu: "12"
             memory: "200Gi"
         # -- Volume mounts for shared storage
         volumeMounts:
           - name: shared
             mountPath: /home
+          - name: dshm
+            mountPath: /dev/shm
 
       # LogFile sidecar configurations
       logfile:
@@ -185,6 +187,10 @@ slurm:
           - name: shared
             persistentVolumeClaim:
               claimName: hackathon-home-dirs
+          - name: dshm
+            emptyDir:
+              medium: Memory
+              sizeLimit: 64Gi
 
       # -- Shared storage configuration
       shared:
