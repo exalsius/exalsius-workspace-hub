@@ -28,8 +28,10 @@ slurm:
       # Priority and fairness configuration
       PriorityType=priority/multifactor
       PriorityWeightFairshare=100000
+      PriorityWeightAge=10000
       PriorityDecayHalfLife=14-0
       PriorityCalcPeriod=5
+      AccountingStorageEnforce=associations,limits,qos
 
   # Slurm REST API (slurmrestd) configuration
   restapi:

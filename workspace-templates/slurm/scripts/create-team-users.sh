@@ -292,7 +292,7 @@ setup_slurm_accounting() {
     # Ensure QoS
     if ! sacctmgr_exists "show qos where name=$SLURM_QOS_NAME -nP"; then
         log_info "Creating QoS: ${SLURM_QOS_NAME} (MaxJobsPerUser=2, MaxWall=01:00:00)"
-        sacctmgr -i add qos "$SLURM_QOS_NAME" MaxJobsPerUser=2 MaxWall=01:00:00 || {
+        sacctmgr -i add qos "$SLURM_QOS_NAME" MaxJobsPerUser=2 MaxSubmitJobs=10 MaxWall=01:00:00 || {
             log_warn "QoS creation may have failed"
         }
     fi
