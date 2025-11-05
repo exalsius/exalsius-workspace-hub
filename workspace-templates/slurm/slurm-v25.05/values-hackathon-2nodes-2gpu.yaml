@@ -369,7 +369,7 @@ slurm:
         auth_provider = ldap
         chpass_provider = ldap
 
-        ldap_uri = ldap://ldap.ldap.svc.cluster.local
+        ldap_uri = ldap://ldap.slurm.svc.cluster.local
 
         ldap_schema = rfc2307
         ldap_search_base       = dc=exalsius,dc=ai
