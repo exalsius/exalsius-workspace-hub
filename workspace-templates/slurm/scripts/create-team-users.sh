@@ -5,7 +5,7 @@ set -euo pipefail
 # Can be run in login pod or init container
 
 # Configuration via environment variables
-LDAP_URI="${LDAP_URI:-ldap://ldap.ldap.svc.cluster.local:389}"
+LDAP_URI="${LDAP_URI:-ldap://ldap.slurm.svc.cluster.local:389}"
 LDAP_ADMIN_DN="${LDAP_ADMIN_DN:-cn=admin,dc=exalsius,dc=ai}"
 LDAP_ADMIN_PASSWORD="${LDAP_ADMIN_PASSWORD:-Not@SecurePassw0rd}"
 LDAP_BASE_DN="${LDAP_BASE_DN:-dc=exalsius,dc=ai}"
