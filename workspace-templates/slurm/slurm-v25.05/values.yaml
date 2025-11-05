@@ -191,6 +191,8 @@ mariadb:
 openldap-stack-ha:
   # -- Enable OpenLDAP Stack HA deployment
   enabled: false
+  # -- Override the full name for all resources (service will be named "ldap")
+  fullnameOverride: "ldap"
   
   global:
     imageRegistry: ""

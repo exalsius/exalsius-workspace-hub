@@ -492,6 +492,7 @@ mariadb:
 openldap-stack-ha:
   # -- Enable OpenLDAP Stack HA deployment
   enabled: true
+  fullnameOverride: "ldap"
   
   global:
     imageRegistry: ""
