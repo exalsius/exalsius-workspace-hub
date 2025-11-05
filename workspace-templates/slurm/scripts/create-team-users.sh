@@ -76,6 +76,14 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Check if sacctmgr query returns results (reliable existence check)
+sacctmgr_exists() {
+    local out
+    out=$(sacctmgr $1 2>/dev/null | tr -d '[:space:]')
+    # sacctmgr prints nothing if there are no rows when -nP is used
+    [ -n "$out" ]
+}
+
 # Validate prerequisites
 check_prerequisites() {
     local missing=()
@@ -232,9 +240,7 @@ create_home_directory() {
         log_info "Created home directory ${home_dir}"
         return 0
     else
-        log_warn "Home directory ${home_dir} already exists, updating ownership"
-        chown "${uid}:${gid}" "$home_dir"
-        chmod 755 "$home_dir"
+        log_info "Home directory ${home_dir} already exists, skipping"
         return 0
     fi
 }
@@ -246,8 +252,18 @@ create_dataset_symlink() {
     local symlink_path="${home_dir}/xray-data"
     local target_path="/home/datasets/xray-data"
     
-    # Remove existing symlink or file if it exists
-    if [ -L "$symlink_path" ] || [ -e "$symlink_path" ]; then
+    # Check if symlink already exists and points to correct target
+    if [ -L "$symlink_path" ]; then
+        local current_target
+        current_target=$(readlink -f "$symlink_path" 2>/dev/null || readlink "$symlink_path" 2>/dev/null || echo "")
+        if [ "$current_target" = "$target_path" ]; then
+            log_info "Symlink ${symlink_path} already exists and points to correct target, skipping"
+            return 0
+        fi
+    fi
+    
+    # If file/directory exists but is not the correct symlink, remove it
+    if [ -e "$symlink_path" ]; then
         rm -f "$symlink_path"
         log_warn "Removed existing ${symlink_path} before creating symlink"
     fi
@@ -271,35 +287,24 @@ setup_slurm_accounting() {
     
     log_info "Setting up Slurm accounting..."
     
-    # Ensure cluster exists
-    if ! sacctmgr show cluster "$SLURM_CLUSTER_NAME" >/dev/null 2>&1; then
-        log_info "Creating Slurm cluster: ${SLURM_CLUSTER_NAME}"
-        sacctmgr -i add cluster "$SLURM_CLUSTER_NAME" 2>/dev/null || {
-            log_warn "Cluster may already exist or creation failed"
-        }
-    fi
+    # (Usually the cluster is auto-registered by slurmctld/slurmdbd handshake)
     
-    # Create QoS if it doesn't exist
-    if ! sacctmgr show qos "$SLURM_QOS_NAME" >/dev/null 2>&1; then
+    # Ensure QoS
+    if ! sacctmgr_exists "show qos where name=$SLURM_QOS_NAME -nP"; then
         log_info "Creating QoS: ${SLURM_QOS_NAME} (MaxJobsPerUser=2, MaxWall=01:00:00)"
-        sacctmgr -i add qos "$SLURM_QOS_NAME" MaxJobsPerUser=2 MaxWall=01:00:00 2>/dev/null || {
+        sacctmgr -i add qos "$SLURM_QOS_NAME" MaxJobsPerUser=2 MaxWall=01:00:00 || {
             log_warn "QoS creation may have failed"
         }
     fi
     
-    # Create account if it doesn't exist
-    if ! sacctmgr show account "$SLURM_ACCOUNT_NAME" cluster="$SLURM_CLUSTER_NAME" >/dev/null 2>&1; then
+    # Ensure account
+    if ! sacctmgr_exists "show account where name=$SLURM_ACCOUNT_NAME -nP"; then
         log_info "Creating Slurm account: ${SLURM_ACCOUNT_NAME}"
-        sacctmgr -i add account "$SLURM_ACCOUNT_NAME" cluster="$SLURM_CLUSTER_NAME" 2>/dev/null || {
+        # Organization/Description are optional but helpful
+        sacctmgr -i add account name="$SLURM_ACCOUNT_NAME" Organization=hackathon Description="Hackathon team" || {
             log_warn "Account creation may have failed"
         }
     fi
-    
-    # Associate QoS with account
-    log_info "Associating QoS ${SLURM_QOS_NAME} with account ${SLURM_ACCOUNT_NAME}"
-    sacctmgr -i modify account "$SLURM_ACCOUNT_NAME" cluster="$SLURM_CLUSTER_NAME" set qos="$SLURM_QOS_NAME" 2>/dev/null || {
-        log_warn "QoS association may have failed"
-    }
 }
 
 # Add user to Slurm accounting
@@ -310,21 +315,16 @@ add_slurm_user() {
         return 0
     fi
     
-    # Check if user already exists
-    if sacctmgr show user "$username" cluster="$SLURM_CLUSTER_NAME" >/dev/null 2>&1; then
-        log_warn "Slurm user ${username} already exists, updating..."
-        sacctmgr -i modify user "$username" cluster="$SLURM_CLUSTER_NAME" \
-            set account="$SLURM_ACCOUNT_NAME" qos="$SLURM_QOS_NAME" DefaultAccount="$SLURM_ACCOUNT_NAME" 2>/dev/null || {
-            log_warn "Failed to update Slurm user ${username}"
+    if ! sacctmgr_exists "show assoc where user=$username and account=$SLURM_ACCOUNT_NAME and cluster=$SLURM_CLUSTER_NAME -nP"; then
+        log_info "Adding association ${SLURM_CLUSTER_NAME}/${SLURM_ACCOUNT_NAME}/${username}"
+        sacctmgr -i add user name="$username" account="$SLURM_ACCOUNT_NAME" cluster="$SLURM_CLUSTER_NAME" DefaultAccount="$SLURM_ACCOUNT_NAME" qos="$SLURM_QOS_NAME" || {
+            log_warn "Failed to add association for ${username}"
             return 1
         }
     else
-        log_info "Adding ${username} to Slurm accounting"
-        sacctmgr -i add user "$username" cluster="$SLURM_CLUSTER_NAME" \
-            account="$SLURM_ACCOUNT_NAME" qos="$SLURM_QOS_NAME" DefaultAccount="$SLURM_ACCOUNT_NAME" 2>/dev/null || {
-            log_warn "Failed to add Slurm user ${username}"
-            return 1
-        }
+        sacctmgr -i modify user where name="$username" and cluster="$SLURM_CLUSTER_NAME" \
+            set qos="$SLURM_QOS_NAME" DefaultAccount="$SLURM_ACCOUNT_NAME" || \
+            log_warn "Failed to set QoS/DefaultAccount for ${username}"
     fi
     
     return 0
@@ -336,45 +336,51 @@ create_user() {
     local username="team$(printf "%02d" "$index")"
     local uid=$((UID_BASE + index))
     local gid=$((GID_BASE + index))
+    local user_exists=false
     
     log_info "Creating user: ${username} (UID: ${uid}, GID: ${gid})"
     
     # Check if user already exists
     if ldap_user_exists "$username"; then
-        log_warn "LDAP user ${username} already exists, skipping..."
-        return 1
+        log_info "LDAP user ${username} already exists, skipping LDAP creation"
+        user_exists=true
+    else
+        # Generate password
+        local password
+        password=$(generate_password 16)
+        local password_hash
+        password_hash=$(generate_ssha_hash "$password")
+        
+        # Create LDAP user and primary group
+        if ! create_ldap_user "$username" "$uid" "$gid" "$password_hash"; then
+            log_error "Failed to create LDAP user ${username}"
+            return 1
+        fi
+        
+        # Add user to shared groups
+        add_user_to_groups "$username"
+        
+        # Save password to CSV
+        echo "${username},${password}" >> "$PASSWORDS_FILE"
     fi
     
-    # Generate password
-    local password
-    password=$(generate_password 16)
-    local password_hash
-    password_hash=$(generate_ssha_hash "$password")
-    
-    # Create LDAP user and primary group
-    if ! create_ldap_user "$username" "$uid" "$gid" "$password_hash"; then
-        log_error "Failed to create LDAP user ${username}"
-        return 1
-    fi
-    
-    # Add user to shared groups
-    add_user_to_groups "$username"
-    
-    # Create home directory
+    # Create home directory (only if it doesn't exist)
     if ! create_home_directory "$username" "$uid" "$gid"; then
         log_warn "Failed to create home directory for ${username}"
     fi
     
-    # Create dataset symlink
+    # Create dataset symlink (only if it doesn't exist)
     create_dataset_symlink "$username"
     
-    # Add to Slurm accounting
+    # Add to Slurm accounting (only if association doesn't exist)
     add_slurm_user "$username"
     
-    # Save password to CSV
-    echo "${username},${password}" >> "$PASSWORDS_FILE"
+    if [ "$user_exists" = true ]; then
+        log_info "Successfully updated user: ${username}"
+    else
+        log_info "Successfully created user: ${username}"
+    fi
     
-    log_info "Successfully created user: ${username}"
     return 0
 }
 
@@ -425,6 +431,20 @@ main() {
     
     log_info "User creation complete: ${success_count} successful, ${fail_count} failed"
     log_info "Passwords saved to: ${PASSWORDS_FILE}"
+    
+    # Verify Slurm associations
+    if command_exists sacctmgr; then
+        log_info "Verifying Slurm associations:"
+        local verify_output
+        verify_output=$(sacctmgr show assoc where account="$SLURM_ACCOUNT_NAME" cluster="$SLURM_CLUSTER_NAME" format=Cluster,Account,User -P 2>&1)
+        if [ $? -eq 0 ] && [ -n "$verify_output" ]; then
+            echo "$verify_output"
+        else
+            log_warn "Failed to show Slurm associations (this may be normal if no associations exist)"
+            log_info "Attempting simple query..."
+            sacctmgr show assoc format=Cluster,Account,User -P 2>&1 | grep -E "(^$SLURM_CLUSTER_NAME|^Cluster)" || true
+        fi
+    fi
     
     if [ $fail_count -gt 0 ]; then
         log_warn "Some users failed to create. Check logs above."
