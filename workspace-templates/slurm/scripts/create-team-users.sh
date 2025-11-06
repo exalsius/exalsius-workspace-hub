@@ -5,7 +5,7 @@ set -euo pipefail
 # Can be run in login pod or init container
 
 # Configuration via environment variables
-LDAP_URI="${LDAP_URI:-ldap://ldap.slurm.svc.cluster.local:389}"
+LDAP_URI="${LDAP_URI:-ldap://ldap.ldap.svc.cluster.local:389}"
 LDAP_ADMIN_DN="${LDAP_ADMIN_DN:-cn=admin,dc=exalsius,dc=ai}"
 LDAP_ADMIN_PASSWORD="${LDAP_ADMIN_PASSWORD:-Not@SecurePassw0rd}"
 LDAP_BASE_DN="${LDAP_BASE_DN:-dc=exalsius,dc=ai}"
@@ -23,7 +23,6 @@ PASSWORDS_FILE="${PASSWORDS_FILE:-/tmp/passwords.csv}"
 HOME_BASE="${HOME_BASE:-/home}"
 
 # Shared group GIDs
-GID_HACKATHON=20010
 GID_KVM=992
 GID_RENDER=991
 GID_VIDEO=44
@@ -136,6 +135,61 @@ ldap_group_exists() {
         -b "$LDAP_GROUP_OU" "(cn=$groupname)" dn 2>/dev/null | grep -q "^dn:"
 }
 
+# Create LDAP group
+create_ldap_group() {
+    local groupname="$1"
+    local gid="$2"
+    local temp_ldif
+    
+    temp_ldif=$(mktemp)
+    
+    cat > "$temp_ldif" <<EOF
+dn: cn=${groupname},${LDAP_GROUP_OU}
+objectClass: top
+objectClass: posixGroup
+cn: ${groupname}
+gidNumber: ${gid}
+EOF
+    
+    if ldapadd -H "$LDAP_URI" -x -D "$LDAP_ADMIN_DN" -w "$LDAP_ADMIN_PASSWORD" -f "$temp_ldif" 2>/dev/null; then
+        rm -f "$temp_ldif"
+        log_info "Created LDAP group: ${groupname} (GID: ${gid})"
+        return 0
+    else
+        log_error "Failed to create LDAP group ${groupname}"
+        rm -f "$temp_ldif"
+        return 1
+    fi
+}
+
+# Ensure shared LDAP groups exist
+ensure_shared_groups() {
+    log_info "Ensuring shared LDAP groups exist..."
+    
+    # Check and create kvm group
+    if ! ldap_group_exists "kvm"; then
+        create_ldap_group "kvm" "$GID_KVM" || return 1
+    else
+        log_info "LDAP group kvm already exists"
+    fi
+    
+    # Check and create render group
+    if ! ldap_group_exists "render"; then
+        create_ldap_group "render" "$GID_RENDER" || return 1
+    else
+        log_info "LDAP group render already exists"
+    fi
+    
+    # Check and create video group
+    if ! ldap_group_exists "video"; then
+        create_ldap_group "video" "$GID_VIDEO" || return 1
+    else
+        log_info "LDAP group video already exists"
+    fi
+    
+    return 0
+}
+
 # Create LDAP user
 create_ldap_user() {
     local username="$1"
@@ -191,15 +245,12 @@ EOF
 add_user_to_groups() {
     local username="$1"
     local temp_ldif
+    local temp_err
     
     temp_ldif=$(mktemp)
+    temp_err=$(mktemp)
     
     cat > "$temp_ldif" <<EOF
-dn: cn=hackathon,${LDAP_GROUP_OU}
-changetype: modify
-add: memberUid
-memberUid: ${username}
-
 dn: cn=kvm,${LDAP_GROUP_OU}
 changetype: modify
 add: memberUid
@@ -216,13 +267,21 @@ add: memberUid
 memberUid: ${username}
 EOF
     
-    if ldapmodify -H "$LDAP_URI" -x -D "$LDAP_ADMIN_DN" -w "$LDAP_ADMIN_PASSWORD" -f "$temp_ldif" 2>/dev/null; then
-        rm -f "$temp_ldif"
+    if ldapmodify -H "$LDAP_URI" -x -D "$LDAP_ADMIN_DN" -w "$LDAP_ADMIN_PASSWORD" -f "$temp_ldif" 2>"$temp_err"; then
+        rm -f "$temp_ldif" "$temp_err"
+        log_info "Added ${username} to shared groups (kvm, render, video)"
         return 0
     else
-        log_warn "Failed to add ${username} to shared groups (may already be member)"
-        rm -f "$temp_ldif"
-        return 1
+        # Check if error is due to user already being a member
+        if grep -q "Type or value exists" "$temp_err" 2>/dev/null || grep -q "Already exists" "$temp_err" 2>/dev/null; then
+            log_info "User ${username} already member of shared groups, skipping"
+            rm -f "$temp_ldif" "$temp_err"
+            return 0
+        else
+            log_error "Failed to add ${username} to shared groups: $(cat "$temp_err" 2>/dev/null | head -n 1)"
+            rm -f "$temp_ldif" "$temp_err"
+            return 1
+        fi
     fi
 }
 
@@ -287,24 +346,53 @@ setup_slurm_accounting() {
     
     log_info "Setting up Slurm accounting..."
     
-    # (Usually the cluster is auto-registered by slurmctld/slurmdbd handshake)
+    # Ensure cluster exists (if not, create it)
+    if ! sacctmgr_exists "show cluster where name=$SLURM_CLUSTER_NAME -nP"; then
+        log_info "Creating Slurm cluster: ${SLURM_CLUSTER_NAME}"
+        sacctmgr -i add cluster name="$SLURM_CLUSTER_NAME" || {
+            log_error "Failed to create cluster ${SLURM_CLUSTER_NAME}"
+            return 1
+        }
+    else
+        log_info "Slurm cluster ${SLURM_CLUSTER_NAME} already exists"
+    fi
     
     # Ensure QoS
     if ! sacctmgr_exists "show qos where name=$SLURM_QOS_NAME -nP"; then
-        log_info "Creating QoS: ${SLURM_QOS_NAME} (MaxJobsPerUser=2, MaxWall=01:00:00)"
+        log_info "Creating QoS: ${SLURM_QOS_NAME}"
         sacctmgr -i add qos "$SLURM_QOS_NAME" MaxJobsPerUser=2 MaxSubmitJobs=10 MaxWall=01:00:00 || {
-            log_warn "QoS creation may have failed"
+            log_error "Failed to create QoS ${SLURM_QOS_NAME}"
+            return 1
         }
+    else
+        log_info "QoS ${SLURM_QOS_NAME} already exists"
     fi
     
-    # Ensure account
+    # Ensure account (must be associated with cluster)
     if ! sacctmgr_exists "show account where name=$SLURM_ACCOUNT_NAME -nP"; then
         log_info "Creating Slurm account: ${SLURM_ACCOUNT_NAME}"
-        # Organization/Description are optional but helpful
-        sacctmgr -i add account name="$SLURM_ACCOUNT_NAME" Organization=hackathon Description="Hackathon team" || {
-            log_warn "Account creation may have failed"
+        sacctmgr -i add account name="$SLURM_ACCOUNT_NAME" cluster="$SLURM_CLUSTER_NAME" Organization=hackathon Description="Hackathon team" || {
+            log_error "Failed to create account ${SLURM_ACCOUNT_NAME}"
+            return 1
         }
+    else
+        log_info "Slurm account ${SLURM_ACCOUNT_NAME} already exists"
     fi
+    
+    # Grant team account access to gpu and cpu partitions
+    for partition in gpu cpu; do
+        # Check if partition exists
+        if sinfo -h -p "$partition" >/dev/null 2>&1; then
+            log_info "Granting ${SLURM_ACCOUNT_NAME} access to partition: ${partition}"
+            scontrol update partitionname="$partition" AllowAccounts+="$SLURM_ACCOUNT_NAME" 2>/dev/null || {
+                log_warn "Failed to grant access to partition ${partition} (may already have access or insufficient permissions)"
+            }
+        else
+            log_info "Partition ${partition} does not exist yet, skipping"
+        fi
+    done
+    
+    return 0
 }
 
 # Add user to Slurm accounting
@@ -406,6 +494,12 @@ main() {
     # Test LDAP connection
     if ! test_ldap_connection; then
         log_error "Cannot proceed without LDAP connection"
+        exit 1
+    fi
+    
+    # Ensure shared LDAP groups exist
+    if ! ensure_shared_groups; then
+        log_error "Failed to create required LDAP groups"
         exit 1
     fi
     
