@@ -1,0 +1,21 @@
+# Default values for mariadb-operator chart
+# This chart installs the MariaDB operator and CRDs as a prerequisite for Slurm accounting
+
+# Configuration for MariaDB operator CRDs
+mariadb-operator-crds:
+  # -- Enable MariaDB operator CRDs installation
+  enabled: true
+
+# Configuration for MariaDB operator
+mariadb-operator:
+  # -- Enable MariaDB operator installation
+  enabled: true
+  
+  # -- Override the namespace for MariaDB operator installation
+  # Empty string installs in the same namespace as the chart
+  # Set to a specific namespace name to install operator elsewhere
+  namespaceOverride: ""
+  
+  # -- Additional configuration can be passed through to the operator chart
+  # Refer to: https://github.com/mariadb-operator/mariadb-operator/tree/main/deploy/charts/mariadb-operator
+

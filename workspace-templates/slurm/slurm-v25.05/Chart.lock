@@ -2,14 +2,5 @@ dependencies:
 - name: slurm
   repository: oci://ghcr.io/slinkyproject/charts
   version: 0.4.1
-- name: mariadb-operator-crds
-  repository: https://helm.mariadb.com/mariadb-operator
-  version: 25.10.1
-- name: mariadb-operator
-  repository: https://helm.mariadb.com/mariadb-operator
-  version: 25.10.1
-- name: openldap-stack-ha
-  repository: https://jp-gouin.github.io/helm-openldap/
-  version: 4.3.3
-digest: sha256:e55d11cb52c51da4402e6a08fd93df2625aa6e284c4bc793688e5dfbed968e3c
-generated: "2025-11-04T12:36:13.742482278+01:00"
+digest: sha256:4578994191a598741e21387b082be56867f1db6787a9d37979acdd54f6d3918a
+generated: "2025-11-06T17:00:58.119764375+01:00"

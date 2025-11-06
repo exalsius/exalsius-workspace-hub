@@ -6,6 +6,7 @@
 slurm:
   # -- Cluster identification
   clusterName: "hackathon-cluster"
+  fullnameOverride: "hackathon-cluster"
 
   # -- Set the image pull policy
   imagePullPolicy: IfNotPresent
@@ -121,8 +122,10 @@ slurm:
       slurmd:
         # -- The image to use for GPU nodes with ROCm support
         image:
-          repository: ghcr.io/exalsius/slurmd
-          tag: 25.05.3-ubuntu24.04-rocm
+          #repository: ghcr.io/exalsius/slurmd
+          #tag: 25.05.3-ubuntu24.04-rocm
+          repository: ghcr.io/exalsius/hackathon
+          tag: latest-worker
         imagePullPolicy: Always
         # -- Arguments passed to the image
         args: []
@@ -329,14 +332,16 @@ slurm:
       # -- Enable use of this LoginSet
       enabled: true
       # -- Number of replicas to deploy
-      replicas: 1
+      replicas: 2
 
       # login container configurations
       login:
         # -- The image to use
         image:
-          repository: ghcr.io/slinkyproject/login
-          tag: 25.05-ubuntu24.04
+          #repository: ghcr.io/slinkyproject/login
+          #tag: 25.05-ubuntu24.04
+          repository: ghcr.io/exalsius/hackathon
+          tag: latest-login
         # -- The container resource limits and requests
         resources:
           limits:
@@ -371,7 +376,7 @@ slurm:
         auth_provider = ldap
         chpass_provider = ldap
 
-        ldap_uri = ldap://ldap.slurm.svc.cluster.local
+        ldap_uri = ldap://ldap.ldap.svc.cluster.local
 
         ldap_schema = rfc2307
         ldap_search_base       = dc=exalsius,dc=ai
@@ -444,24 +449,15 @@ slurm:
     gres.conf: |
       AutoDetect=rsmi
 
-# NFS configuration removed - now handled by slinky chart
-# The slurm chart now only creates PVCs that consume the NFS storage class
-# created by the slinky chart. Make sure to install slinky chart first with:
-# helm install slinky ./slinky-v0.4.1 --set nfs.enabled=true
-
-# MariaDB operator configuration
-# These dependencies are automatically enabled when slurm.accounting.enabled is true
-mariadb-operator-crds:
-  # -- Enable MariaDB operator CRDs installation
-  enabled: true
-
-mariadb-operator:
-  # -- Enable MariaDB operator installation
-  enabled: true
-  # -- Install operator in same namespace as Slurm cluster (explicit empty override)
-  namespaceOverride: ""
 
 # MariaDB instance configuration
+# PREREQUISITE: The MariaDB operator must be installed separately before installing this chart.
+#
+# Install the operator first:
+#   helm install mariadb-operator ../mariadb-operator -n slurm --create-namespace
+#   kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=mariadb-operator -n slurm --timeout=300s
+#
+# Then install this Slurm chart with accounting enabled.
 mariadb:
   # -- Storage configuration for MariaDB instance
   storage:
@@ -490,18 +486,11 @@ mariadb:
       cpu: "2000m"
       memory: "4Gi"
 
-# OpenLDAP Stack HA configuration
-openldap-stack-ha:
-  # -- Enable OpenLDAP Stack HA deployment
-  enabled: true
-  fullnameOverride: "ldap"
-  
-  global:
-    imageRegistry: ""
-    ldapDomain: "exalsius.ai"
-    adminUser: "admin"
-    adminPassword: Not@SecurePassw0rd
-    configUser: "admin"
-    configPassword: Not@SecurePassw0rd
-    ldapPort: 389
-    sslLdapPort: 636
+# OpenLDAP configuration
+# PREREQUISITE: OpenLDAP must be installed separately in the ldap namespace before installing this chart.
+#
+# Install OpenLDAP first:
+#   helm install openldap ../openldap -n ldap --create-namespace
+#   kubectl wait --for=condition=ready pod -l app=openldap-stack-ha -n ldap --timeout=300s
+#
+# The Slurm login nodes connect to: ldap://ldap.ldap.svc.cluster.local (configured in loginsets.slinky.sssdConf above)

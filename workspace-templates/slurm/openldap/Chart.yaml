@@ -1,0 +1,14 @@
+apiVersion: v2
+name: openldap
+description: OpenLDAP Stack HA for Kubernetes - prerequisite for Slurm authentication
+version: 0.1.0
+type: application
+
+# This chart installs OpenLDAP Stack HA for user authentication and authorization.
+# It should be installed as a prerequisite before installing the Slurm chart if login nodes are enabled.
+
+dependencies:
+  - name: openldap-stack-ha
+    version: 4.3.3
+    repository: https://jp-gouin.github.io/helm-openldap/
+

@@ -18,6 +18,8 @@ This chart wraps the official slinkyproject/slurm Helm chart (v0.4.1) and provid
 - A storage class for persistent volumes (controller state persistence)
 - Sufficient cluster resources for your compute nodes
 - **NFS Storage**: For shared storage across compute nodes, install the slinky chart with NFS enabled first
+- **OpenLDAP** (required if login nodes are enabled): Install the separate `openldap` chart in the `ldap` namespace before installing this chart
+- **MariaDB Operator** (required if `slurm.accounting.enabled=true`): Install the separate `mariadb-operator` chart in the `slurm` namespace before installing this chart
 
 ## Installation
 
@@ -199,7 +201,65 @@ slurm:
           maxUnavailable: 1
 ```
 
-#### 4. With Accounting Enabled (MariaDB Operator)
+#### 4. With Login Nodes and LDAP Authentication
+
+**PREREQUISITES:** Install OpenLDAP first:
+
+```bash
+# Step 1: Install OpenLDAP (prerequisite)
+cd ../openldap
+helm dependency update
+helm install openldap . -n ldap --create-namespace
+
+# Step 2: Wait for OpenLDAP to be ready
+kubectl wait --for=condition=ready pod -l app=openldap-stack-ha -n ldap --timeout=300s
+
+# Step 3: (Optional) Add users and groups
+kubectl cp ldif-examples/02-groups.ldif openldap-stack-ha-0:/tmp/ -n ldap
+kubectl exec -it openldap-stack-ha-0 -n ldap -- ldapadd -x -D "cn=admin,dc=exalsius,dc=ai" -w "Not@SecurePassw0rd" -f /tmp/02-groups.ldif
+
+# Step 4: Install Slurm with login nodes enabled
+cd ../slurm-v25.05
+helm install my-slurm-cluster . -f my-values.yaml -n slurm
+```
+
+**values.yaml:**
+
+```yaml
+slurm:
+  loginsets:
+    login:
+      enabled: true
+      replicas: 1
+      sssdConf: |
+        [domain/ldap]
+        ldap_uri = ldap://ldap.ldap.svc.cluster.local
+        ldap_search_base = dc=exalsius,dc=ai
+        ldap_user_search_base = ou=users,dc=exalsius,dc=ai
+        ldap_group_search_base = ou=groups,dc=exalsius,dc=ai
+        ldap_default_bind_dn = cn=admin,dc=exalsius,dc=ai
+        ldap_default_authtok = Not@SecurePassw0rd
+```
+
+#### 5. With Accounting Enabled (MariaDB)
+
+**PREREQUISITE:** Install the MariaDB operator first:
+
+```bash
+# Step 1: Install MariaDB operator (prerequisite)
+cd ../mariadb-operator
+helm dependency update
+helm install mariadb-operator . -n slurm --create-namespace
+
+# Step 2: Wait for operator to be ready
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=mariadb-operator -n slurm --timeout=300s
+
+# Step 3: Install Slurm with accounting enabled
+cd ../slurm-v25.05
+helm install my-slurm-cluster . -f my-values.yaml -n slurm
+```
+
+**values.yaml:**
 
 ```yaml
 slurm:
@@ -207,7 +267,7 @@ slurm:
   accounting:
     enabled: true
     storageConfig:
-      host: mariadb
+      host: mariadb.slurm.svc.cluster.local
       port: 3306
       database: slurm_acct_db
       username: slurm
@@ -215,7 +275,6 @@ slurm:
         name: mariadb-password
         key: password
 
-# MariaDB operator will be automatically installed when accounting is enabled
 # The MariaDB instance will be created in the same namespace as the Slurm cluster
 mariadb:
   storage:
@@ -227,27 +286,34 @@ mariadb:
       memory: "4Gi"
 ```
 
-#### 5. With Login Nodes
+#### 6. Complete Hackathon Setup (Login + Accounting + GPU)
 
-```yaml
-slurm:
-  clusterName: "login-cluster"
-  loginsets:
-    login:
-      enabled: true
-      replicas: 2
-      login:
-        resources:
-          limits:
-            cpu: "2"
-            memory: "4Gi"
-      podSpec:
-        nodeSelector:
-          node-role.kubernetes.io/login: ""
-      service:
-        spec:
-          type: LoadBalancer
+**PREREQUISITES:** Install both OpenLDAP and MariaDB operator first:
+
+```bash
+# Step 1: Install OpenLDAP
+cd ../openldap
+helm dependency update
+helm install openldap . -n ldap --create-namespace
+kubectl wait --for=condition=ready pod -l app=openldap-stack-ha -n ldap --timeout=300s
+
+# Step 2: Install MariaDB operator
+cd ../mariadb-operator
+helm dependency update
+helm install mariadb-operator . -n slurm --create-namespace
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=mariadb-operator -n slurm --timeout=300s
+
+# Step 3: Install Slurm with full hackathon configuration
+cd ../slurm-v25.05
+helm install hackathon-cluster . -f values-hackathon-2nodes-2gpu.yaml -n slurm
 ```
+
+This setup provides:
+- GPU compute nodes (MI300X)
+- Login nodes with LDAP authentication
+- Slurm accounting with MariaDB
+- REST API access
+- Shared NFS storage
 
 ## Advanced Configuration
 
@@ -299,67 +365,171 @@ helm install my-slurm-cluster . -f my-custom-values.yaml
 
 The `values-full.yaml` file contains all available configuration options with detailed comments and examples.
 
+## OpenLDAP Integration
+
+This chart supports OpenLDAP integration for user authentication on Slurm login nodes. When login nodes are enabled:
+
+1. **Install OpenLDAP** as a prerequisite (separate chart in `../openldap`) in the `ldap` namespace
+2. **Configure users and groups** using LDIF files before installing Slurm
+3. **Login nodes automatically connect** to LDAP for authentication via SSSD
+
+### How It Works
+
+OpenLDAP must be installed as a **prerequisite** in a separate namespace before installing this Slurm chart:
+
+- **OpenLDAP Stack HA**: Installed separately using the `openldap` chart in the `ldap` namespace
+- **LDAP Service**: Accessible at `ldap://ldap.ldap.svc.cluster.local`
+- **SSSD Configuration**: Automatically configured in login nodes to connect to LDAP
+
+### Installation Steps
+
+1. **Install OpenLDAP first:**
+
+```bash
+cd ../openldap
+helm dependency update
+helm install openldap . -n ldap --create-namespace
+```
+
+2. **Wait for OpenLDAP to be ready:**
+
+```bash
+kubectl wait --for=condition=ready pod -l app=openldap-stack-ha -n ldap --timeout=300s
+```
+
+3. **Add users and groups (optional but recommended):**
+
+```bash
+# Copy LDIF files to the pod
+kubectl cp ../openldap/ldif-examples/02-groups.ldif openldap-stack-ha-0:/tmp/ -n ldap
+kubectl cp ../openldap/ldif-examples/03-testuser.ldif openldap-stack-ha-0:/tmp/ -n ldap
+
+# Add groups
+kubectl exec -it openldap-stack-ha-0 -n ldap -- \
+  ldapadd -x -D "cn=admin,dc=exalsius,dc=ai" -w "Not@SecurePassw0rd" -f /tmp/02-groups.ldif
+
+# Add test user
+kubectl exec -it openldap-stack-ha-0 -n ldap -- \
+  ldapadd -x -D "cn=admin,dc=exalsius,dc=ai" -w "Not@SecurePassw0rd" -f /tmp/03-testuser.ldif
+```
+
+4. **Install the Slurm chart with login nodes enabled:**
+
+```bash
+cd ../slurm-v25.05
+helm install my-slurm-cluster . -f values-hackathon-2nodes-2gpu.yaml -n slurm
+```
+
+### Troubleshooting LDAP
+
+#### Check OpenLDAP Status
+
+```bash
+# Check LDAP pods
+kubectl get pods -n ldap
+
+# Check LDAP service
+kubectl get svc -n ldap
+
+# Test LDAP connection
+kubectl exec -it openldap-stack-ha-0 -n ldap -- \
+  ldapsearch -x -D "cn=admin,dc=exalsius,dc=ai" -w "Not@SecurePassw0rd" \
+  -b "dc=exalsius,dc=ai"
+```
+
+#### Common LDAP Issues
+
+1. **Cannot connect to LDAP from login node**: Verify service name is `ldap` in the `ldap` namespace
+2. **Authentication fails**: Check bind DN and password in sssdConf configuration
+3. **Users not found**: Verify users exist in LDAP using ldapsearch
+4. **Cross-namespace DNS resolution**: Ensure full service DNS name is used: `ldap.ldap.svc.cluster.local`
+
 ## MariaDB Operator Integration
 
-This chart includes MariaDB operator integration for Slurm accounting. When `slurm.accounting.enabled` is set to `true`, you can:
+This chart supports MariaDB integration for Slurm accounting. When `slurm.accounting.enabled` is set to `true`:
 
-1. **Install the MariaDB operator** in the `mariadb` namespace by enabling the dependencies
-2. **Create a MariaDB database instance** in the same namespace as your Slurm cluster
+1. **Install the MariaDB operator** as a prerequisite (separate chart in `../mariadb-operator`) in the `slurm` namespace
+2. **Create a MariaDB database instance** automatically in the same namespace as your Slurm cluster
 3. **Configure the database** with optimized settings for Slurm accounting workloads
 4. **Generate secrets** for database authentication automatically
 
 ### How It Works
 
-The integration uses Helm chart dependencies to manage the MariaDB operator lifecycle:
+The MariaDB operator must be installed as a **prerequisite** before installing this Slurm chart:
 
-- **MariaDB Operator CRDs**: Installed when `mariadb-operator-crds.enabled` is true
-- **MariaDB Operator**: Installed when `mariadb-operator.enabled` is true  
-- **MariaDB Instance**: Created via a custom resource when `slurm.accounting.enabled` is true
+- **MariaDB Operator**: Installed separately using the `mariadb-operator` chart in the `slurm` namespace
+- **MariaDB Operator CRDs**: Installed as part of the operator chart
+- **MariaDB Instance**: Created automatically by this chart when `slurm.accounting.enabled` is true
+
+### Installation Steps
+
+1. **Install the MariaDB operator first:**
+
+```bash
+cd ../mariadb-operator
+helm dependency update
+helm install mariadb-operator . -n slurm --create-namespace
+```
+
+2. **Wait for the operator to be ready:**
+
+```bash
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=mariadb-operator -n slurm --timeout=300s
+```
+
+3. **Verify the operator and CRDs:**
+
+```bash
+# Check operator deployment
+kubectl get deployments -n slurm | grep mariadb-operator
+
+# Verify CRDs are installed
+kubectl get crd | grep mariadb
+```
+
+4. **Install the Slurm chart with accounting enabled:**
+
+```bash
+cd ../slurm-v25.05
+helm install my-slurm-cluster . -f values-hackathon-2nodes-2gpu.yaml -n slurm
+```
 
 ### Configuration
 
 #### Basic Accounting Setup
 
+**PREREQUISITE:** The MariaDB operator must be installed first (see Installation Steps above).
+
 ```yaml
 slurm:
   accounting:
     enabled: true
     storageConfig:
-      host: mariadb
+      host: mariadb.slurm.svc.cluster.local
       port: 3306
       database: slurm_acct_db
       username: slurm
       passwordKeyRef:
         name: mariadb-password
         key: password
-
-# Enable MariaDB operator dependencies
-mariadb-operator-crds:
-  enabled: true
-mariadb-operator:
-  enabled: true
 ```
 
 #### Advanced MariaDB Configuration
 
+**PREREQUISITE:** The MariaDB operator must be installed first (see Installation Steps above).
+
 ```yaml
 slurm:
   accounting:
     enabled: true
     storageConfig:
-      host: mariadb
+      host: mariadb.slurm.svc.cluster.local
       port: 3306
       database: slurm_acct_db
       username: slurm
       passwordKeyRef:
         name: mariadb-password
         key: password
-
-# Enable MariaDB operator dependencies
-mariadb-operator-crds:
-  enabled: true
-mariadb-operator:
-  enabled: true
 
 # Customize MariaDB instance
 mariadb:
@@ -377,7 +547,7 @@ mariadb:
 
 #### External Database
 
-If you prefer to use an external MariaDB/MySQL database:
+If you prefer to use an external MariaDB/MySQL database instead of the operator-managed instance:
 
 ```yaml
 slurm:
@@ -391,13 +561,9 @@ slurm:
       passwordKeyRef:
         name: external-db-credentials
         key: password
-
-# Disable MariaDB operator
-mariadb-operator-crds:
-  enabled: false
-mariadb-operator:
-  enabled: false
 ```
+
+**Note:** When using an external database, you don't need to install the MariaDB operator chart.
 
 ### Troubleshooting MariaDB
 
@@ -405,7 +571,10 @@ mariadb-operator:
 
 ```bash
 # Check if operator is running
-kubectl get pods -n mariadb
+kubectl get pods -n slurm -l app.kubernetes.io/name=mariadb-operator
+
+# Check operator logs
+kubectl logs -n slurm -l app.kubernetes.io/name=mariadb-operator
 
 # Check MariaDB instance
 kubectl get mariadb -n slurm
@@ -416,9 +585,11 @@ kubectl logs -n slurm -l app.kubernetes.io/name=mariadb
 
 #### Common Issues
 
-1. **MariaDB pod stuck in Pending**: Check storage class and available storage
-2. **Connection refused**: Ensure MariaDB service is running and accessible
-3. **Authentication failed**: Verify secret names and keys match the configuration
+1. **"no matches for kind MariaDB" error**: The MariaDB operator is not installed. Install the `mariadb-operator` chart first as a prerequisite.
+2. **MariaDB pod stuck in Pending**: Check storage class and available storage
+3. **Connection refused**: Ensure MariaDB service is running and accessible
+4. **Authentication failed**: Verify secret names and keys match the configuration
+5. **Operator webhook issues**: Ensure the operator has been running for at least 30 seconds and the webhook service has endpoints
 
 #### Database Management
 

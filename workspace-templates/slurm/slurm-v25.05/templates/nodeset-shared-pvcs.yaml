@@ -12,6 +12,8 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ $nodeset.shared.name | default (printf "%s-%s-shared" (include "slurm.fullname" $) $nodesetName) }}
   namespace: {{ $.Release.Namespace }}
+  annotations:
+    helm.sh/resource-policy: keep
   labels:
     {{- include "slurm.labels" $ | nindent 4 }}
     app.kubernetes.io/component: nodeset-{{ $nodesetName }}

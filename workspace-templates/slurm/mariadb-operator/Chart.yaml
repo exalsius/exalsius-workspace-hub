@@ -1,0 +1,17 @@
+apiVersion: v2
+name: mariadb-operator
+description: MariaDB Operator for Kubernetes - prerequisite for Slurm accounting
+version: 0.1.0
+type: application
+
+# This chart installs the MariaDB operator and CRDs required for managing MariaDB instances.
+# It should be installed as a prerequisite before installing the Slurm chart if accounting is enabled.
+
+dependencies:
+  - name: mariadb-operator-crds
+    version: 25.10.1
+    repository: https://helm.mariadb.com/mariadb-operator
+  - name: mariadb-operator
+    version: 25.10.1
+    repository: https://helm.mariadb.com/mariadb-operator
+

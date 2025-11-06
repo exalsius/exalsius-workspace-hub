@@ -1,0 +1,73 @@
+# Default values for openldap chart
+# This chart installs OpenLDAP Stack HA as a prerequisite for Slurm authentication
+
+# Configuration for OpenLDAP Stack HA
+openldap-stack-ha:
+  # -- Enable OpenLDAP Stack HA deployment
+  enabled: true
+  
+  # -- Override the full name for all resources
+  # This ensures the service is named "ldap" for easy DNS resolution
+  fullnameOverride: "ldap"
+  
+  # Global configuration
+  global:
+    # -- Container image registry (empty uses chart defaults)
+    imageRegistry: ""
+    
+    # -- Image pull secrets if using a private registry
+    # imagePullSecrets:
+    #   - myRegistryKeySecretName
+    
+    # -- LDAP domain (can be explicit like "dc=example,dc=com" or domain-based like "example.com")
+    # This setting determines the LDAP directory structure
+    ldapDomain: "exalsius.ai"
+    
+    # -- Existing secret for admin and config passwords
+    # If specified, adminPassword and configPassword below are ignored
+    # Expected keys: LDAP_ADMIN_PASSWORD and LDAP_CONFIG_ADMIN_PASSWORD
+    # existingSecret: ""
+    
+    # -- Admin user name for LDAP
+    adminUser: "admin"
+    
+    # -- Admin password for LDAP
+    # WARNING: Change this password in production!
+    adminPassword: "Not@SecurePassw0rd"
+    
+    # -- Config user name for LDAP
+    configUser: "admin"
+    
+    # -- Config password for LDAP
+    # WARNING: Change this password in production!
+    configPassword: "Not@SecurePassw0rd"
+    
+    # -- Standard LDAP port (non-TLS)
+    ldapPort: 389
+    
+    # -- SSL/TLS LDAP port
+    sslLdapPort: 636
+  
+  # -- Additional configuration can be passed through to the openldap-stack-ha chart
+  # Refer to: https://github.com/jp-gouin/helm-openldap
+  
+  # Example: Enable persistence
+  # persistence:
+  #   enabled: true
+  #   storageClass: "fast-ssd"
+  #   size: 8Gi
+  
+  # Example: Configure replication
+  # replication:
+  #   enabled: true
+  #   replicas: 3
+  
+  # Example: Configure resources
+  # resources:
+  #   requests:
+  #     cpu: 100m
+  #     memory: 256Mi
+  #   limits:
+  #     cpu: 500m
+  #     memory: 512Mi
+

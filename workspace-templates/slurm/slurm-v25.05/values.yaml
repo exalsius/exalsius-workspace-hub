@@ -143,22 +143,15 @@ slurm:
 # created by the slinky chart. Make sure to install slinky chart first with:
 # helm install slinky ./slinky-v0.4.1 --set nfs.enabled=true
 
-# MariaDB operator configuration
-# IMPORTANT: Set both mariadb-operator-crds.enabled and mariadb-operator.enabled to true
-# when slurm.accounting.enabled is true to automatically provision a MariaDB database
-mariadb-operator-crds:
-  # -- Enable MariaDB operator CRDs installation
-  # Set to true when slurm.accounting.enabled is true
-  enabled: false
-
-mariadb-operator:
-  # -- Enable MariaDB operator installation  
-  # Set to true when slurm.accounting.enabled is true
-  enabled: false
-  # -- Override the namespace for MariaDB operator installation
-  namespaceOverride: mariadb
-
 # MariaDB instance configuration
+# PREREQUISITE: The MariaDB operator must be installed separately before installing this chart
+# when slurm.accounting.enabled is true.
+#
+# Install the operator first:
+#   helm install mariadb-operator ../mariadb-operator -n slurm --create-namespace
+#   kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=mariadb-operator -n slurm --timeout=300s
+#
+# Then install this Slurm chart with accounting enabled.
 mariadb:
   # -- Storage configuration for MariaDB instance
   storage:
@@ -187,28 +180,12 @@ mariadb:
       cpu: "1000m"
       memory: "1Gi"
 
-# OpenLDAP Stack HA configuration
-openldap-stack-ha:
-  # -- Enable OpenLDAP Stack HA deployment
-  enabled: false
-  # -- Override the full name for all resources (service will be named "ldap")
-  fullnameOverride: "ldap"
-  
-  global:
-    imageRegistry: ""
-    ## E.g.
-    ## imagePullSecrets:
-    ##   - myRegistryKeySecretName
-    ##
-    #imagePullSecrets: [""]
-    ## ldapDomain , can be explicit (e.g dc=toto,c=ca) or domain based (e.g example.com)
-    ldapDomain: "exalsius.ai"
-    # Specifies an existing secret to be used for admin and config user passwords. The expected key are LDAP_ADMIN_PASSWORD and LDAP_CONFIG_ADMIN_PASSWORD.
-    # existingSecret: ""
-    ## Default Passwords to use, stored as a secret. Not used if existingSecret is set.
-    adminUser: "admin"
-    adminPassword: Not@SecurePassw0rd
-    configUser: "admin"
-    configPassword: Not@SecurePassw0rd
-    ldapPort: 389
-    sslLdapPort: 636
+# OpenLDAP configuration
+# PREREQUISITE: OpenLDAP must be installed separately before installing this chart
+# when Slurm login nodes are enabled.
+#
+# Install OpenLDAP first:
+#   helm install openldap ../openldap -n ldap --create-namespace
+#   kubectl wait --for=condition=ready pod -l app=openldap-stack-ha -n ldap --timeout=300s
+#
+# The Slurm login nodes will connect to: ldap://ldap.ldap.svc.cluster.local
