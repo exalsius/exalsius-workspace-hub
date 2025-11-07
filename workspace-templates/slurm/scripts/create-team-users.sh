@@ -295,7 +295,7 @@ create_home_directory() {
     if [ ! -d "$home_dir" ]; then
         mkdir -p "$home_dir"
         chown "${uid}:${gid}" "$home_dir"
-        chmod 755 "$home_dir"
+        chmod 750 "$home_dir"
         log_info "Created home directory ${home_dir}"
         return 0
     else
