@@ -28,12 +28,6 @@
       "default": "ghcr.io/marimo-team/marimo:latest-data",
       "minLength": 1
     },
-    "enablePvcDeletion": {
-      "type": "string",
-      "description": "Enable PVC deletion (string value)",
-      "enum": ["true", "false"],
-      "default": "false"
-    },
     "tokenPassword": {
       "type": "string",
       "description": "Password for marimo token authentication",
