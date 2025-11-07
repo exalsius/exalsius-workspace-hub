@@ -7,7 +7,6 @@ deploymentNumReplicas: 1
 deploymentName: "my-marimo"
 deploymentNamespace: "default"
 deploymentImage: "ghcr.io/marimo-team/marimo:latest-data"
-enablePvcDeletion: "false"
 
 # Marimo configuration
 tokenPassword: "mysecurepassword"
