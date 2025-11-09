@@ -42,16 +42,18 @@ spec:
               image: {{ .Values.deploymentImage }}
               imagePullPolicy: IfNotPresent
               name: master
-              requests:
-                cpu: {{ .Values.cpuCores }}
-                memory: {{ .Values.memoryGb }}Gi
-                nvidia.com/gpu: {{ .Values.gpuCount }}
-                ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
-              limits:
-                cpu: {{ .Values.cpuCores }}
-                memory: {{ .Values.memoryGb }}Gi
-                nvidia.com/gpu: {{ .Values.gpuCount }}
-                ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+              resources:
+                requests:
+                  cpu: {{ .Values.cpuCores }}
+                  memory: {{ .Values.memoryGb }}Gi
+                  nvidia.com/gpu: {{ .Values.gpuCount }}
+                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+                limits:
+                  cpu: {{ .Values.cpuCores }}
+                  memory: {{ .Values.memoryGb }}Gi
+                  nvidia.com/gpu: {{ .Values.gpuCount }}
+                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+              workingDir: /app
           restartPolicy: OnFailure
           runtimeClassName: nvidia
     - maxRetry: 3
@@ -76,16 +78,17 @@ spec:
               image: {{ .Values.deploymentImage }}
               imagePullPolicy: IfNotPresent
               name: worker
-              requests:
-                cpu: {{ .Values.cpuCores }}
-                memory: {{ .Values.memoryGb }}Gi
-                nvidia.com/gpu: {{ .Values.gpuCount }}
-                ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
-              limits:
-                cpu: {{ .Values.cpuCores }}
-                memory: {{ .Values.memoryGb }}Gi
-                nvidia.com/gpu: {{ .Values.gpuCount }}
-                ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+              resources:
+                requests:
+                  cpu: {{ .Values.cpuCores }}
+                  memory: {{ .Values.memoryGb }}Gi
+                  nvidia.com/gpu: {{ .Values.gpuCount }}
+                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+                limits:
+                  cpu: {{ .Values.cpuCores }}
+                  memory: {{ .Values.memoryGb }}Gi
+                  nvidia.com/gpu: {{ .Values.gpuCount }}
+                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
               workingDir: /app
           restartPolicy: OnFailure
           runtimeClassName: nvidia
