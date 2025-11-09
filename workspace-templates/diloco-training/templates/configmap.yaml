@@ -37,6 +37,9 @@ data:
 {{- if .Values.diloco.quantization }}
   DILOCO_QUANTIZATION: {{ .Values.diloco.quantization | quote }}
 {{- end }}
+{{- if .Values.diloco.asyncCommunication }}
+  DILOCO_ASYNC_COMMUNICATION: {{ .Values.diloco.asyncCommunication | quote }}
+{{- end }}
 {{- if .Values.diloco.checkpointPath }}
   DILOCO_CHECKPOINT_PATH: {{ .Values.diloco.checkpointPath | quote }}
 {{- end }}
@@ -52,8 +55,18 @@ data:
 {{- if .Values.diloco.wandbGroup }}
   DILOCO_WANDB_GROUP: {{ .Values.diloco.wandbGroup | quote }}
 {{- end }}
+  DILOCO_WANDB_RUN_ID: {{ .Values.diloco.wandbRunId | default "" | quote }}
 {{- if .Values.diloco.heterogeneous }}
   DILOCO_HETEROGENEOUS: {{ .Values.diloco.heterogeneous | quote }}
+{{- end }}
+{{- if .Values.diloco.minBatchSize }}
+  DILOCO_MIN_BATCH_SIZE: {{ .Values.diloco.minBatchSize | quote }}
+{{- end }}
+{{- if .Values.diloco.maxBatchSize }}
+  DILOCO_MAX_BATCH_SIZE: {{ .Values.diloco.maxBatchSize | quote }}
+{{- end }}
+{{- if .Values.diloco.groupPercVariance }}
+  DILOCO_GROUP_PERC_VARIANCE: {{ .Values.diloco.groupPercVariance | quote }}
 {{- end }}
 {{- if .Values.diloco.compressionDecay }}
   DILOCO_COMPRESSION_DECAY: {{ .Values.diloco.compressionDecay | quote }}

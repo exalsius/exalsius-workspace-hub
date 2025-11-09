@@ -69,12 +69,17 @@ These parameters configure the DiLoCo training process and are passed as environ
 | `diloco.batchSize`             | The total batch size across all devices.                                 | `512`                          |
 | `diloco.optimMethod`           | The optimization method to use.                                          | `sgd`                          |
 | `diloco.quantization`          | Whether to use quantization.                                             | `false`                        |
+| `diloco.asyncCommunication`    | Whether to enable async gradient synchronization.                        | `false`                        |
 | `diloco.checkpointPath`        | The path to save checkpoints.                                            | `checkpoint.pth`               |
 | `diloco.checkpointInterval`    | The interval (in steps) for saving checkpoints.                          | `512`                          |
 | `diloco.device`                | The device to use for training.                                          | `cuda`                         |
 | `diloco.wandbProjectName`      | The project name for Weights & Biases logging.                           | `diloco`                       |
 | `diloco.wandbGroup`            | The group name for Weights & Biases logging.                             | `diloco-gptneo-c4`             |
+| `diloco.wandbRunId`            | Optional WandB run ID (leave empty for auto-generated).                 | `""`                           |
 | `diloco.heterogeneous`         | Whether the training environment is heterogeneous.                       | `false`                        |
+| `diloco.minBatchSize`          | Minimum batch size for heterogeneous training.                           | `16`                           |
+| `diloco.maxBatchSize`          | Maximum batch size for heterogeneous training.                           | `512`                          |
+| `diloco.groupPercVariance`     | Group percentage variance for heterogeneous training.                   | `0.15`                         |
 | `diloco.compressionDecay`      | The decay factor for compression.                                        | `0.9`                          |
 | `diloco.compressionTopk`       | The top-k value for compression.                                         | `32`                           |
 | `diloco.experimentDescription` | A description of the experiment.                                         | `DiLoCo distributed training...` |
