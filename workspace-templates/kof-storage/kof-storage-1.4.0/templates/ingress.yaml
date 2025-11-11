@@ -1,0 +1,27 @@
+{{- if .Values.custom-grafana-ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.custom-grafana-ingress.ingressName | quote }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .Values.custom-grafana-ingress.certManagerIssuer | quote }}
+    {{- toYaml .Values.custom-grafana-ingress.annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.custom-grafana-ingress.ingressClassName | quote }}
+  tls:
+    - hosts:
+        - {{ .Values.custom-grafana-ingress.host | quote }}
+      secretName: {{ .Values.custom-grafana-ingress.certManagerSecretName | quote }}
+  rules:
+    - host: {{ .Values.custom-grafana-ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.custom-grafana-ingress.serviceName | quote }}
+                port:
+                  number: {{ .Values.custom-grafana-ingress.servicePort | int }}
+{{- end }}
