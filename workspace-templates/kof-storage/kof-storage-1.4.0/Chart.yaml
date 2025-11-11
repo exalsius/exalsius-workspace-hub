@@ -1,0 +1,9 @@
+apiVersion: v2
+name: kof-storage
+description: A Helm chart that references the official "kof-storage" Helm chart.
+type: application
+version: 1.4.0
+dependencies:
+  - name: kof-storage
+    version: 1.4.0
+    repository: oci://ghcr.io/k0rdent/kof/charts
