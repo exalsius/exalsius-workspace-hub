@@ -7,76 +7,142 @@ metadata:
     job-name: {{ include "diloco-training.jobName" . }}
 spec:
   maxRetry: 3
-  minAvailable: 2
+  minAvailable: {{ .Values.elastic.minNodes | default .Values.nodes }}
   plugins:
-    pytorch:
-      - --master=master
-      - --worker=worker
-      - --port=23456
     svc: []
   queue: default
   schedulerName: volcano
+  {{- if .Values.storage.enabled }}
+  volumes:
+    - mountPath: "/data"
+      volumeClaim:
+        accessModes: 
+          - {{ .Values.storage.accessMode | quote }}
+        {{- if .Values.storage.storageClassName }}
+        storageClassName: {{ .Values.storage.storageClassName | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.storage.sizeGb }}Gi
+  {{- end }}
   tasks:
     - maxRetry: 3
-      minAvailable: 1
-      name: master
-      policies:
-        - action: CompleteJob
-          event: TaskCompleted
-      replicas: 1
-      template:
-        metadata:
-          annotations:
-            scheduling.k8s.io/group-name: {{ include "diloco-training.jobName" . }}
-          labels:
-            job-name: {{ include "diloco-training.jobName" . }}
-            role: master
-        spec:
-          containers:
-            - command:
-                - python
-                - /app/diloco_training/training/start_training.py
-              envFrom:
-                - configMapRef:
-                    name: {{ include "diloco-training.configmapName" . }}
-              image: {{ .Values.deploymentImage }}
-              imagePullPolicy: IfNotPresent
-              name: master
-              resources:
-                requests:
-                  cpu: {{ .Values.cpuCores }}
-                  memory: {{ .Values.memoryGb }}Gi
-                  nvidia.com/gpu: {{ .Values.gpuCount }}
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
-                limits:
-                  cpu: {{ .Values.cpuCores }}
-                  memory: {{ .Values.memoryGb }}Gi
-                  nvidia.com/gpu: {{ .Values.gpuCount }}
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
-              workingDir: /app
-          restartPolicy: OnFailure
-          runtimeClassName: nvidia
-    - maxRetry: 3
-      minAvailable: {{ sub .Values.nodes 1 }}
+      minAvailable: {{ .Values.elastic.minNodes | default .Values.nodes }}
       name: worker
-      replicas: {{ sub .Values.nodes 1 }}
+      replicas: {{ .Values.elastic.maxNodes | default .Values.nodes }}
       template:
         metadata:
           annotations:
             scheduling.k8s.io/group-name: {{ include "diloco-training.jobName" . }}
           labels:
             job-name: {{ include "diloco-training.jobName" . }}
-            role: worker
         spec:
           containers:
             - command:
-                - python
-                - /app/diloco_training/training/start_training.py
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  # Ensure output is not buffered
+                  export PYTHONUNBUFFERED=1
+                  
+                  {{- if .Values.storage.enabled }}
+                  # Create storage subdirectories
+                  echo "Setting up storage directories..." >&2
+                  mkdir -p /data/models /data/datasets /data/checkpoints
+                  echo "Storage directories created at /data" >&2
+                  {{- end }}
+                  
+                  echo "Starting PyTorch Elastic training..." >&2
+                  echo "POD_NAME: ${POD_NAME}" >&2
+                  
+                  # Extract node rank from pod name (format: {job-name}-worker-{index})
+                  # Volcano creates pods with names like: {job-name}-worker-0, {job-name}-worker-1, etc.
+                  NODE_RANK=$(echo ${POD_NAME} | grep -oE '[0-9]+$' || echo "0")
+                  echo "Extracted NODE_RANK: ${NODE_RANK}" >&2
+                  
+                  # Determine etcd rendezvous endpoint
+                  # etcd provides fault-tolerant coordination for PyTorch Elastic training
+                  echo "Configuring etcd rendezvous backend..." >&2
+                  
+                  {{- if .Values.elastic.etcd.externalEndpoint }}
+                  # Using external etcd cluster
+                  ETCD_ENDPOINT="{{ .Values.elastic.etcd.externalEndpoint }}"
+                  echo "Using external etcd: ${ETCD_ENDPOINT}" >&2
+                  {{- else if .Values.etcd.enabled }}
+                  # Using embedded etcd deployed with this chart
+                  ETCD_HOST="{{ include "diloco-training.etcdEndpoint" . }}"
+                  ETCD_ENDPOINT="${ETCD_HOST}"
+                  echo "Using embedded etcd: ${ETCD_ENDPOINT}" >&2
+                  
+                  # Wait for etcd to be ready
+                  echo "Waiting for etcd to be ready..." >&2
+                  for i in $(seq 1 30); do
+                    if command -v getent > /dev/null 2>&1; then
+                      if getent hosts {{ printf "%s-etcd.%s.svc.cluster.local" .Release.Name .Values.deploymentNamespace }} > /dev/null 2>&1; then
+                        echo "etcd service resolved successfully" >&2
+                        break
+                      fi
+                    fi
+                    echo "Waiting for etcd DNS... (attempt $i/30)" >&2
+                    sleep 2
+                  done
+                  {{- else }}
+                  echo "ERROR: etcd is not enabled and no external endpoint specified!" >&2
+                  exit 1
+                  {{- end }}
+                  
+                  # Use etcd endpoint (hostname:port only, path goes in rdzv-conf)
+                  RDZV_ENDPOINT="${ETCD_ENDPOINT}"
+                  
+                  echo "etcd rendezvous endpoint: ${RDZV_ENDPOINT}" >&2
+                  echo "Node rank ${NODE_RANK} ready for fault-tolerant elastic training" >&2
+                  
+                  # Check if torchrun exists (try multiple locations)
+                  TORCHRUN_CMD=""
+                  if command -v torchrun &> /dev/null; then
+                    TORCHRUN_CMD="torchrun"
+                  elif [ -f "/app/.venv/bin/torchrun" ]; then
+                    TORCHRUN_CMD="/app/.venv/bin/torchrun"
+                  elif [ -f "/usr/local/bin/torchrun" ]; then
+                    TORCHRUN_CMD="/usr/local/bin/torchrun"
+                  else
+                    echo "ERROR: torchrun command not found!" >&2
+                    echo "Available in PATH: $(echo $PATH)" >&2
+                    echo "Checking /app/.venv/bin..." >&2
+                    ls -la /app/.venv/bin/ | grep torch >&2 || true
+                    exit 1
+                  fi
+                  echo "Found torchrun: ${TORCHRUN_CMD}" >&2
+                  
+                  echo "Launching torchrun with etcd rendezvous..." >&2
+                  exec ${TORCHRUN_CMD} \
+                    --nnodes={{ .Values.elastic.minNodes | default .Values.nodes }}:{{ .Values.elastic.maxNodes | default .Values.nodes }} \
+                    --nproc_per_node={{ .Values.elastic.nprocPerNode | default .Values.gpuCount }} \
+                    --max-restarts={{ .Values.elastic.maxRestarts | default 3 }} \
+                    --node_rank=${NODE_RANK} \
+                    --rdzv_backend=etcd \
+                    --rdzv_endpoint=${RDZV_ENDPOINT} \
+                    --rdzv-conf=protocol={{ .Values.elastic.etcd.protocol | default "http" }},prefix={{ .Values.elastic.etcd.prefix | default "/torchelastic" }}/{{ include "diloco-training.jobName" . }} \
+                    /app/diloco_training/training/start_training.py
+              env:
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: POD_IP
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: status.podIP
+                - name: POD_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
               envFrom:
                 - configMapRef:
                     name: {{ include "diloco-training.configmapName" . }}
               image: {{ .Values.deploymentImage }}
-              imagePullPolicy: IfNotPresent
+              imagePullPolicy: Always
               name: worker
               resources:
                 requests:
@@ -92,3 +158,4 @@ spec:
               workingDir: /app
           restartPolicy: OnFailure
           runtimeClassName: nvidia
+

@@ -2,8 +2,13 @@
 
 # DiLoCo Training Workspace
 
-This workspace provides a template for running distributed AI training jobs on Kubernetes using DiLoCo (Distributed Low-Communication). 
-It is pre-configured to handle distributed setups, resource allocation, and necessary environment variables for training transformers, CNNs, or GNNs on datasets hosted at huggingface.
+This workspace provides a template for running fault-tolerant distributed AI training jobs on Kubernetes using DiLoCo (Distributed Low-Communication) with **PyTorch Elastic** and **etcd rendezvous**. 
+
+It is pre-configured to handle:
+- **Fault-tolerant training**: Continues even if worker nodes fail
+- **Elastic scaling**: Dynamic node count between min and max nodes
+- **Distributed coordination**: etcd-based rendezvous for robust synchronization
+- Training transformers, CNNs, or GNNs on datasets hosted at HuggingFace
 
 ## Quickstart
 
@@ -25,9 +30,17 @@ You can also deploy the workspace directly using Helm.
     cd exalsius-workspace-templates/workspace-templates
     ```
 
-2.  **Install the chart:**
+2.  **Update dependencies** (to fetch etcd subchart):
     ```sh
-    helm install my-training-job ./diloco-training --set diloco.wandbUserKey=<your-wandb-key> --set diloco.huggingfaceToken=<your-hf-token>
+    cd diloco-training
+    helm dependency update
+    ```
+
+3.  **Install the chart:**
+    ```sh
+    helm install my-training-job ./diloco-training \
+      --set diloco.wandbUserKey=<your-wandb-key> \
+      --set diloco.huggingfaceToken=<your-hf-token>
     ```
 
 ## Configuration
@@ -52,6 +65,94 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | `ephemeralStorageGb` | The amount of storage in GB to allocate.  | `100`         |
 | `gpuCount`         | The number of GPUs to allocate.           | `1`           |
 
+### Persistent Storage Configuration
+
+This chart supports per-pod persistent storage using Volcano's native `volumeClaim` feature. When enabled, each worker pod receives its own isolated persistent volume mounted at `/data` with subdirectories for models, datasets, and checkpoints.
+
+| Parameter                  | Description                                                    | Default Value        |
+| -------------------------- | -------------------------------------------------------------- | -------------------- |
+| `storage.enabled`          | Enable persistent storage for each worker pod                  | `true`               |
+| `storage.sizeGb`           | Storage size in GB per worker pod                              | `100`                |
+| `storage.storageClassName` | Kubernetes storage class (empty = cluster default)             | `""`                 |
+| `storage.accessMode`       | Volume access mode (ReadWriteOnce for per-pod isolation)       | `ReadWriteOnce`      |
+| `diloco.modelCacheDir`     | Directory path for HuggingFace model cache                     | `/data/models`       |
+| `diloco.datasetCacheDir`   | Directory path for HuggingFace dataset cache                   | `/data/datasets`     |
+| `diloco.checkpointPath`    | Path for training checkpoints                                  | `/data/checkpoints/checkpoint.pth` |
+
+**Storage Architecture:**
+
+Each worker pod gets its own persistent volume with the following structure:
+
+```
+/data/
+├── models/       (HuggingFace model cache - DILOCO_MODEL_CACHE_DIR)
+├── datasets/     (HuggingFace dataset cache - DILOCO_DATASET_CACHE_DIR)
+└── checkpoints/  (Training checkpoints - DILOCO_CHECKPOINT_PATH)
+```
+
+**Benefits:**
+- **Persistence**: Storage survives pod restarts and rescheduling
+- **Isolation**: Each worker has its own storage (no sharing conflicts)
+- **Performance**: Models and datasets cached locally, reducing download times
+- **Checkpointing**: Training state preserved across failures
+
+**Notes:**
+- Volcano automatically creates PVCs with names like `{job-name}-worker-0-data`, `{job-name}-worker-1-data`, etc.
+- PVCs are not automatically deleted when the job completes (manual cleanup required)
+- To disable persistent storage, set `storage.enabled: false` (cache directories will use container ephemeral storage)
+
+### PyTorch Elastic Configuration
+
+| Parameter                     | Description                                                              | Default Value      |
+| ----------------------------- | ------------------------------------------------------------------------ | ------------------ |
+| `elastic.minNodes`            | Minimum number of nodes for elastic training                             | `2`                |
+| `elastic.maxNodes`            | Maximum number of nodes for elastic training                             | `2`                |
+| `elastic.nprocPerNode`        | Number of processes (GPUs) per node                                      | `1`                |
+| `elastic.maxRestarts`         | Maximum restarts before job fails                                        | `3`                |
+| `etcd.enabled`                | Deploy embedded etcd with the chart                                      | `true`             |
+| `etcd.replicaCount`           | Number of etcd replicas (1 for dev, 3+ for prod HA)                     | `3`                |
+| `elastic.etcd.externalEndpoint` | External etcd cluster endpoint (if not using embedded)                | `""`               |
+| `elastic.etcd.prefix`         | etcd key prefix for job isolation                                        | `/torchelastic`    |
+| `elastic.etcd.protocol`       | etcd protocol (http or https)                                            | `http`             |
+
+**Fault Tolerance Benefits:**
+- Training continues if any worker fails (as long as min_nodes ≤ active_nodes ≤ max_nodes)
+- No single point of failure (unlike c10d where worker-0 failure kills the job)
+- Automatic re-rendezvous when nodes join or leave
+- Production-ready with 3+ etcd replicas for high availability
+
+**Example Configurations:**
+
+*Development (1 etcd replica):*
+```yaml
+elastic:
+  minNodes: 1
+  maxNodes: 2
+  etcd:
+    enabled: true
+    replicas: 1
+```
+
+*Production (3 etcd replicas, tolerate 1 node failure):*
+```yaml
+elastic:
+  minNodes: 2
+  maxNodes: 3
+  etcd:
+    enabled: true
+    replicas: 3
+```
+
+*Production with External etcd:*
+```yaml
+elastic:
+  minNodes: 2
+  maxNodes: 4
+  etcd:
+    enabled: false
+    externalEndpoint: "etcd-cluster.infrastructure.svc.cluster.local:2379"
+```
+
 ### DiLoCo Training Parameters
 
 These parameters configure the DiLoCo training process and are passed as environment variables to the training container.
@@ -70,7 +171,9 @@ These parameters configure the DiLoCo training process and are passed as environ
 | `diloco.optimMethod`           | The optimization method to use.                                          | `sgd`                          |
 | `diloco.quantization`          | Whether to use quantization.                                             | `false`                        |
 | `diloco.asyncCommunication`    | Whether to enable async gradient synchronization.                        | `false`                        |
-| `diloco.checkpointPath`        | The path to save checkpoints.                                            | `checkpoint.pth`               |
+| `diloco.modelCacheDir`         | Directory path for HuggingFace model cache.                              | `/data/models`                 |
+| `diloco.datasetCacheDir`       | Directory path for HuggingFace dataset cache.                            | `/data/datasets`               |
+| `diloco.checkpointPath`        | The path to save checkpoints.                                            | `/data/checkpoints/checkpoint.pth` |
 | `diloco.checkpointInterval`    | The interval (in steps) for saving checkpoints.                          | `512`                          |
 | `diloco.device`                | The device to use for training.                                          | `cuda`                         |
 | `diloco.wandbProjectName`      | The project name for Weights & Biases logging.                           | `diloco`                       |

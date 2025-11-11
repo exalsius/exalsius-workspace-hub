@@ -46,6 +46,12 @@ data:
 {{- if .Values.diloco.checkpointInterval }}
   DILOCO_CHECKPOINT_INTERVAL: {{ .Values.diloco.checkpointInterval | quote }}
 {{- end }}
+{{- if .Values.diloco.modelCacheDir }}
+  DILOCO_MODEL_CACHE_DIR: {{ .Values.diloco.modelCacheDir | quote }}
+{{- end }}
+{{- if .Values.diloco.datasetCacheDir }}
+  DILOCO_DATASET_CACHE_DIR: {{ .Values.diloco.datasetCacheDir | quote }}
+{{- end }}
 {{- if .Values.diloco.device }}
   DILOCO_DEVICE: {{ .Values.diloco.device | quote }}
 {{- end }}
@@ -100,4 +106,10 @@ data:
 {{- end }}
 {{- if .Values.diloco.compileMode }}
   DILOCO_COMPILE_MODE: {{ .Values.diloco.compileMode | quote }}
+{{- end }}
+{{- if .Values.diloco.hfUpload }}
+  DILOCO_HF_UPLOAD: {{ .Values.diloco.hfUpload | quote }}
+{{- end }}
+{{- if .Values.diloco.trainedModelHfName }}
+  DILOCO_TRAINED_MODEL_HF_NAME: {{ .Values.diloco.trainedModelHfName | quote }}
 {{- end }}
