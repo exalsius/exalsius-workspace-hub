@@ -6,7 +6,7 @@ set -euo pipefail
 CSV_FILE="coldstart2025_wandb_keys.csv"
 BASE_HOME="/home"
 
-tail -n +2 "$CSV_FILE" | while IFS=',' read -r raw_user key; do
+while IFS=',' read -r raw_user key; do
 
     user="${raw_user##*-}"
 
@@ -26,4 +26,4 @@ tail -n +2 "$CSV_FILE" | while IFS=',' read -r raw_user key; do
     else
         echo "Home directory for $user not found ($user_home)"
     fi
-done
+done < "$CSV_FILE"
