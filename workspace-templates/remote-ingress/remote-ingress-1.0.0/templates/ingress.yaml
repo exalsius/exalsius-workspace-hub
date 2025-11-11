@@ -1,0 +1,27 @@
+{{- if .Values.remote-ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.remote-ingress.ingressName | quote }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .Values.remote-ingress.certManagerIssuer | quote }}
+    {{- toYaml .Values.remote-ingress.annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.remote-ingress.ingressClassName | quote }}
+  tls:
+    - hosts:
+        - {{ .Values.remote-ingress.host | quote }}
+      secretName: {{ .Values.remote-ingress.certManagerSecretName | quote }}
+  rules:
+    - host: {{ .Values.remote-ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.remote-ingress.serviceName | quote }}
+                port:
+                  number: {{ .Values.remote-ingress.servicePort | int }}
+{{- end }}

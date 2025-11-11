@@ -2,17 +2,17 @@
 apiVersion: k0rdent.mirantis.com/v1beta1
 kind: ServiceTemplate
 metadata:
-  name: kof-storage-1-4-0
+  name: remote-ingress-1-0-0
   namespace: kcm-system
   labels:
     app.kubernetes.io/managed-by: Helm
-    helm.toolkit.fluxcd.io/name: kof-mothership
-    helm.toolkit.fluxcd.io/namespace: kof
+    helm.toolkit.fluxcd.io/name: remote-ingress-service-template
+    helm.toolkit.fluxcd.io/namespace: kcm-system
     k0rdent.mirantis.com/component: kcm
 spec:
   helm:
     chartSpec:
-      chart: workspace-templates/kof-storage/kof-storage-1.4.0
+      chart: workspace-templates/remote-ingress/remote-ingress-1.0.0
       version: "0.1.0"
       interval: 10m
       sourceRef:

@@ -1,0 +1,11 @@
+remote-ingress:
+  enabled: false
+  ingressName: remote-ingress
+  certManagerIssuer: letsencrypt
+  annotations: {}
+  ingressClassName: nginx
+  # Requires customization for your environment
+  host: remote.kcm0.example.net
+  certManagerSecretName: remote-ingress-tls
+  serviceName: remote-ingress-service
+  servicePort: 80
