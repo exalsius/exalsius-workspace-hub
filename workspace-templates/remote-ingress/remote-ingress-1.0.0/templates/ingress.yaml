@@ -18,8 +18,8 @@ spec:
     - host: {{ $remote.host | quote }}
       http:
         paths:
-          - path: /
-            pathType: Prefix
+          - path: {{ $remote.path | quote }}
+            pathType: {{ $remote.pathType | quote }}
             backend:
               service:
                 name: {{ $remote.serviceName | quote }}
