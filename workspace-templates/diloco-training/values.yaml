@@ -10,10 +10,34 @@ deploymentImage: "ghcr.io/exalsius/diloco-training:dev"
 
 # Job configuration
 deploymentName: "diloco-training-job"
-nodes: 2  # Number of nodes for distributed training
+nodes: 2  # Number of nodes for distributed training (deprecated, use elastic.minNodes/maxNodes)
+
+# PyTorch Elastic training configuration with etcd rendezvous
+elastic:
+  minNodes: 2  # Minimum number of nodes for elastic training
+  maxNodes: 3  # Maximum number of nodes for elastic training
+  nprocPerNode: 1  # Number of processes per node (default: same as gpuCount)
+  maxRestarts: 3  # Maximum restarts for elastic training
+  
+  # etcd rendezvous backend configuration
+  etcd:
+    # External etcd configuration (if using external etcd instead of the embedded subchart)
+    externalEndpoint: ""  # e.g., "etcd.infrastructure.svc.cluster.local:2379"
+    
+    # Rendezvous settings
+    prefix: "/torchelastic"  # etcd key prefix for job isolation
+    protocol: "http"         # "http" or "https"
 
 # Ephemeral storage configuration
-ephemeralStorageGb: 100
+ephemeralStorageGb: 50
+
+# Persistent storage configuration for models, datasets, and checkpoints
+# Creates per-pod PVCs using Volcano's volumeClaim feature
+storage:
+  enabled: false
+  sizeGb: 100  # Storage size per pod
+  storageClassName: ""  # Use default storage class if empty
+  accessMode: "ReadWriteOnce"  # Per-pod isolated storage
 
 # Resource configuration
 # the job template does not configure pvc storage
@@ -25,34 +49,93 @@ gpuCount: 1
 diloco:
   model: "gpt-neo-x"
   dataset: "c4"
-  localSteps: "128"
-  lr: "4e-4"
+  localSteps: "50"
+  lr: "3e-4"
   outerLr: "0.7"
-  warmupSteps: "1000"
-  totalSteps: "30000"
-  perDeviceTrainBatchSize: "32"
+  warmupSteps: "500"
+  totalSteps: "1000"
+  perDeviceTrainBatchSize: "64"
   batchSize: "512"
-  optimMethod: "sgd"
+  optimMethod: "demo"
   quantization: "false"
   asyncCommunication: "false"
-  checkpointPath: "checkpoint.pth"
+  # Storage paths (mounted at /data when storage.enabled=true)
+  modelCacheDir: "/data/models"
+  datasetCacheDir: "/data/datasets"
+  checkpointPath: "/data/checkpoints/checkpoint.pth"
   checkpointInterval: "512"
   device: "cuda"
-  wandbProjectName: "diloco"
-  wandbGroup: "diloco-gptneo-c4"
-  wandbRunId: ""
-  heterogeneous: "false"
-  minBatchSize: "16"
+  wandbProjectName: "diloco-scaling"
+  wandbGroup: "elastic-test"
+  #wandbRunId: "gpt"
+  heterogeneous: "true"
+  minBatchSize: "32"
   maxBatchSize: "512"
   groupPercVariance: "0.15"
-  compressionDecay: "0.9"
+  compressionDecay: "0.95"
   compressionTopk: "32"
-  experimentDescription: "DiLoCo distributed training experiment"
+  experimentDescription: "GPT training on c4 using DiLoCo distributed training"
   experimentTags: "[\"diloco\", \"gpt-neo-x\", \"c4\"]"
   seed: "42"
   wandbLogging: "true"
-  wandbUserKey: "XXXXXXXXXXXXXXXXX"
-  huggingfaceToken: "hf_XXXXXXXXXXXXXXXXX"
+  wandbUserKey: "XXXXXXXXXXXXXXXXXXXXXXXX"
+  huggingfaceToken: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx"
   compileModel: "false"
   compileBackend: "inductor"
   compileMode: "default"
+  hfUpload: "false"
+  trainedModelHfName: ""
+
+# etcd subchart configuration (bitnami/etcd)
+# Set enabled: false to use an external etcd cluster (configure elastic.etcd.externalEndpoint)
+etcd:
+  enabled: true  # Deploy embedded etcd with the chart
+  replicaCount: 1  # Single replica for dev (simpler, more stable, no Raft consensus overhead)
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/etcd
+  auth:
+    rbac:
+      create: false
+      rootPassword: ""
+    client:
+      secureTransport: false
+      enableAuthentication: false
+  persistence:
+    enabled: false  # Use ephemeral storage for training jobs
+  service:
+    type: ClusterIP
+    ports:
+      client: 2379
+      peer: 2380
+  # Resources for single-node etcd (no Raft consensus overhead)
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  # Health probes - disabled for stability during development
+  startupProbe:
+    enabled: true
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 20  # Allow 100s for startup
+    exec:
+      command:
+        - /opt/bitnami/scripts/etcd/healthcheck.sh
+  livenessProbe:
+    enabled: false  # Disabled to prevent restart loops
+  readinessProbe:
+    enabled: false  # Disabled to prevent restart loops
+  # Auto-compaction for ephemeral workloads
+  autoCompactionMode: "revision"
+  autoCompactionRetention: "5000"
+  # Enable v2 API for PyTorch etcd rendezvous backend compatibility
+  # PyTorch's python-etcd library requires the v2 API to be enabled
+  extraEnvVars:
+    - name: ETCD_ENABLE_V2
+      value: "true"

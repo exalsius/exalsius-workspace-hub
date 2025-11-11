@@ -29,3 +29,25 @@ Create a safe configmap name specifically for diloco-training configmap.
 {{- define "diloco-training.configmapName" -}}
 {{- include "diloco-training.safeName" (dict "base" .Values.deploymentName "suffix" "config") -}}
 {{- end -}}
+
+{{/*
+Create etcd service name for rendezvous.
+*/}}
+{{- define "diloco-training.etcdServiceName" -}}
+{{- if .Values.elastic.etcd.externalEndpoint -}}
+{{- .Values.elastic.etcd.externalEndpoint -}}
+{{- else -}}
+{{- printf "%s-etcd" .Release.Name -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create full etcd rendezvous endpoint.
+*/}}
+{{- define "diloco-training.etcdEndpoint" -}}
+{{- if .Values.elastic.etcd.externalEndpoint -}}
+{{- .Values.elastic.etcd.externalEndpoint -}}
+{{- else -}}
+{{- printf "%s-etcd.%s.svc.cluster.local:2379" .Release.Name .Values.deploymentNamespace -}}
+{{- end -}}
+{{- end -}}
