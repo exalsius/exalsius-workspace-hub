@@ -63,7 +63,7 @@ diloco:
   seed: "42"
   wandbLogging: "true"
   wandbUserKey: "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
-  huggingfaceToken: "XXXXXXXXXXXXXXXXXXXXXXXX
+  huggingfaceToken: "XXXXXXXXXXXXXXXXXXXXXXXX"
   compileModel: "false"
   compileBackend: "inductor"
   compileMode: "default"
