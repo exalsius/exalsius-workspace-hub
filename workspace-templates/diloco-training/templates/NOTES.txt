@@ -1,0 +1,60 @@
+{{- if .Values.etcd.enabled }}
+=============================================================================
+  DiLoCo Training Job with PyTorch Elastic and etcd Rendezvous
+=============================================================================
+
+Your training job has been deployed with fault-tolerant etcd rendezvous!
+
+Job Name: {{ include "diloco-training.jobName" . }}
+Namespace: {{ .Values.deploymentNamespace }}
+
+Elastic Training Configuration:
+  - Min Nodes: {{ .Values.elastic.minNodes }}
+  - Max Nodes: {{ .Values.elastic.maxNodes }}
+  - Processes per Node: {{ .Values.elastic.nprocPerNode }}
+  - Max Restarts: {{ .Values.elastic.maxRestarts }}
+
+{{- if .Values.elastic.etcd.externalEndpoint }}
+Rendezvous Backend: etcd (external)
+  - Endpoint: {{ .Values.elastic.etcd.externalEndpoint }}
+{{- else }}
+Rendezvous Backend: etcd (embedded)
+  - Service: {{ include "diloco-training.etcdEndpoint" . }}
+  - Replicas: {{ .Values.etcd.replicaCount }}
+  - Prefix: {{ .Values.elastic.etcd.prefix }}
+{{- end }}
+
+Fault Tolerance:
+  ✓ Training continues if any worker fails (as long as min_nodes are available)
+  ✓ No single point of failure
+  ✓ Automatic re-rendezvous on node failure
+
+To monitor your job:
+  kubectl get job {{ include "diloco-training.jobName" . }} -n {{ .Values.deploymentNamespace }}
+  kubectl get pods -l job-name={{ include "diloco-training.jobName" . }} -n {{ .Values.deploymentNamespace }}
+
+To view training logs:
+  kubectl logs -f {{ include "diloco-training.jobName" . }}-worker-0 -n {{ .Values.deploymentNamespace }}
+
+{{- if .Values.etcd.enabled }}
+To check etcd status:
+  kubectl get pods -l app.kubernetes.io/name=etcd -n {{ .Values.deploymentNamespace }}
+{{- end }}
+
+=============================================================================
+{{- else }}
+=============================================================================
+  DiLoCo Training Job with PyTorch Elastic
+=============================================================================
+
+ERROR: etcd is not enabled!
+
+To enable fault-tolerant training, set:
+  etcd.enabled: true
+
+Or specify an external etcd endpoint:
+  elastic.etcd.externalEndpoint: "etcd.infrastructure.svc.cluster.local:2379"
+
+=============================================================================
+{{- end }}
+
