@@ -6,7 +6,7 @@ deploymentNumReplicas: 1
 # Deployment configuration
 deploymentName: "my-notebook"
 deploymentNamespace: "default"
-deploymentImage: "jupyter/tensorflow-notebook:latest"
+deploymentImage: "tensorflow/tensorflow:2.18.0-gpu-jupyter"
 
 # Jupyter Notebook configuration
 notebookPassword: "mysecurepassword"
