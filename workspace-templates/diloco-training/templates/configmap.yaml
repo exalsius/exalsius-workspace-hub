@@ -46,12 +46,6 @@ data:
 {{- if .Values.diloco.checkpointInterval }}
   DILOCO_CHECKPOINT_INTERVAL: {{ .Values.diloco.checkpointInterval | quote }}
 {{- end }}
-{{- if .Values.diloco.modelCacheDir }}
-  DILOCO_MODEL_CACHE_DIR: {{ .Values.diloco.modelCacheDir | quote }}
-{{- end }}
-{{- if .Values.diloco.datasetCacheDir }}
-  DILOCO_DATASET_CACHE_DIR: {{ .Values.diloco.datasetCacheDir | quote }}
-{{- end }}
 {{- if .Values.diloco.device }}
   DILOCO_DEVICE: {{ .Values.diloco.device | quote }}
 {{- end }}
