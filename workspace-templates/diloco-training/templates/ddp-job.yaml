@@ -7,29 +7,16 @@ metadata:
     job-name: {{ include "diloco-training.jobName" . }}
 spec:
   maxRetry: 3
-  minAvailable: {{ .Values.elastic.minNodes | default .Values.nodes }}
+  minAvailable: {{ .Values.elastic.minNodes }}
   plugins:
     svc: []
   queue: default
   schedulerName: volcano
-  {{- if .Values.storage.enabled }}
-  volumes:
-    - mountPath: "/data"
-      volumeClaim:
-        accessModes: 
-          - {{ .Values.storage.accessMode | quote }}
-        {{- if .Values.storage.storageClassName }}
-        storageClassName: {{ .Values.storage.storageClassName | quote }}
-        {{- end }}
-        resources:
-          requests:
-            storage: {{ .Values.storage.sizeGb }}Gi
-  {{- end }}
   tasks:
     - maxRetry: 3
-      minAvailable: {{ .Values.elastic.minNodes | default .Values.nodes }}
+      minAvailable: {{ .Values.elastic.minNodes }}
       name: worker
-      replicas: {{ .Values.elastic.maxNodes | default .Values.nodes }}
+      replicas: {{ .Values.elastic.maxNodes }}
       template:
         metadata:
           annotations:
@@ -45,13 +32,6 @@ spec:
                   set -e
                   # Ensure output is not buffered
                   export PYTHONUNBUFFERED=1
-                  
-                  {{- if .Values.storage.enabled }}
-                  # Create storage subdirectories
-                  echo "Setting up storage directories..." >&2
-                  mkdir -p /data/models /data/datasets /data/checkpoints
-                  echo "Storage directories created at /data" >&2
-                  {{- end }}
                   
                   echo "Starting PyTorch Elastic training..." >&2
                   echo "POD_NAME: ${POD_NAME}" >&2
@@ -117,8 +97,8 @@ spec:
                   
                   echo "Launching torchrun with etcd rendezvous..." >&2
                   exec ${TORCHRUN_CMD} \
-                    --nnodes={{ .Values.elastic.minNodes | default .Values.nodes }}:{{ .Values.elastic.maxNodes | default .Values.nodes }} \
-                    --nproc_per_node={{ .Values.elastic.nprocPerNode | default .Values.gpuCount }} \
+                    --nnodes={{ .Values.elastic.minNodes }}:{{ .Values.elastic.maxNodes }} \
+                    --nproc_per_node={{ .Values.gpuCountPerNode }} \
                     --max-restarts={{ .Values.elastic.maxRestarts | default 3 }} \
                     --node_rank=${NODE_RANK} \
                     --rdzv_backend=etcd \
@@ -148,12 +128,12 @@ spec:
                 requests:
                   cpu: {{ .Values.cpuCores }}
                   memory: {{ .Values.memoryGb }}Gi
-                  nvidia.com/gpu: {{ .Values.gpuCount }}
+                  nvidia.com/gpu: {{ .Values.gpuCountPerNode }}
                   ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
                 limits:
                   cpu: {{ .Values.cpuCores }}
                   memory: {{ .Values.memoryGb }}Gi
-                  nvidia.com/gpu: {{ .Values.gpuCount }}
+                  nvidia.com/gpu: {{ .Values.gpuCountPerNode }}
                   ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
               workingDir: /app
           restartPolicy: OnFailure
