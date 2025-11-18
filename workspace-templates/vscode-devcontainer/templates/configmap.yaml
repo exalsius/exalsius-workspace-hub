@@ -1,0 +1,11 @@
+{{- if .Values.sshPublicKey }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "vscode-devcontainer.configmapName" . }}
+  namespace: {{ .Values.deploymentNamespace | default "default" }}
+data:
+  authorized_keys: |
+{{ .Values.sshPublicKey | indent 4 }}
+{{- end }}
+

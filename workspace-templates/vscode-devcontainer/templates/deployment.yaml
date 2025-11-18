@@ -17,27 +17,55 @@ spec:
     spec:
       securityContext:
         fsGroup: 0
+{{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) (eq (lower .Values.gpuVendor) "nvidia") }}
       runtimeClassName: nvidia
+{{- end }}
       containers:
-        - name: cuda-pytorch
-          image: {{ .Values.deploymentImage }}
-          command: ["sleep", "infinity"]
+        - name: devpod
+          image: {{ include "vscode-devcontainer.image" . }}
+          ports:
+            - containerPort: 22
+              name: ssh
+          env:
+{{- if .Values.sshPassword }}
+            - name: DEV_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vscode-devcontainer.secretName" . }}
+                  key: SSH_PASSWORD
+{{- end }}
           volumeMounts:
             - name: {{ include "vscode-devcontainer.storageVolumeName" . }}
               mountPath: /workspace
             - name: dshm
               mountPath: /dev/shm
+{{- if .Values.sshPublicKey }}
+            - name: ssh-authorized-keys
+              mountPath: /workspace/.ssh/authorized_keys
+              subPath: authorized_keys
+              readOnly: true
+{{- end }}
           resources:
             requests:
               cpu: {{ .Values.cpuCores }}
               memory: {{ .Values.memoryGb }}Gi
+{{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) }}
+{{- if eq (lower .Values.gpuVendor) "nvidia" }}
               nvidia.com/gpu: {{ .Values.gpuCount }}
-              ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+{{- else if eq (lower .Values.gpuVendor) "amd" }}
+              amd.com/gpu: {{ .Values.gpuCount }}
+{{- end }}
+{{- end }}
             limits:
               cpu: {{ .Values.cpuCores }}
               memory: {{ .Values.memoryGb }}Gi
+{{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) }}
+{{- if eq (lower .Values.gpuVendor) "nvidia" }}
               nvidia.com/gpu: {{ .Values.gpuCount }}
-              ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+{{- else if eq (lower .Values.gpuVendor) "amd" }}
+              amd.com/gpu: {{ .Values.gpuCount }}
+{{- end }}
+{{- end }}
       volumes:
         - name: {{ include "vscode-devcontainer.storageVolumeName" . }}
           persistentVolumeClaim:
@@ -46,3 +74,8 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: {{ .Values.shmSizeGb }}Gi
+{{- if .Values.sshPublicKey }}
+        - name: ssh-authorized-keys
+          configMap:
+            name: {{ include "vscode-devcontainer.configmapName" . }}
+{{- end }}
