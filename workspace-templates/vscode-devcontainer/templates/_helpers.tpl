@@ -36,3 +36,40 @@ Create a safe volume name for vscode-devcontainer storage.
 {{- define "vscode-devcontainer.storageVolumeName" -}}
 {{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code-storage") -}}
 {{- end -}}
+
+{{/*
+Create a safe service name specifically for vscode-devcontainer service.
+*/}}
+{{- define "vscode-devcontainer.serviceName" -}}
+{{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code") -}}
+{{- end -}}
+
+{{/*
+Create a safe secret name specifically for vscode-devcontainer secret.
+*/}}
+{{- define "vscode-devcontainer.secretName" -}}
+{{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code-secret") -}}
+{{- end -}}
+
+{{/*
+Create a safe configmap name specifically for vscode-devcontainer configmap.
+*/}}
+{{- define "vscode-devcontainer.configmapName" -}}
+{{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code-configmap") -}}
+{{- end -}}
+
+{{/*
+Determine the image to use based on deploymentImage or gpuVendor.
+If deploymentImage is provided, use it. Otherwise, auto-select based on gpuVendor.
+*/}}
+{{- define "vscode-devcontainer.image" -}}
+{{- if .Values.deploymentImage -}}
+{{- .Values.deploymentImage -}}
+{{- else if eq (lower .Values.gpuVendor) "nvidia" -}}
+ghcr.io/exalsius/devpod:latest-nvidia-pytorch
+{{- else if eq (lower .Values.gpuVendor) "amd" -}}
+ghcr.io/exalsius/devpod:latest-rocm-pytorch
+{{- else -}}
+ghcr.io/exalsius/devpod:latest-nvidia-pytorch
+{{- end -}}
+{{- end -}}
