@@ -58,7 +58,7 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
 | `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
-| `deploymentImage`     | The Docker image for the training job.            | `ghcr.io/exalsius/diloco-training:dev` ||
+| `deploymentImage`     | The Docker image for the training job.            | `ghcr.io/exalsius/diloco-training:dev` |
 | `nodes`               | The number of nodes for distributed training.     | `2`                          |
 
 ### Resource Configuration
