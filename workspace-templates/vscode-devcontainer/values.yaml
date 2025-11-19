@@ -1,10 +1,11 @@
 # VSCode DevContainer Helm Chart Values
+global:
+  deploymentName: "devcontainer"
 
 # DO NOT CHANGE THIS PARAMETER
 deploymentNumReplicas: 1
 
 # Deployment configuration
-deploymentName: "devcontainer"
 deploymentNamespace: "default"
 # Optional: If not provided, image will be auto-selected based on gpuVendor
 # NVIDIA -> ghcr.io/exalsius/devpod:nvidia-pytorch-latest

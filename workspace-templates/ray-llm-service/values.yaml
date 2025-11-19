@@ -1,10 +1,11 @@
 # Ray LLM Service Helm Chart Values
+global:
+  deploymentName: "my-llm-service"
 
 # DO NOT CHANGE THIS PARAMETER
 deploymentNumReplicas: 1
 
 # Deployment configuration
-deploymentName: "my-llm-service"
 deploymentNamespace: "default"
 deploymentImage: "rayproject/ray-ml:2.46.0.0e19ea"
 

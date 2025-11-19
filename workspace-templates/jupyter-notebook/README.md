@@ -34,11 +34,16 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
 
+### Global Configuration (Global helm values)
+
+| Parameter             | Description                                       | Default Value                |
+| --------------------- | ------------------------------------------------- | ---------------------------- |
+| `deploymentName`      | The name of the deployment.                       | `my-notebook`                |
+
 ### Deployment Configuration
 
 | Parameter             | Description                                          | Default Value                        |
 | --------------------- | ---------------------------------------------------- | ------------------------------------ |
-| `deploymentName`      | The name of the deployment.                          | `my-notebook`                        |
 | `deploymentNamespace` | The Kubernetes namespace for the deployment.         | `default`                            |
 | `deploymentImage`     | The Docker image for the Jupyter Notebook.           | `jupyter/tensorflow-notebook:latest` |
 | `enablePvcDeletion`   | If `true`, the PersistentVolumeClaim will be deleted when the workspace is destroyed. | `false` |

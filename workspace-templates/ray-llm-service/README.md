@@ -44,7 +44,7 @@ All configurable options are defined in the `values.yaml` file and can be overri
 
 | Parameter             | Description                                                            | Default Value                   |
 | --------------------- | ---------------------------------------------------------------------- | ------------------------------- |
-| `deploymentName`      | The name of the RayService deployment.                                 | `my-llm-service`                |
+| `global.deploymentName`      | The name of the RayService deployment.                                 | `my-llm-service`                |
 | `deploymentNamespace` | The Kubernetes namespace for the deployment.                           | `default`                       |
 | `deploymentImage`     | The Docker image for the Ray service.                                  | `rayproject/ray-ml:2.46.0.0e19ea` |
 | `huggingfaceToken`    | **Optional.** Your Hugging Face token for accessing private models.    | `""`                            |
