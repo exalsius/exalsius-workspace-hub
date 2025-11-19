@@ -82,7 +82,6 @@
   "required": [
     "global",
     "deploymentNumReplicas",
-    "deploymentName",
     "deploymentNamespace",
     "deploymentImage",
     "tokenPassword",
