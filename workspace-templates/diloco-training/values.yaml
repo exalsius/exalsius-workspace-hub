@@ -13,7 +13,7 @@ deploymentImage: "ghcr.io/exalsius/diloco-training:dev"
 # PyTorch Elastic training configuration with etcd rendezvous
 elastic:
   minNodes: 2  # Minimum number of nodes for elastic training
-  maxNodes: 2  # Maximum number of nodes for elastic training
+  maxNodes: 3  # Maximum number of nodes for elastic training
   maxRestarts: 3  # Maximum restarts for elastic training
   
   # etcd rendezvous backend configuration
