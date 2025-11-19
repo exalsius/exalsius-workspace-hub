@@ -46,7 +46,6 @@ All configurable options are defined in the `values.yaml` file and can be overri
 
 | Parameter             | Description                                                                           | Default Value                    |
 | --------------------- | ------------------------------------------------------------------------------------- | -------------------------------- |
-
 | `deploymentNamespace` | The Kubernetes namespace for the deployment.                                          | `default`                        |
 | `deploymentImage`     | The Docker image for the Marimo notebook.                                             | `ghcr.io/marimo-team/marimo:latest-data` |
 | `enablePvcDeletion`   | If `true`, the PersistentVolumeClaim will be deleted when the workspace is destroyed. | `false`                          |
