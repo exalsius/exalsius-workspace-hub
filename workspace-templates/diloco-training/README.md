@@ -47,13 +47,19 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
 
+### Global Configuration (Global helm values)
+
+| Parameter             | Description                                       | Default Value                |
+| --------------------- | ------------------------------------------------- | ---------------------------- |
+| `deploymentName`      | The name of the training job.                     | `diloco-training-job`        |
+
 ### General Configuration
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
 | `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
 | `deploymentImage`     | The Docker image for the training job.            | `ghcr.io/exalsius/diloco-training:dev` |
-| `deploymentName`      | The name of the training job.                     | `diloco-training-job`        |
+| `global.deploymentName`      | The name of the training job.                     | `diloco-training-job`        |
 | `nodes`               | The number of nodes for distributed training.     | `2`                          |
 
 ### Resource Configuration

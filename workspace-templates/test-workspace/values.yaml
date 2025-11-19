@@ -1,10 +1,11 @@
 # Test Workspace Helm Chart Values
+global:
+  deploymentName: "test-workspace"
 
 # DO NOT CHANGE THIS PARAMETER
 deploymentNumReplicas: 1
 
 # Deployment configuration
-deploymentName: "test-workspace"
 deploymentNamespace: "default"
 deploymentImage: "ubuntu:22.04"
 

@@ -24,11 +24,17 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
 
+### Global Configuration (Global helm values)
+
+| Parameter             | Description                                       | Default Value                |
+| --------------------- | ------------------------------------------------- | ---------------------------- |
+| `deploymentName`      | The name of the deployment.                       | `test-workspace`             |
+
 ### Deployment Configuration
 
 | Parameter             | Description                                  | Default Value      |
 | --------------------- | -------------------------------------------- | ------------------ |
-| `deploymentName`      | The name of the deployment.                  | `test-workspace`   |
+| `global.deploymentName`      | The name of the deployment.                  | `test-workspace`   |
 | `deploymentNamespace` | The Kubernetes namespace for the deployment. | `default`          |
 | `deploymentImage`     | The Docker image for the container.          | `ubuntu:22.04`     |
 

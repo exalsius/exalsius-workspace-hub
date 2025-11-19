@@ -1,7 +1,7 @@
 {{/*
 Create a safe resource name that respects Kubernetes naming limits.
 This helper ensures the final name doesn't exceed 63 characters.
-Usage: {{ include "performance-profiling.safeName" (dict "base" .Values.deploymentName "suffix" "profiling-config") }}
+Usage: {{ include "performance-profiling.safeName" (dict "base" .Values.global.deploymentName "suffix" "profiling-config") }}
 */}}
 {{- define "performance-profiling.safeName" -}}
 {{- $base := .base -}}
@@ -20,12 +20,12 @@ Usage: {{ include "performance-profiling.safeName" (dict "base" .Values.deployme
 Create a safe job name specifically for performance-profiling resources.
 */}}
 {{- define "performance-profiling.jobName" -}}
-{{- .Values.deploymentName | trunc 63 -}}
+{{- .Values.global.deploymentName | trunc 63 -}}
 {{- end -}}
 
 {{/*
 Create a safe configmap name specifically for performance-profiling configmap.
 */}}
 {{- define "performance-profiling.configmapName" -}}
-{{- include "performance-profiling.safeName" (dict "base" .Values.deploymentName "suffix" "prof-config") -}}
+{{- include "performance-profiling.safeName" (dict "base" .Values.global.deploymentName "suffix" "prof-config") -}}
 {{- end -}}

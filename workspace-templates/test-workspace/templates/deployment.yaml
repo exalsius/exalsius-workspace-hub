@@ -9,11 +9,11 @@ spec:
   replicas: {{ .Values.deploymentNumReplicas }}
   selector:
     matchLabels:
-      app: {{ .Values.deploymentName }}
+      app: {{ .Values.global.deploymentName }}
   template:
     metadata:
       labels:
-        app: {{ .Values.deploymentName }}
+        app: {{ .Values.global.deploymentName }}
     spec:
       containers:
         - name: {{ include "test-workspace.deploymentName" . }}
