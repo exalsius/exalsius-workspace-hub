@@ -59,7 +59,7 @@ spec:
                   echo "Waiting for etcd to be ready..." >&2
                   for i in $(seq 1 30); do
                     if command -v getent > /dev/null 2>&1; then
-                      if getent hosts {{ printf "%s-etcd.%s.svc.cluster.local" .Values.global.deploymentName .Values.deploymentNamespace }} > /dev/null 2>&1; then
+                      if getent hosts {{ include "diloco-training.etcdEndpoint" . }} > /dev/null 2>&1; then
                         echo "etcd service resolved successfully" >&2
                         break
                       fi
