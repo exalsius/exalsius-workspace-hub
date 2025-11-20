@@ -1,7 +1,7 @@
 {{/*
 Create a safe resource name that respects Kubernetes naming limits.
 This helper ensures the final name doesn't exceed 63 characters.
-Usage: {{ include "test-workspace.safeName" (dict "base" .Values.deploymentName "suffix" "test") }}
+Usage: {{ include "test-workspace.safeName" (dict "base" .Values.global.deploymentName "suffix" "test") }}
 */}}
 {{- define "test-workspace.safeName" -}}
 {{- $base := .base -}}
@@ -20,12 +20,12 @@ Usage: {{ include "test-workspace.safeName" (dict "base" .Values.deploymentName 
 Create a safe deployment name specifically for test-workspace resources.
 */}}
 {{- define "test-workspace.deploymentName" -}}
-{{- include "test-workspace.safeName" (dict "base" .Values.deploymentName "suffix" "test") -}}
+{{- include "test-workspace.safeName" (dict "base" .Values.global.deploymentName "suffix" "test") -}}
 {{- end -}}
 
 {{/*
 Create a safe service name specifically for test-workspace service.
 */}}
 {{- define "test-workspace.serviceName" -}}
-{{- include "test-workspace.safeName" (dict "base" .Values.deploymentName "suffix" "test") -}}
+{{- include "test-workspace.safeName" (dict "base" .Values.global.deploymentName "suffix" "test") -}}
 {{- end -}}

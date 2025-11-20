@@ -1,10 +1,11 @@
 # Marimo Helm Chart Values
+global:
+  deploymentName: "my-marimo"
 
 # DO NOT CHANGE THIS PARAMETER
 deploymentNumReplicas: 1
 
 # Deployment configuration
-deploymentName: "my-marimo"
 deploymentNamespace: "default"
 deploymentImage: "ghcr.io/marimo-team/marimo:latest-data"
 

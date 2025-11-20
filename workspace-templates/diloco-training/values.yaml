@@ -1,4 +1,6 @@
 # Test Workspace Helm Chart Values
+global:
+  deploymentName: "diloco-training-job"
 
 # DO NOT CHANGE THIS PARAMETER
 deploymentNumReplicas: 1
@@ -7,9 +9,6 @@ deploymentNumReplicas: 1
 
 deploymentNamespace: "default"
 deploymentImage: "ghcr.io/exalsius/diloco-training:dev"
-
-# Job configuration
-deploymentName: "diloco-training-job"
 
 # PyTorch Elastic training configuration with etcd rendezvous
 elastic:
