@@ -48,6 +48,9 @@ Create full etcd rendezvous endpoint.
 {{- if .Values.elastic.etcd.externalEndpoint -}}
 {{- .Values.elastic.etcd.externalEndpoint -}}
 {{- else -}}
-{{- printf "%s-etcd.%s.svc.cluster.local:2379" .Values.global.deploymentName .Values.deploymentNamespace -}}
+{{- $name := "etcd" -}}
+{{- $max := sub 63 (len $name) -}}
+{{- $prefix := .Values.global.deploymentName | trunc (int $max) | trimSuffix "-" -}}
+{{- printf "%s-%s.%s.svc.cluster.local:2379" $prefix $name .Values.deploymentNamespace -}}
 {{- end -}}
 {{- end -}}
