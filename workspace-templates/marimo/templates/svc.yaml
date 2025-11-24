@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "marimo.serviceName" . }}
-  namespace: {{ .Values.deploymentNamespace | default "default" }}
+  namespace: {{ .Values.global.deploymentNamespace | default "default" }}
   labels:
     app: {{ include "marimo.deploymentName" . }}
   annotations:

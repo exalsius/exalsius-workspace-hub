@@ -2,7 +2,7 @@ apiVersion: batch.volcano.sh/v1alpha1
 kind: Job
 metadata:
   name: {{ include "diloco-training.jobName" . }}
-  namespace: {{ .Values.deploymentNamespace }}
+  namespace: {{ .Values.global.deploymentNamespace }}
   labels:
     job-name: {{ include "diloco-training.jobName" . }}
 spec:

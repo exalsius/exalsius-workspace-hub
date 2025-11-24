@@ -2,7 +2,7 @@ apiVersion: ray.io/v1
 kind: RayService
 metadata:
   name: {{ include "ray-llm-service.deploymentName" . }}
-  namespace: {{ .Values.deploymentNamespace | default "default" }}
+  namespace: {{ .Values.global.deploymentNamespace | default "default" }}
 spec:
   serveConfigV2: |
     applications:

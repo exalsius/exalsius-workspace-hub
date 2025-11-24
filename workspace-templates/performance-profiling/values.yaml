@@ -1,8 +1,8 @@
 global:
   deploymentName: "performance-profiling-job"
+  deploymentNamespace: "default"
 
 # Deployment configuration
-deploymentNamespace: "default"
 deploymentImage: ghcr.io/exalsius/exalsius-performance-modeling:dev
 
 # Job configuration

@@ -13,9 +13,15 @@
           "description": "Name of the deployment",
           "default": "my-marimo",
           "minLength": 1
+        },
+        "deploymentNamespace": {
+          "type": "string",
+          "description": "Kubernetes namespace for the deployment",
+          "default": "default",
+          "minLength": 1
         }
       },
-      "required": ["deploymentName"],
+      "required": ["deploymentName", "deploymentNamespace"],
       "additionalProperties": false
     },
     "deploymentNumReplicas": {
@@ -23,12 +29,6 @@
       "description": "Number of deployment replicas. DO NOT CHANGE THIS PARAMETER",
       "const": 1,
       "default": 1
-    },
-    "deploymentNamespace": {
-      "type": "string",
-      "description": "Kubernetes namespace for the deployment",
-      "default": "default",
-      "minLength": 1
     },
     "deploymentImage": {
       "type": "string",
@@ -82,7 +82,6 @@
   "required": [
     "global",
     "deploymentNumReplicas",
-    "deploymentNamespace",
     "deploymentImage",
     "tokenPassword",
     "ephemeralStorageGb",

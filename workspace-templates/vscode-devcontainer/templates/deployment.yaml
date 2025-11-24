@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "vscode-devcontainer.deploymentName" . }}
-  namespace: {{ .Values.deploymentNamespace }}
+  namespace: {{ .Values.global.deploymentNamespace }}
   labels:
     app: {{ include "vscode-devcontainer.deploymentName" . }}
 spec:

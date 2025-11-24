@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "diloco-training.configmapName" . }}
-  namespace: {{ .Values.deploymentNamespace }}
+  namespace: {{ .Values.global.deploymentNamespace }}
 data:
 {{- if .Values.diloco.model }}
   DILOCO_MODEL: {{ .Values.diloco.model | quote }}

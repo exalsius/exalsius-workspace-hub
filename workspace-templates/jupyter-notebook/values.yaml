@@ -1,12 +1,12 @@
 # Jupyter Notebook Helm Chart Values
 global:
   deploymentName: "my-notebook"
+  deploymentNamespace: "default"
 
 # DO NOT CHANGE THIS PARAMETER
 deploymentNumReplicas: 1
 
 # Deployment configuration
-deploymentNamespace: "default"
 deploymentImage: "ghcr.io/exalsius/jupyter-notebook:latest-nvidia"
 
 # Jupyter Notebook configuration
