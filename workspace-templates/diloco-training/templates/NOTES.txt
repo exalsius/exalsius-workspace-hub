@@ -6,7 +6,7 @@
 Your training job has been deployed with fault-tolerant etcd rendezvous!
 
 Job Name: {{ include "diloco-training.jobName" . }}
-Namespace: {{ .Values.deploymentNamespace }}
+Namespace: {{ .Values.global.deploymentNamespace }}
 
 Elastic Training Configuration:
   - Min Nodes: {{ .Values.elastic.minNodes }}
@@ -30,15 +30,15 @@ Fault Tolerance:
   ✓ Automatic re-rendezvous on node failure
 
 To monitor your job:
-  kubectl get job {{ include "diloco-training.jobName" . }} -n {{ .Values.deploymentNamespace }}
-  kubectl get pods -l job-name={{ include "diloco-training.jobName" . }} -n {{ .Values.deploymentNamespace }}
+  kubectl get job {{ include "diloco-training.jobName" . }} -n {{ .Values.global.deploymentNamespace }}
+  kubectl get pods -l job-name={{ include "diloco-training.jobName" . }} -n {{ .Values.global.deploymentNamespace }}
 
 To view training logs:
-  kubectl logs -f {{ include "diloco-training.jobName" . }}-worker-0 -n {{ .Values.deploymentNamespace }}
+  kubectl logs -f {{ include "diloco-training.jobName" . }}-worker-0 -n {{ .Values.global.deploymentNamespace }}
 
 {{- if .Values.etcd.enabled }}
 To check etcd status:
-  kubectl get pods -l app.kubernetes.io/name=etcd -n {{ .Values.deploymentNamespace }}
+  kubectl get pods -l app.kubernetes.io/name=etcd -n {{ .Values.global.deploymentNamespace }}
 {{- end }}
 
 =============================================================================

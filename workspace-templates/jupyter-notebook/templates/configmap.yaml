@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "jupyter-notebook.configmapName" . }}
-  namespace: {{ .Values.deploymentNamespace | default "default" }}
+  namespace: {{ .Values.global.deploymentNamespace | default "default" }}
 data:
   jupyter_server_config.py: |
     from jupyter_server.auth import passwd

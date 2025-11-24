@@ -1,0 +1,1 @@
+**Note**: The archived chart `etcd-10.2.12.tgz` has been modified by us. In particular, we modified the `charts/common/templates/_names.tpl` file to also respect `.Values.global.deploymentName` (if defined) during construction of the `common.names.fullname` variable.

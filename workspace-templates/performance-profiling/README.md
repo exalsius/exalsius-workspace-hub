@@ -33,13 +33,18 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through Helm parameters.
 
+### Global Configuration (Global helm values)
+
+| Parameter             | Description                                       | Default Value                |
+| --------------------- | ------------------------------------------------- | ---------------------------- |
+| `deploymentName`      | The name of the profiling job.                    | `performance-profiling-job`  |
+| `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
+
 ### General Configuration
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
 | `deploymentImage`     | The Docker image for the profiling job.           | `ghcr.io/exalsius/exalsius-performance-modeling:dev` |
-| `deploymentName`      | The name of the profiling job.                    | `performance-profiling-job`  |
 | `nodes`               | The number of nodes for distributed profiling.    | `1`                          |
 
 ### Resource Configuration

@@ -35,12 +35,17 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
 
+### Global Configuration (Global helm values)
+
+| Parameter             | Description                                       | Default Value                |
+| --------------------- | ------------------------------------------------- | ---------------------------- |
+| `deploymentName`      | The name of the deployment.                       | `devcontainer`               |
+| `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
+
 ### Deployment Configuration
 
 | Parameter             | Description                                          | Default Value                     |
 | --------------------- | ---------------------------------------------------- | --------------------------------- |
-| `deploymentName`      | The name of the deployment.                          | `devcontainer`                    |
-| `deploymentNamespace` | The Kubernetes namespace for the deployment.         | `default`                         |
 | `deploymentImage`     | The Docker image for the development container. If not provided, image will be auto-selected based on `gpuVendor`. | `""` (auto-selected) |
 | `gpuVendor`          | The GPU vendor to use. Valid values: `"NVIDIA"` or `"AMD"`. Used for automatic image selection and GPU resource allocation. | `"NVIDIA"` |
 

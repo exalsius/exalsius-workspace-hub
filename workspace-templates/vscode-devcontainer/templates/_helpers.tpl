@@ -1,7 +1,7 @@
 {{/*
 Create a safe resource name that respects Kubernetes naming limits.
 This helper ensures the final name doesn't exceed 63 characters.
-Usage: {{ include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code") }}
+Usage: {{ include "vscode-devcontainer.safeName" (dict "base" .Values.global.deploymentName "suffix" "code") }}
 */}}
 {{- define "vscode-devcontainer.safeName" -}}
 {{- $base := .base -}}
@@ -20,42 +20,42 @@ Usage: {{ include "vscode-devcontainer.safeName" (dict "base" .Values.deployment
 Create a safe deployment name specifically for vscode-devcontainer resources.
 */}}
 {{- define "vscode-devcontainer.deploymentName" -}}
-{{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code") -}}
+{{- include "vscode-devcontainer.safeName" (dict "base" .Values.global.deploymentName "suffix" "code") -}}
 {{- end -}}
 
 {{/*
 Create a safe PVC name specifically for vscode-devcontainer storage.
 */}}
 {{- define "vscode-devcontainer.pvcName" -}}
-{{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code-pvc") -}}
+{{- include "vscode-devcontainer.safeName" (dict "base" .Values.global.deploymentName "suffix" "code-pvc") -}}
 {{- end -}}
 
 {{/*
 Create a safe volume name for vscode-devcontainer storage.
 */}}
 {{- define "vscode-devcontainer.storageVolumeName" -}}
-{{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code-storage") -}}
+{{- include "vscode-devcontainer.safeName" (dict "base" .Values.global.deploymentName "suffix" "code-storage") -}}
 {{- end -}}
 
 {{/*
 Create a safe service name specifically for vscode-devcontainer service.
 */}}
 {{- define "vscode-devcontainer.serviceName" -}}
-{{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code") -}}
+{{- include "vscode-devcontainer.safeName" (dict "base" .Values.global.deploymentName "suffix" "code") -}}
 {{- end -}}
 
 {{/*
 Create a safe secret name specifically for vscode-devcontainer secret.
 */}}
 {{- define "vscode-devcontainer.secretName" -}}
-{{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code-secret") -}}
+{{- include "vscode-devcontainer.safeName" (dict "base" .Values.global.deploymentName "suffix" "code-secret") -}}
 {{- end -}}
 
 {{/*
 Create a safe configmap name specifically for vscode-devcontainer configmap.
 */}}
 {{- define "vscode-devcontainer.configmapName" -}}
-{{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code-configmap") -}}
+{{- include "vscode-devcontainer.safeName" (dict "base" .Values.global.deploymentName "suffix" "code-configmap") -}}
 {{- end -}}
 
 {{/*

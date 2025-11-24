@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ include "jupyter-notebook.pvcName" . }}
-  namespace: {{ .Values.deploymentNamespace | default "default" }}
+  namespace: {{ .Values.global.deploymentNamespace | default "default" }}
 spec:
   accessModes:
     - ReadWriteOnce
