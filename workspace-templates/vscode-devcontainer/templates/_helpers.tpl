@@ -41,21 +41,21 @@ Create a safe volume name for vscode-devcontainer storage.
 Create a safe service name specifically for vscode-devcontainer service.
 */}}
 {{- define "vscode-devcontainer.serviceName" -}}
-{{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code") -}}
+{{- include "vscode-devcontainer.safeName" (dict "base" .Values.global.deploymentName "suffix" "code") -}}
 {{- end -}}
 
 {{/*
 Create a safe secret name specifically for vscode-devcontainer secret.
 */}}
 {{- define "vscode-devcontainer.secretName" -}}
-{{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code-secret") -}}
+{{- include "vscode-devcontainer.safeName" (dict "base" .Values.global.deploymentName "suffix" "code-secret") -}}
 {{- end -}}
 
 {{/*
 Create a safe configmap name specifically for vscode-devcontainer configmap.
 */}}
 {{- define "vscode-devcontainer.configmapName" -}}
-{{- include "vscode-devcontainer.safeName" (dict "base" .Values.deploymentName "suffix" "code-configmap") -}}
+{{- include "vscode-devcontainer.safeName" (dict "base" .Values.global.deploymentName "suffix" "code-configmap") -}}
 {{- end -}}
 
 {{/*
