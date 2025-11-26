@@ -14,6 +14,7 @@ spec:
     metadata:
       labels:
         app: {{ .Values.global.deploymentName }}-code
+        workspace.exalsius.ai/database-id: {{ .Release.Name }}
     spec:
       securityContext:
         fsGroup: 0

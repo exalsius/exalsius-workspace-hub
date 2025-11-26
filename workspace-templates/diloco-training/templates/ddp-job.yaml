@@ -23,6 +23,7 @@ spec:
             scheduling.k8s.io/group-name: {{ include "diloco-training.jobName" . }}
           labels:
             job-name: {{ include "diloco-training.jobName" . }}
+            workspace.exalsius.ai/database-id: {{ .Release.Name }}
         spec:
           containers:
             - command:

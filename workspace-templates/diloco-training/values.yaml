@@ -72,7 +72,7 @@ diloco:
 # Set enabled: false to use an external etcd cluster (configure elastic.etcd.externalEndpoint)
 etcd:
   enabled: true
-  replicaCount: 1  
+  replicaCount: 1
   image:
     registry: docker.io
     repository: bitnamilegacy/etcd
