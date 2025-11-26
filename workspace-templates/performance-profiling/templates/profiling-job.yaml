@@ -31,6 +31,7 @@ spec:
           labels:
             job-name: {{ include "performance-profiling.jobName" . }}
             role: master
+            workspace.exalsius.ai/database-id: {{ .Release.Name }}
         spec:
           containers:
             - command: ["uv", "run", "/app/entrypoints/volcano_worker.py"]
@@ -77,6 +78,7 @@ spec:
           labels:
             job-name: {{ include "performance-profiling.jobName" . }}
             role: worker
+            workspace.exalsius.ai/database-id: {{ .Release.Name }}
         spec:
           containers:
             - command: ["uv", "run", "/app/entrypoints/volcano_worker.py"]

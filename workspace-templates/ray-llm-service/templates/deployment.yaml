@@ -38,6 +38,7 @@ spec:
             component.type: head
             component.subtype: serve-endpoint
             ray.name: {{ include "ray-llm-service.deploymentName" . }}
+            workspace.exalsius.ai/database-id: {{ .Release.Name }}
         spec:
 {{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) }}
           runtimeClassName: nvidia
