@@ -73,8 +73,6 @@ diloco:
 etcd:
   enabled: true
   replicaCount: 1
-  podLabels:
-    workspace.exalsius.ai/database-id: {{ .Release.Name }}
   image:
     registry: docker.io
     repository: bitnamilegacy/etcd
