@@ -6,14 +6,15 @@ global:
 # DO NOT CHANGE THIS PARAMETER
 deploymentNumReplicas: 1
 
-# Deployment configuration
-deploymentImage: "ghcr.io/exalsius/diloco-training:dev"
-
 # PyTorch Elastic training configuration with etcd rendezvous
 elastic:
   minNodes: 2  # Minimum number of nodes for elastic training
   maxNodes: 3  # Maximum number of nodes for elastic training
-  maxRestarts: 3  # Maximum restarts for elastic training
+  maxRestarts: 5  # Maximum restarts for elastic training
+  
+  # GPU distribution policy (used when gpu.*.minNodes/maxNodes are null)
+  # Options: "auto" (split evenly), "prefer-nvidia" (NVIDIA first, AMD fallback), "prefer-amd" (AMD first, NVIDIA fallback)
+  gpuDistribution: "auto"
   
   # etcd rendezvous backend configuration
   etcd:
@@ -22,12 +23,29 @@ elastic:
     prefix: "/torchelastic"  # etcd key prefix for job isolation
     protocol: "http"         # "http" or "https"
 
+# GPU-specific configurations
+# If explicitly set, these override the elastic.minNodes/maxNodes/gpuDistribution
+# If not set (or values are null), they will be calculated from elastic config
+gpu:
+  nvidia:
+    enabled: true
+    image: "ghcr.io/exalsius/diloco-training:cuda-dev"
+    minNodes: null  # null means: calculate from elastic.minNodes + gpuDistribution
+    maxNodes: null  # null means: calculate from elastic.maxNodes + gpuDistribution
+    runtimeClassName: "nvidia"
+  amd:
+    enabled: true
+    image: "ghcr.io/exalsius/diloco-training:rocm-dev"
+    minNodes: null  # null means: calculate from elastic.minNodes + gpuDistribution
+    maxNodes: null  # null means: calculate from elastic.maxNodes + gpuDistribution
+    runtimeClassName: ""  # Empty for default runtime
+
 # Ephemeral storage configuration
 ephemeralStorageGb: 50
 
 # Resource configuration for a single worker pod
-cpuCores: 2
-memoryGb: 8
+cpuCores: 6
+memoryGb: 12
 gpuCountPerNode: 1  # Number of GPUs per node (also determines PyTorch processes per node)
 
 # DiLoCo Training Environment Variables
