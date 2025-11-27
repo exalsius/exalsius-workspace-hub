@@ -56,10 +56,7 @@ All configurable options are defined in the `values.yaml` file and can be overri
 
 ### General Configuration
 
-| Parameter             | Description                                       | Default Value                |
-| --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentImage`     | The Docker image for the training job.            | `ghcr.io/exalsius/diloco-training:dev` |
-| `nodes`               | The number of nodes for distributed training.     | `2`                          |
+This chart supports both homogeneous (single GPU type) and heterogeneous (mixed NVIDIA/AMD GPUs) cluster deployments.
 
 ### Resource Configuration
 
@@ -110,12 +107,12 @@ Each worker pod gets its own persistent volume with the following structure:
 
 | Parameter                     | Description                                                              | Default Value      |
 | ----------------------------- | ------------------------------------------------------------------------ | ------------------ |
-| `elastic.minNodes`            | Minimum number of nodes for elastic training                             | `2`                |
-| `elastic.maxNodes`            | Maximum number of nodes for elastic training                             | `2`                |
-| `elastic.nprocPerNode`        | Number of processes (GPUs) per node                                      | `1`                |
+| `elastic.minNodes`            | Minimum number of nodes for elastic training (total across all GPU types) | `2`                |
+| `elastic.maxNodes`            | Maximum number of nodes for elastic training (total across all GPU types) | `3`                |
+| `elastic.gpuDistribution`     | GPU distribution policy: `auto`, `prefer-nvidia`, or `prefer-amd`        | `auto`             |
 | `elastic.maxRestarts`         | Maximum restarts before job fails                                        | `3`                |
 | `etcd.enabled`                | Deploy embedded etcd with the chart                                      | `true`             |
-| `etcd.replicaCount`           | Number of etcd replicas (1 for dev, 3+ for prod HA)                     | `3`                |
+| `etcd.replicaCount`           | Number of etcd replicas (1 for dev, 3+ for prod HA)                     | `1`                |
 | `elastic.etcd.externalEndpoint` | External etcd cluster endpoint (if not using embedded)                | `""`               |
 | `elastic.etcd.prefix`         | etcd key prefix for job isolation                                        | `/torchelastic`    |
 | `elastic.etcd.protocol`       | etcd protocol (http or https)                                            | `http`             |
@@ -126,6 +123,87 @@ Each worker pod gets its own persistent volume with the following structure:
 - Automatic re-rendezvous when nodes join or leave
 - Production-ready with 3+ etcd replicas for high availability
 
+### GPU Configuration (Heterogeneous Support)
+
+The chart supports both homogeneous (single GPU type) and heterogeneous (mixed NVIDIA and AMD GPUs) clusters. There are two configuration modes:
+
+#### Simple Mode (Recommended)
+
+Specify total GPU needs and let the chart distribute across available GPU types:
+
+| Parameter                | Description                                                                | Default Value                            |
+| ------------------------ | -------------------------------------------------------------------------- | ---------------------------------------- |
+| `elastic.minNodes`       | Total minimum nodes needed                                                 | `2`                                      |
+| `elastic.maxNodes`       | Total maximum nodes needed                                                 | `3`                                      |
+| `elastic.gpuDistribution`| How to distribute: `auto` (split evenly), `prefer-nvidia`, `prefer-amd`   | `auto`                                   |
+| `gpu.nvidia.enabled`     | Enable NVIDIA GPU workers                                                  | `true`                                   |
+| `gpu.nvidia.image`       | Docker image for NVIDIA workers                                            | `ghcr.io/exalsius/diloco-training:latest-nvidia` |
+| `gpu.amd.enabled`        | Enable AMD GPU workers                                                     | `false`                                  |
+| `gpu.amd.image`          | Docker image for AMD workers                                               | `ghcr.io/exalsius/diloco-training:latest-rocm`   |
+
+**Example - 5 GPUs, any type:**
+```yaml
+elastic:
+  minNodes: 5
+  maxNodes: 5
+  gpuDistribution: "auto"  # Splits evenly: 3 NVIDIA max, 2 AMD max
+gpu:
+  nvidia:
+    enabled: true
+  amd:
+    enabled: true
+```
+
+**Example - Prefer NVIDIA, fallback to AMD:**
+```yaml
+elastic:
+  minNodes: 4
+  maxNodes: 4
+  gpuDistribution: "prefer-nvidia"  # 4 NVIDIA max (min=4), 4 AMD max (min=0)
+gpu:
+  nvidia:
+    enabled: true
+  amd:
+    enabled: true
+```
+
+**Example - NVIDIA only (backward compatible):**
+```yaml
+elastic:
+  minNodes: 2
+  maxNodes: 3
+gpu:
+  nvidia:
+    enabled: true
+  amd:
+    enabled: false
+```
+
+#### Advanced Mode
+
+Explicitly control GPU allocation per type:
+
+| Parameter                | Description                                                                | Default Value |
+| ------------------------ | -------------------------------------------------------------------------- | ------------- |
+| `gpu.nvidia.minNodes`    | Minimum NVIDIA nodes (overrides elastic.minNodes if set)                  | `null`        |
+| `gpu.nvidia.maxNodes`    | Maximum NVIDIA nodes (overrides elastic.maxNodes if set)                  | `null`        |
+| `gpu.amd.minNodes`       | Minimum AMD nodes (overrides elastic.minNodes if set)                     | `null`        |
+| `gpu.amd.maxNodes`       | Maximum AMD nodes (overrides elastic.maxNodes if set)                     | `null`        |
+
+**Example - Explicit heterogeneous allocation:**
+```yaml
+gpu:
+  nvidia:
+    enabled: true
+    minNodes: 2
+    maxNodes: 3
+  amd:
+    enabled: true
+    minNodes: 1
+    maxNodes: 2
+```
+Result: Requires 3 nodes minimum (2 NVIDIA + 1 AMD), up to 5 maximum (3 NVIDIA + 2 AMD)
+
 **Example Configurations:**
 
 *Development (1 etcd replica):*
@@ -133,9 +211,9 @@ Each worker pod gets its own persistent volume with the following structure:
 elastic:
   minNodes: 1
   maxNodes: 2
-  etcd:
-    enabled: true
-    replicas: 1
+etcd:
+  enabled: true
+  replicaCount: 1
 ```
 
 *Production (3 etcd replicas, tolerate 1 node failure):*
@@ -143,9 +221,9 @@ elastic:
 elastic:
   minNodes: 2
   maxNodes: 3
-  etcd:
-    enabled: true
-    replicas: 3
+etcd:
+  enabled: true
+  replicaCount: 3
 ```
 
 *Production with External etcd:*
