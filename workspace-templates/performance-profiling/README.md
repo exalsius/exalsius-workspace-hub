@@ -33,28 +33,38 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through Helm parameters.
 
-### Global Configuration (Global helm values)
+### Global Configuration
+
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentName`      | The name of the profiling job.                    | `performance-profiling-job`  |
-| `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
+| `global.deploymentName`      | **Required.** The name of the profiling job.                    | `performance-profiling-job`  |
+| `global.deploymentNamespace` | **Required.** The Kubernetes namespace for the deployment.      | `default`                    |
 
 ### General Configuration
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentImage`     | The Docker image for the profiling job.           | `ghcr.io/exalsius/exalsius-performance-modeling:dev` |
-| `nodes`               | The number of nodes for distributed profiling.    | `1`                          |
+| `deploymentImage`     | **Required.** The Docker image for the profiling job.           | `ghcr.io/exalsius/exalsius-performance-modeling:dev` |
+| `deploymentNumReplicas` | **Required.** Number of deployment replicas. DO NOT CHANGE THIS PARAMETER. | `1` (constant) |
+| `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB to allocate. | `100`         |
+| `nodes`               | **Required.** The number of nodes for distributed profiling.    | `1`                          |
+| `extraEnvironmentVariables` | **Required.** Additional environment variables for the job. | `[]` |
 
 ### Resource Configuration
 
-| Parameter          | Description                               | Default Value |
-| ------------------ | ----------------------------------------- | ------------- |
-| `cpuCores`         | The number of CPU cores to allocate.      | `16`          |
-| `memoryGb`         | The amount of memory in GB to allocate.   | `32`          |
-| `ephemeralStorageGb` | The amount of ephemeral storage in GB to allocate. | `100`         |
-| `gpuCount`         | The number of GPUs to allocate.           | `1`           |
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
+
+| Parameter          | Description                               | Default Value | Required |
+| ------------------ | ----------------------------------------- | ------------- | -------- |
+| `resources.cpuCores`         | The number of CPU cores to allocate.      | `16`          | Yes |
+| `resources.memoryGb`         | The amount of memory in GB to allocate.   | `32`          | Yes |
+| `resources.gpuCount`         | The number of GPUs to allocate.           | `1`           | Yes |
+| `resources.gpuVendor`        | GPU vendor configuration. Valid values: `"NVIDIA"` or `"AMD"`. | `"NVIDIA"` | No |
+| `resources.gpuType`          | GPU type/model.                           | `"L40"`       | No |
+| `resources.gpuMemory`        | GPU memory in gigabytes.                 | `24`          | No |
+| `resources.storageGb`       | The size of the persistent volume for your workspace. | `50`          | No |
 
 ### Profiling Configuration
 

@@ -40,38 +40,47 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
 
-### Global Configuration (Global helm values)
+### Global Configuration
+
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentName`      | The name of the RayService deployment.            | `my-llm-service`             |
-| `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
+| `global.deploymentName`      | **Required.** The name of the RayService deployment.            | `my-llm-service`             |
+| `global.deploymentNamespace` | **Required.** The Kubernetes namespace for the deployment.      | `default`                    |
 
 ### Deployment Configuration
 
 | Parameter             | Description                                                            | Default Value                   |
 | --------------------- | ---------------------------------------------------------------------- | ------------------------------- |
-| `deploymentImage`     | The Docker image for the Ray service.                                  | `rayproject/ray-ml:2.46.0.0e19ea` |
+| `deploymentImage`     | **Required.** The Docker image for the Ray service.                                  | `rayproject/ray-ml:2.46.0.0e19ea` |
+| `deploymentNumReplicas` | **Required.** Number of deployment replicas. DO NOT CHANGE THIS PARAMETER. | `1` (constant) |
+| `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB for the pod. | `50`          |
 | `huggingfaceToken`    | **Optional.** Your Hugging Face token for accessing private models.    | `""`                            |
 
 ### Ray and LLM Configuration
 
 | Parameter                       | Description                                                          | Default Value                             |
 | ------------------------------- | -------------------------------------------------------------------- | ----------------------------------------- |
-| `numModelReplicas`              | The number of replicas for the LLM model.                            | `1`                                       |
-| `runtimeEnvironmentPipPackages` | A list of pip packages to install in the runtime environment.        | `numpy==1.26.4,vllm==0.9.0,ray==2.46.0`     |
-| `huggingfaceModel`              | The name of the LLM model from Hugging Face to serve.                | `microsoft/phi-4`                         |
-| `tensorParallelSize`            | The tensor parallel size for the model.                              | `1`                                       |
-| `pipelineParallelSize`          | The pipeline parallel size for the model.                            | `1`                                       |
-| `placementGroupStrategy`        | The placement group strategy for the model.                          | `PACK`                                    |
-| `cpuPerActor`                   | The number of CPUs to allocate per actor.                            | `16`                                      |
-| `gpuPerActor`                   | The number of GPUs to allocate per actor.                            | `1`                                       |
+| `numModelReplicas`              | **Required.** The number of replicas for the LLM model.                            | `1`                                       |
+| `runtimeEnvironmentPipPackages` | **Required.** A list of pip packages to install in the runtime environment.        | `numpy==1.26.4,vllm==0.9.0,ray==2.46.0`     |
+| `huggingfaceModel`              | **Required.** The name of the LLM model from Hugging Face to serve.                | `microsoft/phi-4`                         |
+| `tensorParallelSize`            | **Required.** The tensor parallel size for the model.                              | `1`                                       |
+| `pipelineParallelSize`          | **Required.** The pipeline parallel size for the model.                            | `1`                                       |
+| `placementGroupStrategy`        | **Required.** The placement group strategy for the model.                          | `PACK`                                    |
+| `cpuPerActor`                   | **Required.** The number of CPUs to allocate per actor.                            | `16`                                      |
+| `gpuPerActor`                   | **Required.** The number of GPUs to allocate per actor.                            | `1`                                       |
 
 ### Resource Configuration
 
-| Parameter          | Description                                       | Default Value |
-| ------------------ | ------------------------------------------------- | ------------- |
-| `cpuCores`         | The number of CPU cores for the Ray head.         | `16`          |
-| `memoryGb`         | The amount of memory in GB for the Ray head.      | `32`          |
-| `gpuCount`         | The number of GPUs for the Ray head.              | `1`           |
-| `ephemeralStorageGb` | The amount of ephemeral storage in GB for the pod. | `50`          |
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
+
+| Parameter          | Description                                       | Default Value | Required |
+| ------------------ | ------------------------------------------------- | ------------- | -------- |
+| `resources.cpuCores`         | The number of CPU cores for the Ray head.         | `16`          | Yes |
+| `resources.memoryGb`         | The amount of memory in GB for the Ray head.      | `32`          | Yes |
+| `resources.gpuCount`         | The number of GPUs for the Ray head.              | `1`           | Yes |
+| `resources.gpuVendor`        | GPU vendor configuration. Valid values: `"NVIDIA"` or `"AMD"`. | `"NVIDIA"` | No |
+| `resources.gpuType`          | GPU type/model.                                   | `"L40"`       | No |
+| `resources.gpuMemory`        | GPU memory in gigabytes.                         | `24`          | No |
+| `resources.storageGb`        | The size of the persistent volume for your workspace. | `50`          | No |

@@ -34,27 +34,34 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
 
-### Global Configuration (Global helm values)
+### Global Configuration
+
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentName`      | The name of the deployment.                       | `my-notebook`                |
-| `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
+| `global.deploymentName`      | **Required.** The name of the deployment.                       | `my-notebook`                |
+| `global.deploymentNamespace` | **Required.** The Kubernetes namespace for the deployment.      | `default`                    |
 
 ### Deployment Configuration
 
 | Parameter             | Description                                          | Default Value                        |
 | --------------------- | ---------------------------------------------------- | ------------------------------------ |
-| `deploymentImage`     | The Docker image for the Jupyter Notebook.           | `ghcr.io/exalsius/jupyter-notebook:latest-nvidia` |
-| `enablePvcDeletion`   | If `true`, the PersistentVolumeClaim will be deleted when the workspace is destroyed. | `false` |
+| `deploymentImage`     | **Required.** The Docker image for the Jupyter Notebook.           | `ghcr.io/exalsius/jupyter-notebook:latest-nvidia` |
+| `deploymentNumReplicas` | **Required.** Number of deployment replicas. DO NOT CHANGE THIS PARAMETER. | `1` (constant) |
 | `notebookPassword`    | **Required.** The password to access the Jupyter Notebook. | `mysecurepassword`                   |
+| `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB for the pod.    | `50`          |
 
 ### Resource Configuration
 
-| Parameter          | Description                                           | Default Value |
-| ------------------ | ----------------------------------------------------- | ------------- |
-| `cpuCores`         | The number of CPU cores to allocate.                  | `16`          |
-| `memoryGb`         | The amount of memory in GB to allocate.               | `32`          |
-| `storageGb`        | The size of the persistent volume for your workspace. | `50`          |
-| `gpuCount`         | The number of GPUs to allocate.                       | `1`           |
-| `ephemeralStorageGb` | The amount of ephemeral storage in GB for the pod.    | `50`          |
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
+
+| Parameter          | Description                                           | Default Value | Required |
+| ------------------ | ----------------------------------------------------- | ------------- | -------- |
+| `resources.cpuCores`         | The number of CPU cores to allocate.                  | `16`          | Yes |
+| `resources.memoryGb`         | The amount of memory in GB to allocate.               | `32`          | Yes |
+| `resources.gpuCount`         | The number of GPUs to allocate.                       | `1`           | Yes |
+| `resources.storageGb`        | The size of the persistent volume for your workspace. | `50`          | Yes |
+| `resources.gpuVendor`        | GPU vendor configuration. Valid values: `"NVIDIA"` or `"AMD"`. | `"NVIDIA"` | No |
+| `resources.gpuType`          | GPU type/model.                                       | `"L40"`       | No |
+| `resources.gpuMemory`        | GPU memory in gigabytes.                             | `24`          | No |

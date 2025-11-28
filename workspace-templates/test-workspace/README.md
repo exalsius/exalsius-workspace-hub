@@ -24,24 +24,33 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
 
-### Global Configuration (Global helm values)
+### Global Configuration
+
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentName`      | The name of the deployment.                       | `test-workspace`             |
-| `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
+| `global.deploymentName`      | **Required.** The name of the deployment.                       | `test-workspace`             |
+| `global.deploymentNamespace` | **Required.** The Kubernetes namespace for the deployment.      | `default`                    |
 
 ### Deployment Configuration
 
 | Parameter             | Description                                  | Default Value      |
 | --------------------- | -------------------------------------------- | ------------------ |
-| `deploymentImage`     | The Docker image for the container.          | `ubuntu:22.04`     |
+| `deploymentImage`     | **Required.** The Docker image for the container.          | `ubuntu:22.04`     |
+| `deploymentNumReplicas` | **Required.** Number of deployment replicas. DO NOT CHANGE THIS PARAMETER. | `1` (constant) |
+| `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB for the pod. | `10`          |
 
 ### Resource Configuration
 
-| Parameter          | Description                                        | Default Value |
-| ------------------ | -------------------------------------------------- | ------------- |
-| `cpuCores`         | The number of CPU cores to allocate.               | `1`           |
-| `memoryGb`         | The amount of memory in GB to allocate.            | `2`           |
-| `gpuCount`         | The number of GPUs to allocate.                    | `0`           |
-| `ephemeralStorageGb` | The amount of ephemeral storage in GB for the pod. | `10`          |
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
+
+| Parameter          | Description                                        | Default Value | Required |
+| ------------------ | -------------------------------------------------- | ------------- | -------- |
+| `resources.cpuCores`         | The number of CPU cores to allocate.               | `1`           | Yes |
+| `resources.memoryGb`         | The amount of memory in GB to allocate.            | `2`           | Yes |
+| `resources.gpuCount`         | The number of GPUs to allocate.                    | `0`           | Yes |
+| `resources.gpuVendor`        | GPU vendor configuration. Valid values: `"NVIDIA"` or `"AMD"`. | `"NVIDIA"` | No |
+| `resources.gpuType`          | GPU type/model.                                    | `"L40"`       | No |
+| `resources.gpuMemory`        | GPU memory in gigabytes.                          | `24`          | No |
+| `resources.storageGb`        | The size of the persistent volume for your workspace. | `10`          | No |

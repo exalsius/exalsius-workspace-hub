@@ -47,64 +47,39 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
 
-### Global Configuration (Global helm values)
+### Global Configuration
+
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentName`      | The name of the training job.                     | `diloco-training-job`        |
-| `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
+| `global.deploymentName`      | **Required.** The name of the training job.                     | `diloco-training-job`        |
+| `global.deploymentNamespace` | **Required.** The Kubernetes namespace for the deployment.      | `default`                    |
 
 ### General Configuration
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentImage`     | The Docker image for the training job.            | `ghcr.io/exalsius/diloco-training:dev` |
-| `nodes`               | The number of nodes for distributed training.     | `2`                          |
+| `deploymentImage`     | **Required.** The Docker image for the training job.            | `ghcr.io/exalsius/diloco-training:dev` |
+| `deploymentNumReplicas` | **Required.** Number of deployment replicas. DO NOT CHANGE THIS PARAMETER. | `1` (constant) |
+| `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB to allocate.  | `50`         |
+| `elastic`            | **Required.** PyTorch Elastic training configuration with etcd rendezvous. | See PyTorch Elastic Configuration below |
+| `diloco`             | **Required.** DiLoCo Training Environment Variables. | See DiLoCo Training Parameters below |
+| `etcd`               | **Required.** etcd subchart configuration (bitnami/etcd). | See PyTorch Elastic Configuration below |
 
 ### Resource Configuration
 
-| Parameter          | Description                               | Default Value |
-| ------------------ | ----------------------------------------- | ------------- |
-| `cpuCores`         | The number of CPU cores to allocate.      | `16`          |
-| `memoryGb`         | The amount of memory in GB to allocate.   | `32`          |
-| `ephemeralStorageGb` | The amount of storage in GB to allocate.  | `100`         |
-| `gpuCount`         | The number of GPUs to allocate.           | `1`           |
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
 
-### Persistent Storage Configuration
-
-This chart supports per-pod persistent storage using Volcano's native `volumeClaim` feature. When enabled, each worker pod receives its own isolated persistent volume mounted at `/data` with subdirectories for models, datasets, and checkpoints.
-
-| Parameter                  | Description                                                    | Default Value        |
-| -------------------------- | -------------------------------------------------------------- | -------------------- |
-| `storage.enabled`          | Enable persistent storage for each worker pod                  | `true`               |
-| `storage.sizeGb`           | Storage size in GB per worker pod                              | `100`                |
-| `storage.storageClassName` | Kubernetes storage class (empty = cluster default)             | `""`                 |
-| `storage.accessMode`       | Volume access mode (ReadWriteOnce for per-pod isolation)       | `ReadWriteOnce`      |
-| `diloco.modelCacheDir`     | Directory path for HuggingFace model cache                     | `/data/models`       |
-| `diloco.datasetCacheDir`   | Directory path for HuggingFace dataset cache                   | `/data/datasets`     |
-| `diloco.checkpointPath`    | Path for training checkpoints                                  | `/data/checkpoints/checkpoint.pth` |
-
-**Storage Architecture:**
-
-Each worker pod gets its own persistent volume with the following structure:
-
-```
-/data/
-├── models/       (HuggingFace model cache - DILOCO_MODEL_CACHE_DIR)
-├── datasets/     (HuggingFace dataset cache - DILOCO_DATASET_CACHE_DIR)
-└── checkpoints/  (Training checkpoints - DILOCO_CHECKPOINT_PATH)
-```
-
-**Benefits:**
-- **Persistence**: Storage survives pod restarts and rescheduling
-- **Isolation**: Each worker has its own storage (no sharing conflicts)
-- **Performance**: Models and datasets cached locally, reducing download times
-- **Checkpointing**: Training state preserved across failures
-
-**Notes:**
-- Volcano automatically creates PVCs with names like `{job-name}-worker-0-data`, `{job-name}-worker-1-data`, etc.
-- PVCs are not automatically deleted when the job completes (manual cleanup required)
-- To disable persistent storage, set `storage.enabled: false` (cache directories will use container ephemeral storage)
+| Parameter          | Description                               | Default Value | Required |
+| ------------------ | ----------------------------------------- | ------------- | -------- |
+| `resources.cpuCores`         | The number of CPU cores to allocate per worker pod.      | `2`          | Yes |
+| `resources.memoryGb`         | The amount of memory in GB to allocate per worker pod.   | `8`          | Yes |
+| `resources.gpuCount`         | The number of GPUs per node (also determines PyTorch processes per node).           | `1`           | Yes |
+| `resources.gpuVendor`        | GPU vendor configuration. Valid values: `"NVIDIA"` or `"AMD"`. | `"NVIDIA"` | No |
+| `resources.gpuType`          | GPU type/model.                           | `"A100"`       | No |
+| `resources.gpuMemory`        | GPU memory in gigabytes.                 | `80`          | No |
+| `resources.storageGb`       | The size of the persistent volume for your workspace. | `20`          | No |
 
 ### PyTorch Elastic Configuration
 
