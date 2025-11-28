@@ -1,13 +1,8 @@
 # Ray LLM Service Helm Chart Values
-global:
-  deploymentName: "my-llm-service"
-  deploymentNamespace: "default"
-
-# DO NOT CHANGE THIS PARAMETER
-deploymentNumReplicas: 1
-
-# Deployment configuration
 deploymentImage: "rayproject/ray-ml:2.46.0.0e19ea"
+
+# Ephemeral storage configuration
+ephemeralStorageGb: 50
 
 # If you require access to access-restricted models, you can specify a Hugging Face token here.
 # huggingfaceToken: "my-hugging-face-token"
@@ -23,11 +18,22 @@ placementGroupStrategy: "PACK"
 cpuPerActor: 16
 gpuPerActor: 1
 
-# Ephemeral storage configuration
-ephemeralStorageGb: 50
 
-# Resource configuration (this maps to ResourcePool spec in API, but camelcase)
-# the workspace template does not configure pvc storage
-cpuCores: 16
-memoryGb: 32
-gpuCount: 1
+##################################################################
+########## ONLY HERE FOR REFERENCE OR LOCAL TESTING ##############
+########## Values are set automatically by exalsius ##############
+##################################################################
+global:
+  deploymentName: "my-llm-service"
+  deploymentNamespace: "default"
+
+resources:
+  gpuCount: 1
+  gpuVendor: "NVIDIA"
+  gpuType: "L40"
+  gpuMemory: 24
+  cpuCores: 16
+  memoryGb: 32
+  storageGb: 50
+
+deploymentNumReplicas: 1

@@ -1,13 +1,8 @@
 # Test Workspace Helm Chart Values
-global:
-  deploymentName: "diloco-training-job"
-  deploymentNamespace: "default"
-
-# DO NOT CHANGE THIS PARAMETER
-deploymentNumReplicas: 1
-
-# Deployment configuration
 deploymentImage: "ghcr.io/exalsius/diloco-training:dev"
+
+# Ephemeral storage configuration
+ephemeralStorageGb: 50
 
 # PyTorch Elastic training configuration with etcd rendezvous
 elastic:
@@ -21,14 +16,6 @@ elastic:
     externalEndpoint: ""  # e.g., "etcd.infrastructure.svc.cluster.local:2379"
     prefix: "/torchelastic"  # etcd key prefix for job isolation
     protocol: "http"         # "http" or "https"
-
-# Ephemeral storage configuration
-ephemeralStorageGb: 50
-
-# Resource configuration for a single worker pod
-cpuCores: 2
-memoryGb: 8
-gpuCountPerNode: 1  # Number of GPUs per node (also determines PyTorch processes per node)
 
 # DiLoCo Training Environment Variables
 diloco:
@@ -90,3 +77,22 @@ etcd:
   extraEnvVars:
     - name: ETCD_ENABLE_V2
       value: "true"
+
+##################################################################
+########## ONLY HERE FOR REFERENCE OR LOCAL TESTING ##############
+########## Values are set automatically by exalsius ##############
+##################################################################
+global:
+  deploymentName: "diloco-training-job"
+  deploymentNamespace: "default"
+
+resources:
+  gpuCount: 1
+  gpuVendor: "NVIDIA"
+  gpuType: "A100"
+  gpuMemory: 80
+  cpuCores: 2
+  memoryGb: 8
+  storageGb: 20
+
+deploymentNumReplicas: 1

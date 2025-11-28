@@ -1,20 +1,12 @@
 # VSCode DevContainer Helm Chart Values
-global:
-  deploymentName: "devcontainer"
-  deploymentNamespace: "default"
-
-# DO NOT CHANGE THIS PARAMETER
-deploymentNumReplicas: 1
-
 # Deployment configuration
 # Optional: If not provided, image will be auto-selected based on gpuVendor
 # NVIDIA -> ghcr.io/exalsius/devpod:nvidia-pytorch-latest
 # AMD -> ghcr.io/exalsius/devpod:rocm-pytorch-latest
 deploymentImage: ""
 
-# GPU vendor configuration - valid values: "NVIDIA" or "AMD"
-# Used for automatic image selection and GPU resource allocation
-gpuVendor: "NVIDIA"
+# Ephemeral storage configuration
+ephemeralStorageGb: 50
 
 # SSH configuration
 # Password authentication (optional)
@@ -26,8 +18,21 @@ sshPublicKey: ""
 # Shared memory storage configuration
 shmSizeGb: 8
 
-# Resource configuration (this maps to ResourcePool spec in API, but camelcase)
-cpuCores: 2
-memoryGb: 4
-storageGb: 50
-gpuCount: 1
+##################################################################
+########## ONLY HERE FOR REFERENCE OR LOCAL TESTING ##############
+########## Values are set automatically by exalsius ##############
+##################################################################
+global:
+  deploymentName: "devcontainer"
+  deploymentNamespace: "default"
+
+resources:
+  gpuCount: 1
+  gpuVendor: "NVIDIA"
+  gpuType: "L40"
+  gpuMemory: 24
+  cpuCores: 2
+  memoryGb: 4
+  storageGb: 50
+  
+deploymentNumReplicas: 1

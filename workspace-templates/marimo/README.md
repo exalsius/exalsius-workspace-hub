@@ -36,27 +36,34 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
 
-### Global Configuration (Global helm values)
+### Global Configuration
+
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentName`      | The name of the deployment.                       | `my-marimo`                  |
-| `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
+| `global.deploymentName`      | **Required.** The name of the deployment.                       | `my-marimo`                  |
+| `global.deploymentNamespace` | **Required.** The Kubernetes namespace for the deployment.      | `default`                    |
 
 ### Deployment Configuration
 
 | Parameter             | Description                                                                           | Default Value                    |
 | --------------------- | ------------------------------------------------------------------------------------- | -------------------------------- |
-| `deploymentImage`     | The Docker image for the Marimo notebook.                                             | `ghcr.io/marimo-team/marimo:latest-data` |
-| `enablePvcDeletion`   | If `true`, the PersistentVolumeClaim will be deleted when the workspace is destroyed. | `false`                          |
+| `deploymentImage`     | **Required.** The Docker image for the Marimo notebook.                                             | `ghcr.io/exalsius/marimo:latest-nvidia` |
+| `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
 | `tokenPassword`    | **Required.** The password to access the Marimo webinterface. | `mysecurepassword`                   |
+| `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB for the pod.    | `50`          |
 
 ### Resource Configuration
 
-| Parameter            | Description                                           | Default Value |
-| -------------------- | ----------------------------------------------------- | ------------- |
-| `cpuCores`           | The number of CPU cores to allocate.                  | `8`           |
-| `memoryGb`           | The amount of memory in GB to allocate.               | `16`          |
-| `storageGb`          | The size of the persistent volume for your workspace. | `20`          |
-| `gpuCount`           | The number of GPUs to allocate.                       | `0`           |
-| `ephemeralStorageGb` | The amount of ephemeral storage in GB for the pod.    | `20`          |
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
+
+| Parameter            | Description                                           | Default Value | Required |
+| -------------------- | ----------------------------------------------------- | ------------- | -------- |
+| `resources.cpuCores`           | The number of CPU cores to allocate.                  | `16`           | Yes |
+| `resources.memoryGb`           | The amount of memory in GB to allocate.               | `32`          | Yes |
+| `resources.gpuCount`           | The number of GPUs to allocate.                       | `1`           | Yes |
+| `resources.gpuVendor`          | GPU vendor configuration. Valid values: `"NVIDIA"` or `"AMD"`. | `"NVIDIA"` | Yes |
+| `resources.storageGb`          | The size of the persistent volume for your workspace. | `50`          | Yes |
+| `resources.gpuType`            | GPU type/model.                                       | `"L40"`       | No |
+| `resources.gpuMemory`          | GPU memory in gigabytes.                             | `24`          | No |

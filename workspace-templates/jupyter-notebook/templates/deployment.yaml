@@ -18,7 +18,7 @@ spec:
     spec:
       securityContext:
         fsGroup: 0
-{{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) }}
+{{- if and .Values.resources.gpuCount (gt (int .Values.resources.gpuCount) 0) }}
       runtimeClassName: nvidia
 {{- end }}
       containers:
@@ -32,14 +32,14 @@ spec:
               subPath: jupyter_server_config.py
           resources:
             requests:
-              cpu: {{ .Values.cpuCores }}
-              memory: {{ .Values.memoryGb }}Gi
-              nvidia.com/gpu: {{ .Values.gpuCount }}
+              cpu: {{ .Values.resources.cpuCores }}
+              memory: {{ .Values.resources.memoryGb }}Gi
+              nvidia.com/gpu: {{ .Values.resources.gpuCount }}
               ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
             limits:
-              cpu: {{ .Values.cpuCores }}
-              memory: {{ .Values.memoryGb }}Gi
-              nvidia.com/gpu: {{ .Values.gpuCount }}
+              cpu: {{ .Values.resources.cpuCores }}
+              memory: {{ .Values.resources.memoryGb }}Gi
+              nvidia.com/gpu: {{ .Values.resources.gpuCount }}
               ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
           ports:
             - containerPort: 8888

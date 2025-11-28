@@ -65,9 +65,9 @@ If deploymentImage is provided, use it. Otherwise, auto-select based on gpuVendo
 {{- define "vscode-devcontainer.image" -}}
 {{- if .Values.deploymentImage -}}
 {{- .Values.deploymentImage -}}
-{{- else if eq (lower .Values.gpuVendor) "nvidia" -}}
+{{- else if eq (lower .Values.resources.gpuVendor) "nvidia" -}}
 ghcr.io/exalsius/devpod:latest-nvidia-pytorch
-{{- else if eq (lower .Values.gpuVendor) "amd" -}}
+{{- else if eq (lower .Values.resources.gpuVendor) "amd" -}}
 ghcr.io/exalsius/devpod:latest-rocm-pytorch
 {{- else -}}
 ghcr.io/exalsius/devpod:latest-nvidia-pytorch
