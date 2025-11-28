@@ -127,13 +127,13 @@ spec:
               name: worker
               resources:
                 requests:
-                  cpu: {{ .Values.cpuCores }}
-                  memory: {{ .Values.memoryGb }}Gi
+                  cpu: {{ .Values.resources.cpuCores }}
+                  memory: {{ .Values.resources.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.resources.gpuCount }}
                   ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
                 limits:
-                  cpu: {{ .Values.cpuCores }}
-                  memory: {{ .Values.memoryGb }}Gi
+                  cpu: {{ .Values.resources.cpuCores }}
+                  memory: {{ .Values.resources.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.resources.gpuCount }}
                   ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
               workingDir: /app

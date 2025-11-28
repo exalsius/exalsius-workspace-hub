@@ -18,7 +18,7 @@ spec:
     spec:
       securityContext:
         fsGroup: 0
-{{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) (eq (lower .Values.gpuVendor) "nvidia") }}
+{{- if and .Values.resources.gpuCount (gt (int .Values.resources.gpuCount) 0) (eq (lower .Values.resources.gpuVendor) "nvidia") }}
       runtimeClassName: nvidia
 {{- end }}
       containers:
@@ -48,23 +48,23 @@ spec:
 {{- end }}
           resources:
             requests:
-              cpu: {{ .Values.cpuCores }}
-              memory: {{ .Values.memoryGb }}Gi
-{{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) }}
-{{- if eq (lower .Values.gpuVendor) "nvidia" }}
-              nvidia.com/gpu: {{ .Values.gpuCount }}
-{{- else if eq (lower .Values.gpuVendor) "amd" }}
-              amd.com/gpu: {{ .Values.gpuCount }}
+              cpu: {{ .Values.resources.cpuCores }}
+              memory: {{ .Values.resources.memoryGb }}Gi
+{{- if and .Values.resources.gpuCount (gt (int .Values.resources.gpuCount) 0) }}
+{{- if eq (lower .Values.resources.gpuVendor) "nvidia" }}
+              nvidia.com/gpu: {{ .Values.resources.gpuCount }}
+{{- else if eq (lower .Values.resources.gpuVendor) "amd" }}
+              amd.com/gpu: {{ .Values.resources.gpuCount }}
 {{- end }}
 {{- end }}
             limits:
-              cpu: {{ .Values.cpuCores }}
-              memory: {{ .Values.memoryGb }}Gi
-{{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) }}
-{{- if eq (lower .Values.gpuVendor) "nvidia" }}
-              nvidia.com/gpu: {{ .Values.gpuCount }}
-{{- else if eq (lower .Values.gpuVendor) "amd" }}
-              amd.com/gpu: {{ .Values.gpuCount }}
+              cpu: {{ .Values.resources.cpuCores }}
+              memory: {{ .Values.resources.memoryGb }}Gi
+{{- if and .Values.resources.gpuCount (gt (int .Values.resources.gpuCount) 0) }}
+{{- if eq (lower .Values.resources.gpuVendor) "nvidia" }}
+              nvidia.com/gpu: {{ .Values.resources.gpuCount }}
+{{- else if eq (lower .Values.resources.gpuVendor) "amd" }}
+              amd.com/gpu: {{ .Values.resources.gpuCount }}
 {{- end }}
 {{- end }}
       volumes:

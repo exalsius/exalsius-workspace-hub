@@ -40,7 +40,7 @@ spec:
             ray.name: {{ include "ray-llm-service.deploymentName" . }}
             workspace.exalsius.ai/database-id: {{ .Release.Name }}
         spec:
-{{- if and .Values.gpuCount (gt (int .Values.gpuCount) 0) }}
+{{- if and .Values.resources.gpuCount (gt (int .Values.resources.gpuCount) 0) }}
           runtimeClassName: nvidia
 {{- end }}
           containers:
@@ -71,15 +71,15 @@ spec:
 {{- end }}
               resources:
                 limits:
-                  cpu: {{ .Values.cpuCores }}
-                  memory: {{ .Values.memoryGb }}Gi
-                  nvidia.com/gpu: {{ .Values.gpuCount }}
-                  ephemeral-storage: {{ .Values.podEphemeralStorageGb }}Gi
+                  cpu: {{ .Values.resources.cpuCores }}
+                  memory: {{ .Values.resources.memoryGb }}Gi
+                  nvidia.com/gpu: {{ .Values.resources.gpuCount }}
+                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
                 requests:
-                  cpu: {{ .Values.cpuCores }}
-                  memory: {{ .Values.memoryGb }}Gi
-                  nvidia.com/gpu: {{ .Values.gpuCount }}
-                  ephemeral-storage: {{ .Values.podEphemeralStorageGb }}Gi
+                  cpu: {{ .Values.resources.cpuCores }}
+                  memory: {{ .Values.resources.memoryGb }}Gi
+                  nvidia.com/gpu: {{ .Values.resources.gpuCount }}
+                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
               volumeMounts:
               - mountPath: /tmp/files
                 name: ray-head-files

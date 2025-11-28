@@ -41,8 +41,8 @@ spec:
               mountPath: /data
           resources:
             requests:
-              cpu: {{ .Values.cpuCores }}
-              memory: {{ .Values.memoryGb }}Gi
+              cpu: {{ .Values.resources.cpuCores }}
+              memory: {{ .Values.resources.memoryGb }}Gi
 {{- if eq (lower .Values.resources.gpuVendor) "nvidia" }}
               nvidia.com/gpu: {{ .Values.resources.gpuCount }}
 {{- else if eq (lower .Values.resources.gpuVendor) "amd" }}
@@ -50,8 +50,8 @@ spec:
 {{- end }}
               ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
             limits:
-              cpu: {{ .Values.cpuCores }}
-              memory: {{ .Values.memoryGb }}Gi
+              cpu: {{ .Values.resources.cpuCores }}
+              memory: {{ .Values.resources.memoryGb }}Gi
 {{- if eq (lower .Values.resources.gpuVendor) "nvidia" }}
               nvidia.com/gpu: {{ .Values.resources.gpuCount }}
 {{- else if eq (lower .Values.resources.gpuVendor) "amd" }}
