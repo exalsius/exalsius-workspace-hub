@@ -36,6 +36,18 @@ spec:
                   # Ensure output is not buffered
                   export PYTHONUNBUFFERED=1
                   
+                  # NCCL configuration for high-latency environments
+                  export NCCL_DEBUG={{ .Values.elastic.nccl.debug | default "WARN" }}
+                  export NCCL_ASYNC_ERROR_HANDLING={{ .Values.elastic.nccl.asyncErrorHandling | default 1 }}
+                  export NCCL_TIMEOUT={{ .Values.elastic.nccl.timeout | default 600 }}
+                  export NCCL_IB_TIMEOUT={{ .Values.elastic.nccl.ibTimeout | default 22 }}
+                  export NCCL_NSOCKS_PERTHREAD={{ .Values.elastic.nccl.nsocksPerThread | default 8 }}
+                  export NCCL_SOCKET_NTHREADS={{ .Values.elastic.nccl.socketNthreads | default 4 }}
+                  {{- if .Values.elastic.nccl.socketIfname }}
+                  export NCCL_SOCKET_IFNAME={{ .Values.elastic.nccl.socketIfname }}
+                  {{- end }}
+                  echo "NCCL configured for high-latency environment (DEBUG=${NCCL_DEBUG})" >&2
+                  
                   echo "Starting PyTorch Elastic training..." >&2
                   echo "POD_NAME: ${POD_NAME}" >&2
                   
@@ -57,6 +69,23 @@ spec:
                   ETCD_HOST="{{ include "diloco-training.etcdEndpoint" . }}"
                   ETCD_ENDPOINT="${ETCD_HOST}"
                   echo "Using embedded etcd: ${ETCD_ENDPOINT}" >&2
+
+
+                  #  ucc stuff
+                  #export TORCH_CUDA_ARCH_LIST="Turing"
+                  #export USE_MPI=1
+                  #export BUILD_TEST=0
+                  #export BUILD_TEST_LIBTORCH=0
+                  export USE_UCC=ON
+                  export USE_SYSTEM_UCC=ON
+                  export USE_DISTRIBUTED=ON
+                  export USE_C10D_UCC=ON
+                  #export USE_C10D_MPI=ON
+                  #export TORCH_BLAS_PREFER_CUBLASLT=0
+                  export USE_ROCM=OFF
+                  export USE_CUDA=ON
+                  export USE_MKLDNN=OFF
+
                   
                   # Wait for etcd to be ready
                   echo "Waiting for etcd to be ready..." >&2
@@ -106,7 +135,7 @@ spec:
                     --node_rank=${NODE_RANK} \
                     --rdzv_backend=etcd \
                     --rdzv_endpoint=${RDZV_ENDPOINT} \
-                    --rdzv-conf=protocol={{ .Values.elastic.etcd.protocol | default "http" }},prefix={{ .Values.elastic.etcd.prefix | default "/torchelastic" }}/{{ include "diloco-training.jobName" . }} \
+                    --rdzv-conf=timeout={{ .Values.elastic.rdzvTimeout | default 600 }},protocol={{ .Values.elastic.etcd.protocol | default "http" }},prefix={{ .Values.elastic.etcd.prefix | default "/torchelastic" }}/{{ include "diloco-training.jobName" . }} \
                     /app/diloco_training/training/start_training.py
               env:
                 - name: POD_NAME
@@ -166,6 +195,18 @@ spec:
                   # Ensure output is not buffered
                   export PYTHONUNBUFFERED=1
                   
+                  # NCCL configuration for high-latency environments
+                  export NCCL_DEBUG={{ .Values.elastic.nccl.debug | default "WARN" }}
+                  export NCCL_ASYNC_ERROR_HANDLING={{ .Values.elastic.nccl.asyncErrorHandling | default 1 }}
+                  export NCCL_TIMEOUT={{ .Values.elastic.nccl.timeout | default 600 }}
+                  export NCCL_IB_TIMEOUT={{ .Values.elastic.nccl.ibTimeout | default 22 }}
+                  export NCCL_NSOCKS_PERTHREAD={{ .Values.elastic.nccl.nsocksPerThread | default 8 }}
+                  export NCCL_SOCKET_NTHREADS={{ .Values.elastic.nccl.socketNthreads | default 4 }}
+                  {{- if .Values.elastic.nccl.socketIfname }}
+                  export NCCL_SOCKET_IFNAME={{ .Values.elastic.nccl.socketIfname }}
+                  {{- end }}
+                  echo "NCCL configured for high-latency environment (DEBUG=${NCCL_DEBUG})" >&2
+                  
                   echo "Starting PyTorch Elastic training..." >&2
                   echo "POD_NAME: ${POD_NAME}" >&2
                   
@@ -187,6 +228,21 @@ spec:
                   ETCD_HOST="{{ include "diloco-training.etcdEndpoint" . }}"
                   ETCD_ENDPOINT="${ETCD_HOST}"
                   echo "Using embedded etcd: ${ETCD_ENDPOINT}" >&2
+
+                  #  ucc stuff
+                  #export TORCH_CUDA_ARCH_LIST="Turing"
+                  #export USE_MPI=1
+                  #export BUILD_TEST=0
+                  #export BUILD_TEST_LIBTORCH=0
+                  export USE_UCC=ON
+                  export USE_SYSTEM_UCC=ON
+                  export USE_DISTRIBUTED=ON
+                  export USE_C10D_UCC=ON
+                  #export USE_C10D_MPI=ON
+                  #export TORCH_BLAS_PREFER_CUBLASLT=0
+                  export USE_ROCM=ON
+                  export USE_CUDA=OFF
+                  export USE_MKLDNN=OFF
                   
                   # Wait for etcd to be ready
                   echo "Waiting for etcd to be ready..." >&2
@@ -236,7 +292,7 @@ spec:
                     --node_rank=${NODE_RANK} \
                     --rdzv_backend=etcd \
                     --rdzv_endpoint=${RDZV_ENDPOINT} \
-                    --rdzv-conf=protocol={{ .Values.elastic.etcd.protocol | default "http" }},prefix={{ .Values.elastic.etcd.prefix | default "/torchelastic" }}/{{ include "diloco-training.jobName" . }} \
+                    --rdzv-conf=timeout={{ .Values.elastic.rdzvTimeout | default 600 }},protocol={{ .Values.elastic.etcd.protocol | default "http" }},prefix={{ .Values.elastic.etcd.prefix | default "/torchelastic" }}/{{ include "diloco-training.jobName" . }} \
                     /app/diloco_training/training/start_training.py
               env:
                 - name: POD_NAME

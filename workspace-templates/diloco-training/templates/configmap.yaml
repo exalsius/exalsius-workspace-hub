@@ -107,3 +107,6 @@ data:
 {{- if .Values.diloco.trainedModelHfName }}
   DILOCO_TRAINED_MODEL_HF_NAME: {{ .Values.diloco.trainedModelHfName | quote }}
 {{- end }}
+{{- if .Values.diloco.pgroupBackend }}
+  DILOCO_PGROUP_BACKEND: {{ .Values.diloco.pgroupBackend | quote }}
+{{- end }}

@@ -11,10 +11,22 @@ elastic:
   minNodes: 2  # Minimum number of nodes for elastic training
   maxNodes: 3  # Maximum number of nodes for elastic training
   maxRestarts: 5  # Maximum restarts for elastic training
+  rdzvTimeout: 600  # Timeout for rendezvous in seconds (optimized for high latency)
   
   # GPU distribution policy (used when gpu.*.minNodes/maxNodes are null)
   # Options: "auto" (split evenly), "prefer-nvidia" (NVIDIA first, AMD fallback), "prefer-amd" (AMD first, NVIDIA fallback)
   gpuDistribution: "auto"
+  
+  # NCCL/RCCL configuration for high-latency environments
+  nccl:
+    debug: "INFO"  # Options: WARN, INFO, TRACE (INFO recommended for troubleshooting)
+    asyncErrorHandling: 1  # Enable async error handling for better fault tolerance
+    timeout: 1800  # NCCL operation timeout in seconds (default 1800)
+    ibTimeout: 22  # InfiniBand timeout (default 14, increase for high latency)
+    nsocksPerThread: 8  # Number of sockets per thread (default 4, increase for high latency)
+    socketNthreads: 4  # Number of threads per socket (default 1, increase for better utilization)
+    # Optional: Uncomment to specify network interface
+    # socketIfname: "eth0"  # Network interface to use (e.g., eth0, ib0)
   
   # etcd rendezvous backend configuration
   etcd:
@@ -35,7 +47,8 @@ gpu:
     runtimeClassName: "nvidia"
   amd:
     enabled: true
-    image: "ghcr.io/exalsius/diloco-training:rocm-dev"
+    #image: "ghcr.io/exalsius/diloco-training:rocm-dev"
+    image: "srnbckr/diloco-training:rocm"
     minNodes: null  # null means: calculate from elastic.minNodes + gpuDistribution
     maxNodes: null  # null means: calculate from elastic.maxNodes + gpuDistribution
     runtimeClassName: ""  # Empty for default runtime
@@ -65,8 +78,8 @@ diloco:
   checkpointPath: "checkpoint.pth"
   checkpointInterval: "512"
   device: "cuda"
-  wandbProjectName: "diloco-training"
-  wandbGroup: "diloco-gptneo-c4-elastic"
+  wandbProjectName: "diloco-heterogenous"
+  wandbGroup: "diloco-heterogenous-test"
   wandbRunId: "gpt-4e-4"
   heterogeneous: "true"
   minBatchSize: "32"
@@ -78,13 +91,15 @@ diloco:
   experimentTags: "[\"diloco\", \"gpt-neo-x\", \"c4\"]"
   seed: "42"
   wandbLogging: "true"
-  wandbUserKey: "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
-  huggingfaceToken: "XXXXXXXXXXXXXXXXXXXXXXXX"
+  wandbUserKey: "xxxxx"
+  huggingfaceToken: "xxxxxxxx"
   compileModel: "false"
   compileBackend: "inductor"
   compileMode: "default"
   hfUpload: "false"
   trainedModelHfName: ""
+  pgroupBackend: "ucc"
+  
 
 # etcd subchart configuration (bitnami/etcd)
 # Set enabled: false to use an external etcd cluster (configure elastic.etcd.externalEndpoint)
@@ -108,3 +123,15 @@ etcd:
   extraEnvVars:
     - name: ETCD_ENABLE_V2
       value: "true"
+    # High-latency network optimization
+    - name: ETCD_HEARTBEAT_INTERVAL
+      value: "500"  # 500ms (default 100ms) - match network RTT
+    - name: ETCD_ELECTION_TIMEOUT
+      value: "5000"  # 5000ms (default 1000ms) - 10x heartbeat for stability
+    # Increase snapshot and compaction intervals for stability
+    - name: ETCD_SNAPSHOT_COUNT
+      value: "100000"  # More operations before snapshot (default 10000)
+    - name: ETCD_AUTO_COMPACTION_RETENTION
+      value: "1"  # Keep 1 hour of history
+    - name: ETCD_AUTO_COMPACTION_MODE
+      value: "periodic"
