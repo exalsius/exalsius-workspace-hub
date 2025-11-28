@@ -34,7 +34,7 @@
       "description": "Resource configuration",
       "properties": {
         "gpuCount": {
-          "type": "number",
+          "type": "integer",
           "description": "Number of GPUs to allocate",
           "minimum": 0
         },
@@ -49,22 +49,22 @@
           "minLength": 1
         },
         "gpuMemory": {
-          "type": "number",
+          "type": "integer",
           "description": "GPU memory in gigabytes",
           "minimum": 0
         },
         "cpuCores": {
-          "type": "number",
+          "type": "integer",
           "description": "Number of CPU cores to allocate",
-          "minimum": 0.1
+          "minimum": 1
         },
         "memoryGb": {
-          "type": "number",
+          "type": "integer",
           "description": "Memory allocation in gigabytes",
-          "minimum": 0.1
+          "minimum": 1
         },
         "storageGb": {
-          "type": "number",
+          "type": "integer",
           "description": "Persistent storage size in gigabytes",
           "minimum": 1
         }
@@ -87,7 +87,7 @@
       "minLength": 1
     },
     "ephemeralStorageGb": {
-      "type": "number",
+      "type": "integer",
       "description": "Ephemeral storage size in gigabytes",
       "minimum": 1,
       "default": 50
@@ -98,7 +98,7 @@
       "default": ""
     },
     "numModelReplicas": {
-      "type": "number",
+      "type": "integer",
       "description": "Number of model replicas",
       "minimum": 1,
       "default": 1
@@ -116,13 +116,13 @@
       "minLength": 1
     },
     "tensorParallelSize": {
-      "type": "number",
+      "type": "integer",
       "description": "Tensor parallel size for model parallelism",
       "minimum": 1,
       "default": 1
     },
     "pipelineParallelSize": {
-      "type": "number",
+      "type": "integer",
       "description": "Pipeline parallel size for model parallelism",
       "minimum": 1,
       "default": 1
@@ -134,13 +134,13 @@
       "minLength": 1
     },
     "cpuPerActor": {
-      "type": "number",
+      "type": "integer",
       "description": "Number of CPUs per actor",
       "minimum": 1,
       "default": 16
     },
     "gpuPerActor": {
-      "type": "number",
+      "type": "integer",
       "description": "Number of GPUs per actor",
       "minimum": 1,
       "default": 1

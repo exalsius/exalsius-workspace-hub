@@ -34,7 +34,7 @@
       "description": "Resource configuration",
       "properties": {
         "gpuCount": {
-          "type": "number",
+          "type": "integer",
           "description": "Number of GPUs to allocate",
           "minimum": 0
         },
@@ -49,22 +49,22 @@
           "minLength": 1
         },
         "gpuMemory": {
-          "type": "number",
+          "type": "integer",
           "description": "GPU memory in gigabytes",
           "minimum": 0
         },
         "cpuCores": {
-          "type": "number",
+          "type": "integer",
           "description": "Number of CPU cores to allocate",
-          "minimum": 0.1
+          "minimum": 1
         },
         "memoryGb": {
-          "type": "number",
+          "type": "integer",
           "description": "Memory allocation in gigabytes",
-          "minimum": 0.1
+          "minimum": 1
         },
         "storageGb": {
-          "type": "number",
+          "type": "integer",
           "description": "Persistent storage size in gigabytes",
           "minimum": 1
         }
@@ -87,7 +87,7 @@
       "minLength": 1
     },
     "ephemeralStorageGb": {
-      "type": "number",
+      "type": "integer",
       "description": "Ephemeral storage size in gigabytes",
       "minimum": 1,
       "default": 10
