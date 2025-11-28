@@ -5,9 +5,8 @@
 # AMD -> ghcr.io/exalsius/devpod:rocm-pytorch-latest
 deploymentImage: ""
 
-# GPU vendor configuration - valid values: "NVIDIA" or "AMD"
-# Used for automatic image selection and GPU resource allocation
-gpuVendor: "NVIDIA"
+# Ephemeral storage configuration
+ephemeralStorageGb: 50
 
 # SSH configuration
 # Password authentication (optional)
@@ -28,10 +27,12 @@ global:
   deploymentNamespace: "default"
 
 resources:
-  # Resource configuration
+  gpuCount: 1
+  gpuVendor: "NVIDIA"
+  gpuType: "L40"
+  gpuMemory: 24
   cpuCores: 2
   memoryGb: 4
   storageGb: 50
-  gpuCount: 1
   
 deploymentNumReplicas: 1

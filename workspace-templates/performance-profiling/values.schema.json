@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Marimo Helm Chart Values",
-  "description": "Schema for validating marimo Helm chart values",
+  "title": "Performance Profiling Workspace Helm Chart Values",
+  "description": "Schema for validating performance-profiling Helm chart values",
   "type": "object",
   "$defs": {
     "global": {
@@ -82,21 +82,40 @@
     },
     "deploymentImage": {
       "type": "string",
-      "description": "Container image for the marimo deployment",
-      "default": "ghcr.io/exalsius/marimo:latest-nvidia",
+      "description": "Container image for the performance profiling job",
+      "default": "ghcr.io/exalsius/exalsius-performance-modeling:dev",
       "minLength": 1
     },
     "ephemeralStorageGb": {
       "type": "number",
       "description": "Ephemeral storage size in gigabytes",
       "minimum": 1,
-      "default": 50
+      "default": 100
     },
-    "tokenPassword": {
-      "type": "string",
-      "description": "Password for marimo token authentication",
-      "default": "mysecurepassword",
-      "minLength": 1
+    "nodes": {
+      "type": "number",
+      "description": "Number of nodes for distributed training",
+      "minimum": 1,
+      "default": 1
+    },
+    "extraEnvironmentVariables": {
+      "type": "array",
+      "description": "Additional environment variables for the job",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "value"],
+        "additionalProperties": false
+      },
+      "default": []
     },
     "resources": {
       "$ref": "#/$defs/resources"
@@ -107,7 +126,8 @@
     "deploymentNumReplicas",
     "deploymentImage",
     "ephemeralStorageGb",
-    "tokenPassword",
+    "nodes",
+    "extraEnvironmentVariables",
     "resources"
   ],
   "additionalProperties": false

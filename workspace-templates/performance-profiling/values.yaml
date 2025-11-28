@@ -1,6 +1,9 @@
 # Performance Profiling Workspace Helm Chart Values
 deploymentImage: ghcr.io/exalsius/exalsius-performance-modeling:dev
 
+# Ephemeral storage configuration
+ephemeralStorageGb: 100
+
 # Job configuration
 nodes: 1  # Number of nodes for distributed training
 
@@ -29,12 +32,12 @@ global:
   deploymentNamespace: "default"
 
 resources:
-  # Ephemeral storage configuration
-  ephemeralStorageGb: 100
-  # Resource configuration
-  # the job template does not configure pvc storage
+  gpuCount: 1
+  gpuVendor: "NVIDIA"
+  gpuType: "L40"
+  gpuMemory: 24
   cpuCores: 16
   memoryGb: 32
-  gpuCount: 1
+  storageGb: 50
 
 deploymentNumReplicas: 1

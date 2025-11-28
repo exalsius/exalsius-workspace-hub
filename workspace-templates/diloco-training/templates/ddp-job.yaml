@@ -99,7 +99,7 @@ spec:
                   echo "Launching torchrun with etcd rendezvous..." >&2
                   exec ${TORCHRUN_CMD} \
                     --nnodes={{ .Values.elastic.minNodes }}:{{ .Values.elastic.maxNodes }} \
-                    --nproc_per_node={{ .Values.gpuCountPerNode }} \
+                    --nproc_per_node={{ .Values.resources.gpuCount }} \
                     --max-restarts={{ .Values.elastic.maxRestarts | default 3 }} \
                     --node_rank=${NODE_RANK} \
                     --rdzv_backend=etcd \
@@ -129,12 +129,12 @@ spec:
                 requests:
                   cpu: {{ .Values.cpuCores }}
                   memory: {{ .Values.memoryGb }}Gi
-                  nvidia.com/gpu: {{ .Values.gpuCountPerNode }}
+                  nvidia.com/gpu: {{ .Values.resources.gpuCount }}
                   ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
                 limits:
                   cpu: {{ .Values.cpuCores }}
                   memory: {{ .Values.memoryGb }}Gi
-                  nvidia.com/gpu: {{ .Values.gpuCountPerNode }}
+                  nvidia.com/gpu: {{ .Values.resources.gpuCount }}
                   ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
               workingDir: /app
           restartPolicy: OnFailure

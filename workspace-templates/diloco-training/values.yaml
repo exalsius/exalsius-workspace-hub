@@ -1,6 +1,9 @@
 # Test Workspace Helm Chart Values
 deploymentImage: "ghcr.io/exalsius/diloco-training:dev"
 
+# Ephemeral storage configuration
+ephemeralStorageGb: 50
+
 # PyTorch Elastic training configuration with etcd rendezvous
 elastic:
   minNodes: 2  # Minimum number of nodes for elastic training
@@ -84,11 +87,12 @@ global:
   deploymentNamespace: "default"
 
 resources:
-  # Ephemeral storage configuration
-  ephemeralStorageGb: 50
-  # Resource configuration for a single worker pod
+  gpuCount: 1
+  gpuVendor: "NVIDIA"
+  gpuType: "A100"
+  gpuMemory: 80
   cpuCores: 2
   memoryGb: 8
-  gpuCountPerNode: 1  # Number of GPUs per node (also determines PyTorch processes per node)
+  storageGb: 20
 
 deploymentNumReplicas: 1

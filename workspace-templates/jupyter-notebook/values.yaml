@@ -1,6 +1,9 @@
 # Jupyter Notebook Helm Chart Values
 deploymentImage: "ghcr.io/exalsius/jupyter-notebook:latest-nvidia"
 
+# Ephemeral storage configuration
+ephemeralStorageGb: 50
+
 # Jupyter Notebook configuration
 notebookPassword: "mysecurepassword"
 
@@ -13,11 +16,12 @@ global:
   deploymentNamespace: "default"
 
 resources:
-  # Ephemeral storage configuration
-  ephemeralStorageGb: 50
+  gpuCount: 1
+  gpuVendor: "NVIDIA"
+  gpuType: "L40"
+  gpuMemory: 24
   cpuCores: 16
   memoryGb: 32
   storageGb: 50
-  gpuCount: 1
 
 deploymentNumReplicas: 1

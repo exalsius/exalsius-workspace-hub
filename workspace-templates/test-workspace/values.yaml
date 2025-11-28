@@ -1,6 +1,9 @@
 # Test Workspace Helm Chart Values
 deploymentImage: "ubuntu:22.04"
 
+# Ephemeral storage configuration
+ephemeralStorageGb: 10
+
 ##################################################################
 ########## ONLY HERE FOR REFERENCE OR LOCAL TESTING ##############
 ########## Values are set automatically by exalsius ##############
@@ -10,11 +13,12 @@ global:
   deploymentNamespace: "default"
 
 resources:
-  # Ephemeral storage configuration
-  ephemeralStorageGb: 10
-  # Resource configuration
+  gpuCount: 0
+  gpuVendor: "NVIDIA"
+  gpuType: "L40"
+  gpuMemory: 24
   cpuCores: 1
   memoryGb: 2
-  gpuCount: 0
+  storageGb: 10
 
 deploymentNumReplicas: 1
