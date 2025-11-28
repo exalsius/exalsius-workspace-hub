@@ -47,7 +47,7 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
 | `deploymentImage`     | **Required.** The Docker image for the profiling job.           | `ghcr.io/exalsius/exalsius-performance-modeling:dev` |
-| `deploymentNumReplicas` | **Required.** Number of deployment replicas. DO NOT CHANGE THIS PARAMETER. | `1` (constant) |
+| `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
 | `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB to allocate. | `100`         |
 | `nodes`               | **Required.** The number of nodes for distributed profiling.    | `1`                          |
 | `extraEnvironmentVariables` | **Required.** Additional environment variables for the job. | `[]` |

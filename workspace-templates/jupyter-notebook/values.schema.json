@@ -25,7 +25,7 @@
     },
     "deploymentNumReplicas": {
       "type": "integer",
-      "description": "Number of deployment replicas. DO NOT CHANGE THIS PARAMETER",
+      "description": "Number of deployment replicas.",
       "const": 1,
       "default": 1
     },

@@ -50,7 +50,7 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | Parameter             | Description                                                                           | Default Value                    |
 | --------------------- | ------------------------------------------------------------------------------------- | -------------------------------- |
 | `deploymentImage`     | **Required.** The Docker image for the Marimo notebook.                                             | `ghcr.io/exalsius/marimo:latest-nvidia` |
-| `deploymentNumReplicas` | **Required.** Number of deployment replicas. DO NOT CHANGE THIS PARAMETER. | `1` (constant) |
+| `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
 | `tokenPassword`    | **Required.** The password to access the Marimo webinterface. | `mysecurepassword`                   |
 | `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB for the pod.    | `50`          |
 

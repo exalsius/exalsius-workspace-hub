@@ -54,7 +54,7 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | Parameter             | Description                                                            | Default Value                   |
 | --------------------- | ---------------------------------------------------------------------- | ------------------------------- |
 | `deploymentImage`     | **Required.** The Docker image for the Ray service.                                  | `rayproject/ray-ml:2.46.0.0e19ea` |
-| `deploymentNumReplicas` | **Required.** Number of deployment replicas. DO NOT CHANGE THIS PARAMETER. | `1` (constant) |
+| `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
 | `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB for the pod. | `50`          |
 | `huggingfaceToken`    | **Optional.** Your Hugging Face token for accessing private models.    | `""`                            |
 
