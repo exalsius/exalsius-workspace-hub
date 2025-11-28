@@ -1,18 +1,20 @@
 # Test Workspace Helm Chart Values
+deploymentImage: "ubuntu:22.04"
+
+##################################################################
+########## ONLY HERE FOR REFERENCE OR LOCAL TESTING ##############
+########## Values are set automatically by exalsius ##############
+##################################################################
 global:
   deploymentName: "test-workspace"
   deploymentNamespace: "default"
 
-# DO NOT CHANGE THIS PARAMETER
+resources:
+  # Ephemeral storage configuration
+  ephemeralStorageGb: 10
+  # Resource configuration
+  cpuCores: 1
+  memoryGb: 2
+  gpuCount: 0
+
 deploymentNumReplicas: 1
-
-# Deployment configuration
-deploymentImage: "ubuntu:22.04"
-
-# Ephemeral storage configuration
-ephemeralStorageGb: 10
-
-# Resource configuration
-cpuCores: 1
-memoryGb: 2
-gpuCount: 0

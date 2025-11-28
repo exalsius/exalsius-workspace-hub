@@ -1,24 +1,26 @@
 # Marimo Helm Chart Values
-global:
-  deploymentName: "my-marimo"
-  deploymentNamespace: "default"
-
-# DO NOT CHANGE THIS PARAMETER
-deploymentNumReplicas: 1
-
-# Deployment configuration
 deploymentImage: "ghcr.io/exalsius/marimo:latest-nvidia"
 
 # Marimo configuration
 tokenPassword: "mysecurepassword"
 
-# Ephemeral storage storage configuration
-ephemeralStorageGb: 50
+##################################################################
+########## ONLY HERE FOR REFERENCE OR LOCAL TESTING ##############
+########## Values are set automatically by exalsius ##############
+##################################################################
+global:
+  deploymentName: "my-marimo"
+  deploymentNamespace: "default"
 
-# Resource configuration (this maps to ResourcePool spec in API, but camelcase)
-cpuCores: 16
-memoryGb: 32
-storageGb: 50
-# GPU vendor configuration - valid values: "NVIDIA" or "AMD"
-gpuVendor: "NVIDIA"
-gpuCount: 1
+resources:
+  # Ephemeral storage storage configuration
+  ephemeralStorageGb: 50
+  # Resource configuration
+  cpuCores: 16
+  memoryGb: 32
+  storageGb: 50
+  # GPU vendor configuration - valid values: "NVIDIA" or "AMD"
+  gpuVendor: "NVIDIA"
+  gpuCount: 1
+
+deploymentNumReplicas: 1

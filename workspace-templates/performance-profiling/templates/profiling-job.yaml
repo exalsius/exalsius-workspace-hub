@@ -23,7 +23,7 @@ spec:
       policies:
         - action: CompleteJob
           event: TaskCompleted
-      replicas: 1
+      replicas: {{ .Values.deploymentNumReplicas }}
       template:
         metadata:
           annotations:
