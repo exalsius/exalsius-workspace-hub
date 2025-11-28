@@ -7,7 +7,7 @@ global:
 deploymentNumReplicas: 1
 
 # Deployment configuration
-deploymentImage: "ghcr.io/marimo-team/marimo:latest-data"
+deploymentImage: "ghcr.io/exalsius/marimo:latest-nvidia"
 
 # Marimo configuration
 tokenPassword: "mysecurepassword"
