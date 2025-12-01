@@ -35,6 +35,7 @@ spec:
                   set -e
                   # Ensure output is not buffered
                   export PYTHONUNBUFFERED=1
+                  export TORCH_DISTRIBUTED_DEBUG=INFO
                   
                   # NCCL configuration for high-latency environments
                   export NCCL_DEBUG={{ .Values.elastic.nccl.debug | default "WARN" }}
@@ -51,11 +52,6 @@ spec:
                   echo "Starting PyTorch Elastic training..." >&2
                   echo "POD_NAME: ${POD_NAME}" >&2
                   
-                  # Extract node rank from pod name (format: {job-name}-worker-{index})
-                  # Volcano creates pods with names like: {job-name}-worker-0, {job-name}-worker-1, etc.
-                  NODE_RANK=$(echo ${POD_NAME} | grep -oE '[0-9]+$' || echo "0")
-                  echo "Extracted NODE_RANK: ${NODE_RANK}" >&2
-                  
                   # Determine etcd rendezvous endpoint
                   # etcd provides fault-tolerant coordination for PyTorch Elastic training
                   echo "Configuring etcd rendezvous backend..." >&2
@@ -70,35 +66,49 @@ spec:
                   ETCD_ENDPOINT="${ETCD_HOST}"
                   echo "Using embedded etcd: ${ETCD_ENDPOINT}" >&2
 
-
-                  #  ucc stuff
-                  #export TORCH_CUDA_ARCH_LIST="Turing"
-                  #export USE_MPI=1
-                  #export BUILD_TEST=0
-                  #export BUILD_TEST_LIBTORCH=0
-                  export USE_UCC=ON
-                  export USE_SYSTEM_UCC=ON
-                  export USE_DISTRIBUTED=ON
-                  export USE_C10D_UCC=ON
-                  #export USE_C10D_MPI=ON
-                  #export TORCH_BLAS_PREFER_CUBLASLT=0
-                  export USE_ROCM=OFF
-                  export USE_CUDA=ON
-                  export USE_MKLDNN=OFF
-
-                  
                   # Wait for etcd to be ready
                   echo "Waiting for etcd to be ready..." >&2
+                  ETCD_READY=false
                   for i in $(seq 1 30); do
-                    if command -v getent > /dev/null 2>&1; then
-                      if getent hosts {{ include "diloco-training.etcdEndpoint" . }} > /dev/null 2>&1; then
-                        echo "etcd service resolved successfully" >&2
+                    # Try to connect to etcd health endpoint
+                    if command -v curl > /dev/null 2>&1; then
+                      if curl -sf --connect-timeout 2 "{{ .Values.elastic.etcd.protocol | default "http" }}://${ETCD_ENDPOINT}/health" > /dev/null 2>&1; then
+                        echo "etcd is ready and healthy (via curl)" >&2
+                        ETCD_READY=true
+                        break
+                      fi
+                    elif command -v wget > /dev/null 2>&1; then
+                      if wget -q --timeout=2 --tries=1 "{{ .Values.elastic.etcd.protocol | default "http" }}://${ETCD_ENDPOINT}/health" -O /dev/null 2>&1; then
+                        echo "etcd is ready and healthy (via wget)" >&2
+                        ETCD_READY=true
+                        break
+                      fi
+                    elif command -v python3 > /dev/null 2>&1; then
+                      if python3 -c "import urllib.request; urllib.request.urlopen('{{ .Values.elastic.etcd.protocol | default "http" }}://${ETCD_ENDPOINT}/health', timeout=2)" > /dev/null 2>&1; then
+                        echo "etcd is ready and healthy (via python)" >&2
+                        ETCD_READY=true
                         break
                       fi
                     fi
-                    echo "Waiting for etcd DNS... (attempt $i/30)" >&2
+                    echo "Waiting for etcd to be ready... (attempt $i/30)" >&2
                     sleep 2
                   done
+                  
+                  if [ "$ETCD_READY" = "false" ]; then
+                    echo "WARNING: Could not verify etcd availability after 30 attempts" >&2
+                    echo "Continuing anyway - torchrun will handle connection retry" >&2
+                  fi
+                  
+                  # Clean up stale etcd data from previous runs
+                  echo "Cleaning up stale etcd data..." >&2
+                  if command -v etcdctl > /dev/null 2>&1; then
+                    ETCD_PREFIX="{{ .Values.elastic.etcd.prefix | default "/torchelastic" }}"
+                    echo "Attempting to remove prefix: ${ETCD_PREFIX}" >&2
+                    ETCDCTL_API=2 etcdctl --endpoints=${ETCD_ENDPOINT} rm --recursive ${ETCD_PREFIX} 2>&1 | grep -v "Key not found" || true
+                    echo "Cleanup complete" >&2
+                  else
+                    echo "etcdctl not available, skipping cleanup (etcd will handle conflicts)" >&2
+                  fi
                   {{- else }}
                   echo "ERROR: etcd is not enabled and no external endpoint specified!" >&2
                   exit 1
@@ -127,15 +137,23 @@ spec:
                   fi
                   echo "Found torchrun: ${TORCHRUN_CMD}" >&2
                   
+                  # Generate unique run ID for this training session
+                  {{- if .Values.elastic.etcd.runId }}
+                  RUN_ID="{{ .Values.elastic.etcd.runId }}"
+                  {{- else }}
+                  RUN_ID="{{ include "diloco-training.jobName" . }}"
+                  {{- end }}
+                  echo "Using run ID: ${RUN_ID}" >&2
+                  
                   echo "Launching torchrun with etcd rendezvous..." >&2
                   exec ${TORCHRUN_CMD} \
                     --nnodes={{ include "diloco-training.totalMinNodes" . }}:{{ include "diloco-training.totalMaxNodes" . }} \
                     --nproc_per_node={{ .Values.gpuCountPerNode }} \
                     --max-restarts={{ .Values.elastic.maxRestarts | default 3 }} \
-                    --node_rank=${NODE_RANK} \
-                    --rdzv_backend=etcd \
+                    --rdzv_backend=etcd-v2 \
                     --rdzv_endpoint=${RDZV_ENDPOINT} \
-                    --rdzv-conf=timeout={{ .Values.elastic.rdzvTimeout | default 600 }},protocol={{ .Values.elastic.etcd.protocol | default "http" }},prefix={{ .Values.elastic.etcd.prefix | default "/torchelastic" }}/{{ include "diloco-training.jobName" . }} \
+                    --rdzv_id=${RUN_ID} \
+                    --rdzv-conf=timeout={{ .Values.elastic.rdzvTimeout | default 600 }},protocol={{ .Values.elastic.etcd.protocol | default "http" }},prefix={{ .Values.elastic.etcd.prefix | default "/torchelastic" }} \
                     /app/diloco_training/training/start_training.py
               env:
                 - name: POD_NAME
@@ -194,6 +212,7 @@ spec:
                   set -e
                   # Ensure output is not buffered
                   export PYTHONUNBUFFERED=1
+                  export TORCH_DISTRIBUTED_DEBUG=INFO
                   
                   # NCCL configuration for high-latency environments
                   export NCCL_DEBUG={{ .Values.elastic.nccl.debug | default "WARN" }}
@@ -210,11 +229,6 @@ spec:
                   echo "Starting PyTorch Elastic training..." >&2
                   echo "POD_NAME: ${POD_NAME}" >&2
                   
-                  # Extract node rank from pod name (format: {job-name}-worker-{index})
-                  # Volcano creates pods with names like: {job-name}-worker-0, {job-name}-worker-1, etc.
-                  NODE_RANK=$(echo ${POD_NAME} | grep -oE '[0-9]+$' || echo "0")
-                  echo "Extracted NODE_RANK: ${NODE_RANK}" >&2
-                  
                   # Determine etcd rendezvous endpoint
                   # etcd provides fault-tolerant coordination for PyTorch Elastic training
                   echo "Configuring etcd rendezvous backend..." >&2
@@ -229,33 +243,40 @@ spec:
                   ETCD_ENDPOINT="${ETCD_HOST}"
                   echo "Using embedded etcd: ${ETCD_ENDPOINT}" >&2
 
-                  #  ucc stuff
-                  #export TORCH_CUDA_ARCH_LIST="Turing"
-                  #export USE_MPI=1
-                  #export BUILD_TEST=0
-                  #export BUILD_TEST_LIBTORCH=0
-                  export USE_UCC=ON
-                  export USE_SYSTEM_UCC=ON
-                  export USE_DISTRIBUTED=ON
-                  export USE_C10D_UCC=ON
-                  #export USE_C10D_MPI=ON
-                  #export TORCH_BLAS_PREFER_CUBLASLT=0
-                  export USE_ROCM=ON
-                  export USE_CUDA=OFF
-                  export USE_MKLDNN=OFF
                   
                   # Wait for etcd to be ready
                   echo "Waiting for etcd to be ready..." >&2
+                  ETCD_READY=false
                   for i in $(seq 1 30); do
-                    if command -v getent > /dev/null 2>&1; then
-                      if getent hosts {{ include "diloco-training.etcdEndpoint" . }} > /dev/null 2>&1; then
-                        echo "etcd service resolved successfully" >&2
+                    # Try to connect to etcd health endpoint
+                    if command -v curl > /dev/null 2>&1; then
+                      if curl -sf --connect-timeout 2 "{{ .Values.elastic.etcd.protocol | default "http" }}://${ETCD_ENDPOINT}/health" > /dev/null 2>&1; then
+                        echo "etcd is ready and healthy (via curl)" >&2
+                        ETCD_READY=true
+                        break
+                      fi
+                    elif command -v wget > /dev/null 2>&1; then
+                      if wget -q --timeout=2 --tries=1 "{{ .Values.elastic.etcd.protocol | default "http" }}://${ETCD_ENDPOINT}/health" -O /dev/null 2>&1; then
+                        echo "etcd is ready and healthy (via wget)" >&2
+                        ETCD_READY=true
+                        break
+                      fi
+                    elif command -v python3 > /dev/null 2>&1; then
+                      if python3 -c "import urllib.request; urllib.request.urlopen('{{ .Values.elastic.etcd.protocol | default "http" }}://${ETCD_ENDPOINT}/health', timeout=2)" > /dev/null 2>&1; then
+                        echo "etcd is ready and healthy (via python)" >&2
+                        ETCD_READY=true
                         break
                       fi
                     fi
-                    echo "Waiting for etcd DNS... (attempt $i/30)" >&2
+                    echo "Waiting for etcd to be ready... (attempt $i/30)" >&2
                     sleep 2
                   done
+                  
+                  if [ "$ETCD_READY" = "false" ]; then
+                    echo "WARNING: Could not verify etcd availability after 30 attempts" >&2
+                    echo "Continuing anyway - torchrun will handle connection retry" >&2
+                  fi
+                  
                   {{- else }}
                   echo "ERROR: etcd is not enabled and no external endpoint specified!" >&2
                   exit 1
@@ -284,15 +305,23 @@ spec:
                   fi
                   echo "Found torchrun: ${TORCHRUN_CMD}" >&2
                   
+                  # Generate unique run ID for this training session
+                  {{- if .Values.elastic.etcd.runId }}
+                  RUN_ID="{{ .Values.elastic.etcd.runId }}"
+                  {{- else }}
+                  RUN_ID="{{ include "diloco-training.jobName" . }}"
+                  {{- end }}
+                  echo "Using run ID: ${RUN_ID}" >&2
+                  
                   echo "Launching torchrun with etcd rendezvous..." >&2
                   exec ${TORCHRUN_CMD} \
                     --nnodes={{ include "diloco-training.totalMinNodes" . }}:{{ include "diloco-training.totalMaxNodes" . }} \
                     --nproc_per_node={{ .Values.gpuCountPerNode }} \
                     --max-restarts={{ .Values.elastic.maxRestarts | default 3 }} \
-                    --node_rank=${NODE_RANK} \
-                    --rdzv_backend=etcd \
+                    --rdzv_backend=etcd-v2 \
                     --rdzv_endpoint=${RDZV_ENDPOINT} \
-                    --rdzv-conf=timeout={{ .Values.elastic.rdzvTimeout | default 600 }},protocol={{ .Values.elastic.etcd.protocol | default "http" }},prefix={{ .Values.elastic.etcd.prefix | default "/torchelastic" }}/{{ include "diloco-training.jobName" . }} \
+                    --rdzv_id=${RUN_ID} \
+                    --rdzv-conf=timeout={{ .Values.elastic.rdzvTimeout | default 600 }},protocol={{ .Values.elastic.etcd.protocol | default "http" }},prefix={{ .Values.elastic.etcd.prefix | default "/torchelastic" }} \
                     /app/diloco_training/training/start_training.py
               env:
                 - name: POD_NAME
