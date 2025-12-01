@@ -53,42 +53,42 @@ cpuCores: 12
 memoryGb: 32
 gpuCountPerNode: 1  # Number of GPUs per node (also determines PyTorch processes per node)
 
-# DiLoCo Training Environment Variables
+# DiLoCo Training Environment Variables (will be converted to strings in the configmap)
 diloco:
   model: "gpt-neo-x"
   dataset: "c4"
-  localSteps: "10"
-  lr: "4e-4"
-  outerLr: "0.7"
-  warmupSteps: "500"
-  totalSteps: "20"
-  perDeviceTrainBatchSize: "64"
-  batchSize: "512"
+  localSteps: 10
+  lr: 4e-4
+  outerLr: 0.7
+  warmupSteps: 500
+  totalSteps: 20
+  perDeviceTrainBatchSize: 64
+  batchSize: 512
   optimMethod: "sgd"
-  quantization: "false"
-  asyncCommunication: "false"
+  quantization: false
+  asyncCommunication: false
   checkpointPath: "checkpoint.pth"
-  checkpointInterval: "5"
+  checkpointInterval: 5
   device: "cuda"
   wandbProjectName: "diloco-training"
   wandbGroup: "diloco-heterogenous"
   wandbRunId: "gpt-neo-x"
-  heterogeneous: "true"
-  minBatchSize: "32"
-  maxBatchSize: "512"
-  groupPercVariance: "0.15"
-  compressionDecay: "0.95"
-  compressionTopk: "32"
+  heterogeneous: true
+  minBatchSize: 32
+  maxBatchSize: 512
+  groupPercVariance: 0.15
+  compressionDecay: 0.95
+  compressionTopk: 32
   experimentDescription: "GPT training on c4 using DiLoCo distributed training"
   experimentTags: "[\"diloco\", \"gpt-neo-x\", \"c4\"]"
-  seed: "42"
-  wandbLogging: "true"
+  seed: 42
+  wandbLogging: true
   wandbUserKey: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx"
   huggingfaceToken: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-  compileModel: "false"
+  compileModel: false
   compileBackend: "inductor"
   compileMode: "default"
-  hfUpload: "true"
+  hfUpload: true
   trainedModelHfName: "test-model"
   pgroupBackend: ""
   

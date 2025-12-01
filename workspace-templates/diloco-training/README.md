@@ -60,7 +60,6 @@ All configurable options are defined in the `values.yaml` file and can be overri
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentImage`     | **Required.** The Docker image for the training job.            | `ghcr.io/exalsius/diloco-training:dev` |
 | `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
 | `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB to allocate.  | `50`         |
 | `elastic`            | **Required.** PyTorch Elastic training configuration with etcd rendezvous. | See PyTorch Elastic Configuration below |
@@ -258,36 +257,38 @@ These parameters configure the DiLoCo training process and are passed as environ
 | ------------------------------ | ------------------------------------------------------------------------ | ------------------------------ |
 | `diloco.model`                 | The model to be trained.                                                 | `gpt-neo-x`                    |
 | `diloco.dataset`               | The dataset to use for training.                                         | `c4`                           |
-| `diloco.localSteps`            | The number of local steps before communication.                          | `128`                          |
-| `diloco.lr`                    | The learning rate for the local optimizer.                               | `4e-4`                         |
-| `diloco.outerLr`               | The learning rate for the outer optimizer.                               | `0.7`                          |
-| `diloco.warmupSteps`           | The number of warmup steps for the learning rate scheduler.              | `1000`                         |
-| `diloco.totalSteps`            | The total number of training steps.                                      | `30000`                        |
-| `diloco.perDeviceTrainBatchSize` | The training batch size per device.                                      | `32`                           |
-| `diloco.batchSize`             | The total batch size across all devices.                                 | `512`                          |
+| `diloco.localSteps`            | The number of local steps before communication (integer).               | `10`                           |
+| `diloco.lr`                    | The learning rate for the local optimizer (number).                      | `4e-4`                         |
+| `diloco.outerLr`               | The learning rate for the outer optimizer (number).                     | `0.7`                          |
+| `diloco.warmupSteps`           | The number of warmup steps for the learning rate scheduler (integer).    | `500`                          |
+| `diloco.totalSteps`            | The total number of training steps (integer).                            | `20`                           |
+| `diloco.perDeviceTrainBatchSize` | The training batch size per device (integer).                            | `64`                           |
+| `diloco.batchSize`             | The total batch size across all devices (integer).                       | `512`                          |
 | `diloco.optimMethod`           | The optimization method to use.                                          | `sgd`                          |
-| `diloco.quantization`          | Whether to use quantization.                                             | `false`                        |
-| `diloco.asyncCommunication`    | Whether to enable async gradient synchronization.                        | `false`                        |
+| `diloco.quantization`          | Whether to use quantization (boolean).                                    | `false`                        |
+| `diloco.asyncCommunication`    | Whether to enable async gradient synchronization (boolean).            | `false`                        |
 | `diloco.modelCacheDir`         | Directory path for HuggingFace model cache.                              | `/data/models`                 |
 | `diloco.datasetCacheDir`       | Directory path for HuggingFace dataset cache.                            | `/data/datasets`               |
-| `diloco.checkpointPath`        | The path to save checkpoints.                                            | `/data/checkpoints/checkpoint.pth` |
-| `diloco.checkpointInterval`    | The interval (in steps) for saving checkpoints.                          | `512`                          |
+| `diloco.checkpointPath`        | The path to save checkpoints.                                            | `checkpoint.pth`                |
+| `diloco.checkpointInterval`    | The interval (in steps) for saving checkpoints (integer).                | `5`                            |
 | `diloco.device`                | The device to use for training.                                          | `cuda`                         |
-| `diloco.wandbProjectName`      | The project name for Weights & Biases logging.                           | `diloco`                       |
-| `diloco.wandbGroup`            | The group name for Weights & Biases logging.                             | `diloco-gptneo-c4`             |
-| `diloco.wandbRunId`            | Optional WandB run ID (leave empty for auto-generated).                 | `""`                           |
-| `diloco.heterogeneous`         | Whether the training environment is heterogeneous.                       | `false`                        |
-| `diloco.minBatchSize`          | Minimum batch size for heterogeneous training.                           | `16`                           |
-| `diloco.maxBatchSize`          | Maximum batch size for heterogeneous training.                           | `512`                          |
-| `diloco.groupPercVariance`     | Group percentage variance for heterogeneous training.                   | `0.15`                         |
-| `diloco.compressionDecay`      | The decay factor for compression.                                        | `0.9`                          |
-| `diloco.compressionTopk`       | The top-k value for compression.                                         | `32`                           |
+| `diloco.wandbProjectName`      | The project name for Weights & Biases logging.                           | `diloco-training`              |
+| `diloco.wandbGroup`            | The group name for Weights & Biases logging.                             | `diloco-heterogenous`          |
+| `diloco.wandbRunId`            | Optional WandB run ID (leave empty for auto-generated).                 | `gpt-neo-x`                    |
+| `diloco.heterogeneous`         | Whether the training environment is heterogeneous (boolean).             | `true`                         |
+| `diloco.minBatchSize`          | Minimum batch size for heterogeneous training (integer).                 | `32`                           |
+| `diloco.maxBatchSize`          | Maximum batch size for heterogeneous training (integer).                 | `512`                          |
+| `diloco.groupPercVariance`     | Group percentage variance for heterogeneous training (number).          | `0.15`                         |
+| `diloco.compressionDecay`      | The decay factor for compression (number).                               | `0.95`                         |
+| `diloco.compressionTopk`       | The top-k value for compression (integer).                                | `32`                           |
 | `diloco.experimentDescription` | A description of the experiment.                                         | `DiLoCo distributed training...` |
 | `diloco.experimentTags`        | Tags for the experiment.                                                 | `["diloco", "gpt-neo-x", "c4"]`  |
-| `diloco.seed`                  | The random seed for reproducibility.                                     | `42`                           |
-| `diloco.wandbLogging`          | Whether to enable Weights & Biases logging.                              | `true`                         |
-| `diloco.compileModel`          | Whether to compile the model.                                            | `false`                        |
+| `diloco.seed`                  | The random seed for reproducibility (integer).                           | `42`                           |
+| `diloco.wandbLogging`          | Whether to enable Weights & Biases logging (boolean).                    | `true`                         |
+| `diloco.compileModel`          | Whether to compile the model (boolean).                                  | `false`                        |
 | `diloco.compileBackend`        | The backend to use for model compilation.                                | `inductor`                     |
 | `diloco.compileMode`           | The compilation mode.                                                    | `default`                      |
+| `diloco.hfUpload`              | Whether to enable HuggingFace model upload (boolean).                    | `true`                         |
+| `diloco.trainedModelHfName`    | HuggingFace model name for upload.                                       | `test-model`                   |
 | `diloco.wandbUserKey`          | **Required.** Your Weights & Biases user key.                            | `XXXXXXXXXXXXXXXXX`            |
 | `diloco.huggingfaceToken`      | **Required.** Your Hugging Face token.                                   | `hf_XXXXXXXXXXXXXXXXX`         |
