@@ -48,11 +48,6 @@ gpu:
 # Ephemeral storage configuration
 ephemeralStorageGb: 50
 
-# Resource configuration for a single worker pod
-cpuCores: 12
-memoryGb: 32
-gpuCountPerNode: 1  # Number of GPUs per node (also determines PyTorch processes per node)
-
 # DiLoCo Training Environment Variables (will be converted to strings in the configmap)
 diloco:
   model: "gpt-neo-x"
@@ -91,7 +86,6 @@ diloco:
   hfUpload: true
   trainedModelHfName: "test-model"
   pgroupBackend: ""
-  
 
 # etcd subchart configuration (bitnami/etcd)
 # Set enabled: false to use an external etcd cluster (configure elastic.etcd.externalEndpoint)
@@ -144,8 +138,8 @@ resources:
   gpuVendor: "NVIDIA"
   gpuType: "A100"
   gpuMemory: 80
-  cpuCores: 2
-  memoryGb: 8
+  cpuCores: 12
+  memoryGb: 32
   storageGb: 20
 
 deploymentNumReplicas: 1
