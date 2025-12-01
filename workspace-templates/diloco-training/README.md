@@ -60,7 +60,6 @@ All configurable options are defined in the `values.yaml` file and can be overri
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentImage`     | **Required.** The Docker image for the training job.            | `ghcr.io/exalsius/diloco-training:dev` |
 | `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
 | `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB to allocate.  | `50`         |
 | `elastic`            | **Required.** PyTorch Elastic training configuration with etcd rendezvous. | See PyTorch Elastic Configuration below |

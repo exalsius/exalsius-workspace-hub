@@ -289,52 +289,60 @@
           "description": "Dataset name"
         },
         "localSteps": {
-          "type": "string",
-          "description": "Number of local training steps"
+          "type": "integer",
+          "description": "Number of local training steps",
+          "minimum": 1
         },
         "lr": {
-          "type": "string",
-          "description": "Learning rate"
+          "type": "number",
+          "description": "Learning rate",
+          "minimum": 0
         },
         "outerLr": {
-          "type": "string",
-          "description": "Outer optimizer learning rate"
+          "type": "number",
+          "description": "Outer optimizer learning rate",
+          "minimum": 0
         },
         "warmupSteps": {
-          "type": "string",
-          "description": "Number of warmup steps"
+          "type": "integer",
+          "description": "Number of warmup steps",
+          "minimum": 0
         },
         "totalSteps": {
-          "type": "string",
-          "description": "Total training steps"
+          "type": "integer",
+          "description": "Total training steps",
+          "minimum": 1
         },
         "perDeviceTrainBatchSize": {
-          "type": "string",
-          "description": "Batch size per device"
+          "type": "integer",
+          "description": "Batch size per device",
+          "minimum": 1
         },
         "batchSize": {
-          "type": "string",
-          "description": "Global batch size"
+          "type": "integer",
+          "description": "Global batch size",
+          "minimum": 1
         },
         "optimMethod": {
           "type": "string",
           "description": "Optimization method"
         },
         "quantization": {
-          "type": "string",
-          "description": "Enable quantization (true/false)"
+          "type": "boolean",
+          "description": "Enable quantization"
         },
         "asyncCommunication": {
-          "type": "string",
-          "description": "Enable async communication (true/false)"
+          "type": "boolean",
+          "description": "Enable async communication"
         },
         "checkpointPath": {
           "type": "string",
           "description": "Path for checkpoint files"
         },
         "checkpointInterval": {
-          "type": "string",
-          "description": "Checkpoint save interval"
+          "type": "integer",
+          "description": "Checkpoint save interval",
+          "minimum": 1
         },
         "device": {
           "type": "string",
@@ -353,28 +361,34 @@
           "description": "Weights & Biases run ID"
         },
         "heterogeneous": {
-          "type": "string",
-          "description": "Enable heterogeneous training (true/false)"
+          "type": "boolean",
+          "description": "Enable heterogeneous training"
         },
         "minBatchSize": {
-          "type": "string",
-          "description": "Minimum batch size for heterogeneous training"
+          "type": "integer",
+          "description": "Minimum batch size for heterogeneous training",
+          "minimum": 1
         },
         "maxBatchSize": {
-          "type": "string",
-          "description": "Maximum batch size for heterogeneous training"
+          "type": "integer",
+          "description": "Maximum batch size for heterogeneous training",
+          "minimum": 1
         },
         "groupPercVariance": {
-          "type": "string",
-          "description": "Group percentage variance"
+          "type": "number",
+          "description": "Group percentage variance",
+          "minimum": 0
         },
         "compressionDecay": {
-          "type": "string",
-          "description": "Compression decay factor"
+          "type": "number",
+          "description": "Compression decay factor",
+          "minimum": 0,
+          "maximum": 1
         },
         "compressionTopk": {
-          "type": "string",
-          "description": "Top-k compression value"
+          "type": "integer",
+          "description": "Top-k compression value",
+          "minimum": 1
         },
         "experimentDescription": {
           "type": "string",
@@ -385,12 +399,13 @@
           "description": "Tags for the experiment (JSON array string)"
         },
         "seed": {
-          "type": "string",
-          "description": "Random seed"
+          "type": "integer",
+          "description": "Random seed",
+          "minimum": 0
         },
         "wandbLogging": {
-          "type": "string",
-          "description": "Enable Weights & Biases logging (true/false)"
+          "type": "boolean",
+          "description": "Enable Weights & Biases logging"
         },
         "wandbUserKey": {
           "type": "string",
@@ -401,8 +416,8 @@
           "description": "HuggingFace authentication token"
         },
         "compileModel": {
-          "type": "string",
-          "description": "Enable model compilation (true/false)"
+          "type": "boolean",
+          "description": "Enable model compilation"
         },
         "compileBackend": {
           "type": "string",
@@ -413,8 +428,8 @@
           "description": "Compilation mode"
         },
         "hfUpload": {
-          "type": "string",
-          "description": "Enable HuggingFace model upload (true/false)"
+          "type": "boolean",
+          "description": "Enable HuggingFace model upload"
         },
         "trainedModelHfName": {
           "type": "string",
