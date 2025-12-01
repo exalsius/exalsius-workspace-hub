@@ -1,22 +1,27 @@
 # Jupyter Notebook Helm Chart Values
-global:
-  deploymentName: "my-notebook"
-  deploymentNamespace: "default"
-
-# DO NOT CHANGE THIS PARAMETER
-deploymentNumReplicas: 1
-
-# Deployment configuration
 deploymentImage: "ghcr.io/exalsius/jupyter-notebook:latest-nvidia"
+
+# Ephemeral storage configuration
+ephemeralStorageGb: 50
 
 # Jupyter Notebook configuration
 notebookPassword: "mysecurepassword"
 
-# Ephemeral storage storage configuration
-ephemeralStorageGb: 50
+##################################################################
+########## ONLY HERE FOR REFERENCE OR LOCAL TESTING ##############
+########## Values are set automatically by exalsius ##############
+##################################################################
+global:
+  deploymentName: "my-notebook"
+  deploymentNamespace: "default"
 
-# Resource configuration (this maps to ResourcePool spec in API, but camelcase)
-cpuCores: 16
-memoryGb: 32
-storageGb: 50
-gpuCount: 1
+resources:
+  gpuCount: 1
+  gpuVendor: "NVIDIA"
+  gpuType: "L40"
+  gpuMemory: 24
+  cpuCores: 16
+  memoryGb: 32
+  storageGb: 50
+
+deploymentNumReplicas: 1

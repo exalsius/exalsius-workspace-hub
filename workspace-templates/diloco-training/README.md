@@ -47,25 +47,39 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
 
-### Global Configuration (Global helm values)
+### Global Configuration
+
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentName`      | The name of the training job.                     | `diloco-training-job`        |
-| `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
+| `global.deploymentName`      | **Required.** The name of the training job.                     | `diloco-training-job`        |
+| `global.deploymentNamespace` | **Required.** The Kubernetes namespace for the deployment.      | `default`                    |
 
 ### General Configuration
 
-This chart supports both homogeneous (single GPU type) and heterogeneous (mixed NVIDIA/AMD GPUs) cluster deployments.
+| Parameter             | Description                                       | Default Value                |
+| --------------------- | ------------------------------------------------- | ---------------------------- |
+| `deploymentImage`     | **Required.** The Docker image for the training job.            | `ghcr.io/exalsius/diloco-training:dev` |
+| `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
+| `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB to allocate.  | `50`         |
+| `elastic`            | **Required.** PyTorch Elastic training configuration with etcd rendezvous. | See PyTorch Elastic Configuration below |
+| `diloco`             | **Required.** DiLoCo Training Environment Variables. | See DiLoCo Training Parameters below |
+| `etcd`               | **Required.** etcd subchart configuration (bitnami/etcd). | See PyTorch Elastic Configuration below |
 
 ### Resource Configuration
 
-| Parameter          | Description                               | Default Value |
-| ------------------ | ----------------------------------------- | ------------- |
-| `cpuCores`         | The number of CPU cores to allocate.      | `16`          |
-| `memoryGb`         | The amount of memory in GB to allocate.   | `32`          |
-| `ephemeralStorageGb` | The amount of storage in GB to allocate.  | `100`         |
-| `gpuCount`         | The number of GPUs to allocate.           | `1`           |
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
+
+| Parameter          | Description                               | Default Value | Required |
+| ------------------ | ----------------------------------------- | ------------- | -------- |
+| `resources.cpuCores`         | The number of CPU cores to allocate per worker pod.      | `2`          | Yes |
+| `resources.memoryGb`         | The amount of memory in GB to allocate per worker pod.   | `8`          | Yes |
+| `resources.gpuCount`         | The number of GPUs per node (also determines PyTorch processes per node).           | `1`           | Yes |
+| `resources.gpuVendor`        | GPU vendor configuration. Valid values: `"NVIDIA"` or `"AMD"`. | `"NVIDIA"` | No |
+| `resources.gpuType`          | GPU type/model.                           | `"A100"`       | No |
+| `resources.gpuMemory`        | GPU memory in gigabytes.                 | `80`          | No |
+| `resources.storageGb`       | The size of the persistent volume for your workspace. | `20`          | No |
 
 ### Persistent Storage Configuration
 

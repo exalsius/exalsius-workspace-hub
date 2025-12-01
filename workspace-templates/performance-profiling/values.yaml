@@ -1,21 +1,11 @@
-global:
-  deploymentName: "performance-profiling-job"
-  deploymentNamespace: "default"
-
-# Deployment configuration
+# Performance Profiling Workspace Helm Chart Values
 deploymentImage: ghcr.io/exalsius/exalsius-performance-modeling:dev
-
-# Job configuration
-nodes: 1  # Number of nodes for distributed training
 
 # Ephemeral storage configuration
 ephemeralStorageGb: 100
 
-# Resource configuration
-# the job template does not configure pvc storage
-cpuCores: 16
-memoryGb: 32
-gpuCount: 1
+# Job configuration
+nodes: 1  # Number of nodes for distributed training
 
 extraEnvironmentVariables:
   - name: MACHINE_NAME
@@ -32,3 +22,22 @@ extraEnvironmentVariables:
     value: my-s3-region
   - name: HF_TOKEN
     value: my-hf-token
+
+##################################################################
+########## ONLY HERE FOR REFERENCE OR LOCAL TESTING ##############
+########## Values are set automatically by exalsius ##############
+##################################################################
+global:
+  deploymentName: "performance-profiling-job"
+  deploymentNamespace: "default"
+
+resources:
+  gpuCount: 1
+  gpuVendor: "NVIDIA"
+  gpuType: "L40"
+  gpuMemory: 24
+  cpuCores: 16
+  memoryGb: 32
+  storageGb: 50
+
+deploymentNumReplicas: 1

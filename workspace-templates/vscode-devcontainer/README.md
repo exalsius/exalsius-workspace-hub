@@ -35,36 +35,44 @@ You can also deploy the workspace directly using Helm.
 
 All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
 
-### Global Configuration (Global helm values)
+### Global Configuration
+
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
 
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
-| `deploymentName`      | The name of the deployment.                       | `devcontainer`               |
-| `deploymentNamespace` | The Kubernetes namespace for the deployment.      | `default`                    |
+| `global.deploymentName`      | **Required.** The name of the deployment.                       | `devcontainer`               |
+| `global.deploymentNamespace` | **Required.** The Kubernetes namespace for the deployment.      | `default`                    |
 
 ### Deployment Configuration
 
 | Parameter             | Description                                          | Default Value                     |
 | --------------------- | ---------------------------------------------------- | --------------------------------- |
-| `deploymentImage`     | The Docker image for the development container. If not provided, image will be auto-selected based on `gpuVendor`. | `""` (auto-selected) |
-| `gpuVendor`          | The GPU vendor to use. Valid values: `"NVIDIA"` or `"AMD"`. Used for automatic image selection and GPU resource allocation. | `"NVIDIA"` |
+| `deploymentImage`     | **Required.** The Docker image for the development container. If empty, image will be auto-selected based on `resources.gpuVendor`. | `""` (auto-selected) |
+| `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
+| `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB for the pod.    | `50`          |
 
 ### SSH Configuration
 
 | Parameter          | Description                                                        | Default Value |
 | ------------------ | ------------------------------------------------------------------ | ------------- |
-| `sshPassword`      | Password for SSH authentication.                                   | `"testpassword"` |
-| `sshPublicKey`     | SSH public key(s) for key-based authentication. Can contain multiple keys, one per line. | `""` |
+| `sshPassword`      | **Required.** Password for SSH authentication.                                   | `"testpassword"` |
+| `sshPublicKey`     | **Required.** SSH public key(s) for key-based authentication. Can contain multiple keys, one per line. | `""` |
+| `shmSizeGb`        | **Required.** The size of shared memory (`/dev/shm`) in GB for the pod.          | `8`           |
 
 ### Resource Configuration
 
-| Parameter          | Description                                                        | Default Value |
-| ------------------ | ------------------------------------------------------------------ | ------------- |
-| `cpuCores`         | The number of CPU cores to allocate.                               | `2`           |
-| `memoryGb`         | The amount of memory in GB to allocate.                            | `4`           |
-| `storageGb`        | The size of the persistent volume for your workspace.              | `50`          |
-| `gpuCount`         | The number of GPUs to allocate.                                    | `1`           |
-| `shmSizeGb`        | The size of shared memory (`/dev/shm`) in GB for the pod.          | `8`           |
+**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
+
+| Parameter          | Description                                                        | Default Value | Required |
+| ------------------ | ------------------------------------------------------------------ | ------------- | -------- |
+| `resources.cpuCores`         | The number of CPU cores to allocate.                               | `2`           | Yes |
+| `resources.memoryGb`         | The amount of memory in GB to allocate.                            | `4`           | Yes |
+| `resources.gpuCount`         | The number of GPUs to allocate.                                    | `1`           | Yes |
+| `resources.gpuVendor`        | GPU vendor configuration. Valid values: `"NVIDIA"` or `"AMD"`. Used for automatic image selection and GPU resource allocation. | `"NVIDIA"` | Yes |
+| `resources.storageGb`        | The size of the persistent volume for your workspace.              | `50`          | Yes |
+| `resources.gpuType`          | GPU type/model.                                                    | `"L40"`       | No |
+| `resources.gpuMemory`        | GPU memory in gigabytes.                                          | `24`          | No |
 
 ## Remote SSH Connection
 
