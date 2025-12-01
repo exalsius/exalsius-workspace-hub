@@ -31,11 +31,11 @@
     },
     "resources": {
       "type": "object",
-      "description": "Resource configuration for a single worker pod",
+      "description": "Resource configuration (reference section, set by Exalsius)",
       "properties": {
         "gpuCount": {
           "type": "integer",
-          "description": "Number of GPUs per node (also determines PyTorch processes per node)",
+          "description": "Number of GPUs to allocate",
           "minimum": 0
         },
         "gpuVendor": {
@@ -69,22 +69,191 @@
           "minimum": 1
         }
       },
-      "required": ["gpuCount", "cpuCores", "memoryGb"],
+      "required": ["gpuCount", "gpuVendor", "cpuCores", "memoryGb", "storageGb"],
       "additionalProperties": false
     }
   },
   "properties": {
-    "global": {
-      "$ref": "#/$defs/global"
+    "elastic": {
+      "type": "object",
+      "description": "PyTorch Elastic training configuration with etcd rendezvous",
+      "properties": {
+        "minNodes": {
+          "type": "integer",
+          "description": "Minimum number of nodes for elastic training",
+          "minimum": 1
+        },
+        "maxNodes": {
+          "type": "integer",
+          "description": "Maximum number of nodes for elastic training",
+          "minimum": 1
+        },
+        "maxRestarts": {
+          "type": "integer",
+          "description": "Maximum restarts for elastic training",
+          "minimum": 0,
+          "default": 10
+        },
+        "rdzvTimeout": {
+          "type": "integer",
+          "description": "Timeout for rendezvous in seconds (optimized for high latency)",
+          "minimum": 1,
+          "default": 1800
+        },
+        "gpuDistribution": {
+          "type": "string",
+          "description": "GPU distribution policy (used when gpu.*.minNodes/maxNodes are null)",
+          "enum": ["auto", "prefer-nvidia", "prefer-amd"],
+          "default": "auto"
+        },
+        "nccl": {
+          "type": "object",
+          "description": "NCCL/RCCL configuration for high-latency environments",
+          "properties": {
+            "debug": {
+              "type": "string",
+              "description": "NCCL debug level",
+              "enum": ["WARN", "INFO", "TRACE"],
+              "default": "INFO"
+            },
+            "asyncErrorHandling": {
+              "type": "integer",
+              "description": "Enable async error handling for better fault tolerance",
+              "enum": [0, 1],
+              "default": 1
+            },
+            "timeout": {
+              "type": "integer",
+              "description": "NCCL operation timeout in seconds",
+              "minimum": 1,
+              "default": 1800
+            },
+            "ibTimeout": {
+              "type": "integer",
+              "description": "InfiniBand timeout (increase for high latency)",
+              "minimum": 1,
+              "default": 22
+            },
+            "nsocksPerThread": {
+              "type": "integer",
+              "description": "Number of sockets per thread (increase for high latency)",
+              "minimum": 1,
+              "default": 8
+            },
+            "socketNthreads": {
+              "type": "integer",
+              "description": "Number of threads per socket (increase for better utilization)",
+              "minimum": 1,
+              "default": 4
+            },
+            "socketIfname": {
+              "type": "string",
+              "description": "Network interface to use (e.g., eth0, ib0)"
+            }
+          },
+          "additionalProperties": false
+        },
+        "etcd": {
+          "type": "object",
+          "description": "etcd rendezvous backend configuration",
+          "properties": {
+            "externalEndpoint": {
+              "type": "string",
+              "description": "External etcd endpoint (e.g., 'etcd.infrastructure.svc.cluster.local:2379')",
+              "default": ""
+            },
+            "prefix": {
+              "type": "string",
+              "description": "etcd key prefix for job isolation",
+              "default": "/torchelastic"
+            },
+            "protocol": {
+              "type": "string",
+              "description": "Protocol for etcd connection",
+              "enum": ["http", "https"],
+              "default": "http"
+            },
+            "runId": {
+              "type": "string",
+              "description": "Run ID for rendezvous (leave empty for auto-generated timestamp-based ID)",
+              "default": ""
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["minNodes", "maxNodes"],
+      "additionalProperties": false
     },
-    "deploymentNumReplicas": {
-      "$ref": "#/$defs/deploymentNumReplicas"
-    },
-    "deploymentImage": {
-      "type": "string",
-      "description": "Container image for the diloco training deployment",
-      "default": "ghcr.io/exalsius/diloco-training:dev",
-      "minLength": 1
+    "gpu": {
+      "type": "object",
+      "description": "GPU-specific configurations",
+      "properties": {
+        "nvidia": {
+          "type": "object",
+          "description": "NVIDIA GPU configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable NVIDIA GPU workers"
+            },
+            "image": {
+              "type": "string",
+              "description": "Container image for NVIDIA workers",
+              "minLength": 1
+            },
+            "minNodes": {
+              "type": ["integer", "null"],
+              "description": "Minimum NVIDIA nodes (null means calculate from elastic config)",
+              "minimum": 0
+            },
+            "maxNodes": {
+              "type": ["integer", "null"],
+              "description": "Maximum NVIDIA nodes (null means calculate from elastic config)",
+              "minimum": 0
+            },
+            "runtimeClassName": {
+              "type": "string",
+              "description": "Kubernetes runtime class for NVIDIA GPUs"
+            }
+          },
+          "required": ["enabled", "image"],
+          "additionalProperties": false
+        },
+        "amd": {
+          "type": "object",
+          "description": "AMD GPU configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable AMD GPU workers"
+            },
+            "image": {
+              "type": "string",
+              "description": "Container image for AMD workers",
+              "minLength": 1
+            },
+            "minNodes": {
+              "type": ["integer", "null"],
+              "description": "Minimum AMD nodes (null means calculate from elastic config)",
+              "minimum": 0
+            },
+            "maxNodes": {
+              "type": ["integer", "null"],
+              "description": "Maximum AMD nodes (null means calculate from elastic config)",
+              "minimum": 0
+            },
+            "runtimeClassName": {
+              "type": "string",
+              "description": "Kubernetes runtime class for AMD GPUs"
+            }
+          },
+          "required": ["enabled", "image"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["nvidia", "amd"],
+      "additionalProperties": false
     },
     "ephemeralStorageGb": {
       "type": "integer",
@@ -92,34 +261,235 @@
       "minimum": 1,
       "default": 50
     },
-    "elastic": {
-      "type": "object",
-      "description": "PyTorch Elastic training configuration with etcd rendezvous",
-      "additionalProperties": true
+    "cpuCores": {
+      "type": "integer",
+      "description": "Number of CPU cores per worker pod",
+      "minimum": 1
+    },
+    "memoryGb": {
+      "type": "integer",
+      "description": "Memory in gigabytes per worker pod",
+      "minimum": 1
+    },
+    "gpuCountPerNode": {
+      "type": "integer",
+      "description": "Number of GPUs per node (also determines PyTorch processes per node)",
+      "minimum": 1
     },
     "diloco": {
       "type": "object",
       "description": "DiLoCo Training Environment Variables",
-      "additionalProperties": true
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Model name or identifier"
+        },
+        "dataset": {
+          "type": "string",
+          "description": "Dataset name"
+        },
+        "localSteps": {
+          "type": "string",
+          "description": "Number of local training steps"
+        },
+        "lr": {
+          "type": "string",
+          "description": "Learning rate"
+        },
+        "outerLr": {
+          "type": "string",
+          "description": "Outer optimizer learning rate"
+        },
+        "warmupSteps": {
+          "type": "string",
+          "description": "Number of warmup steps"
+        },
+        "totalSteps": {
+          "type": "string",
+          "description": "Total training steps"
+        },
+        "perDeviceTrainBatchSize": {
+          "type": "string",
+          "description": "Batch size per device"
+        },
+        "batchSize": {
+          "type": "string",
+          "description": "Global batch size"
+        },
+        "optimMethod": {
+          "type": "string",
+          "description": "Optimization method"
+        },
+        "quantization": {
+          "type": "string",
+          "description": "Enable quantization (true/false)"
+        },
+        "asyncCommunication": {
+          "type": "string",
+          "description": "Enable async communication (true/false)"
+        },
+        "checkpointPath": {
+          "type": "string",
+          "description": "Path for checkpoint files"
+        },
+        "checkpointInterval": {
+          "type": "string",
+          "description": "Checkpoint save interval"
+        },
+        "device": {
+          "type": "string",
+          "description": "Device type (cuda/rocm)"
+        },
+        "wandbProjectName": {
+          "type": "string",
+          "description": "Weights & Biases project name"
+        },
+        "wandbGroup": {
+          "type": "string",
+          "description": "Weights & Biases group name"
+        },
+        "wandbRunId": {
+          "type": "string",
+          "description": "Weights & Biases run ID"
+        },
+        "heterogeneous": {
+          "type": "string",
+          "description": "Enable heterogeneous training (true/false)"
+        },
+        "minBatchSize": {
+          "type": "string",
+          "description": "Minimum batch size for heterogeneous training"
+        },
+        "maxBatchSize": {
+          "type": "string",
+          "description": "Maximum batch size for heterogeneous training"
+        },
+        "groupPercVariance": {
+          "type": "string",
+          "description": "Group percentage variance"
+        },
+        "compressionDecay": {
+          "type": "string",
+          "description": "Compression decay factor"
+        },
+        "compressionTopk": {
+          "type": "string",
+          "description": "Top-k compression value"
+        },
+        "experimentDescription": {
+          "type": "string",
+          "description": "Description of the experiment"
+        },
+        "experimentTags": {
+          "type": "string",
+          "description": "Tags for the experiment (JSON array string)"
+        },
+        "seed": {
+          "type": "string",
+          "description": "Random seed"
+        },
+        "wandbLogging": {
+          "type": "string",
+          "description": "Enable Weights & Biases logging (true/false)"
+        },
+        "wandbUserKey": {
+          "type": "string",
+          "description": "Weights & Biases API key"
+        },
+        "huggingfaceToken": {
+          "type": "string",
+          "description": "HuggingFace authentication token"
+        },
+        "compileModel": {
+          "type": "string",
+          "description": "Enable model compilation (true/false)"
+        },
+        "compileBackend": {
+          "type": "string",
+          "description": "Compilation backend"
+        },
+        "compileMode": {
+          "type": "string",
+          "description": "Compilation mode"
+        },
+        "hfUpload": {
+          "type": "string",
+          "description": "Enable HuggingFace model upload (true/false)"
+        },
+        "trainedModelHfName": {
+          "type": "string",
+          "description": "HuggingFace model name for upload"
+        },
+        "pgroupBackend": {
+          "type": "string",
+          "description": "Process group backend (nccl/gloo)"
+        }
+      },
+      "additionalProperties": false
     },
     "etcd": {
       "type": "object",
-      "description": "etcd subchart configuration (bitnami/etcd). Set enabled: false to use an external etcd cluster. This is a subchart, so additional properties are allowed.",
+      "description": "etcd subchart configuration (bitnami/etcd). Set enabled: false to use an external etcd cluster.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable embedded etcd subchart"
+        },
+        "persistence": {
+          "type": "object",
+          "description": "Persistence configuration for etcd"
+        },
+        "replicaCount": {
+          "type": "integer",
+          "description": "Number of etcd replicas",
+          "minimum": 1
+        },
+        "image": {
+          "type": "object",
+          "description": "etcd container image configuration"
+        },
+        "auth": {
+          "type": "object",
+          "description": "etcd authentication configuration"
+        },
+        "livenessProbe": {
+          "type": "object",
+          "description": "Liveness probe configuration"
+        },
+        "readinessProbe": {
+          "type": "object",
+          "description": "Readiness probe configuration"
+        },
+        "extraEnvVars": {
+          "type": "array",
+          "description": "Additional environment variables for etcd"
+        }
+      },
+      "required": ["enabled"],
       "additionalProperties": true
+    },
+    "global": {
+      "$ref": "#/$defs/global"
     },
     "resources": {
       "$ref": "#/$defs/resources"
+    },
+    "deploymentNumReplicas": {
+      "$ref": "#/$defs/deploymentNumReplicas"
     }
   },
   "required": [
-    "global",
-    "deploymentNumReplicas",
-    "deploymentImage",
-    "ephemeralStorageGb",
     "elastic",
+    "gpu",
+    "ephemeralStorageGb",
+    "cpuCores",
+    "memoryGb",
+    "gpuCountPerNode",
     "diloco",
     "etcd",
-    "resources"
+    "global",
+    "resources",
+    "deploymentNumReplicas"
   ],
   "additionalProperties": false
 }
