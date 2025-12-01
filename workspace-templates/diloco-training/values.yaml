@@ -1,14 +1,24 @@
-# Test Workspace Helm Chart Values
-deploymentImage: "ghcr.io/exalsius/diloco-training:dev"
-
-# Ephemeral storage configuration
-ephemeralStorageGb: 50
-
 # PyTorch Elastic training configuration with etcd rendezvous
 elastic:
   minNodes: 2  # Minimum number of nodes for elastic training
   maxNodes: 3  # Maximum number of nodes for elastic training
-  maxRestarts: 3  # Maximum restarts for elastic training
+  maxRestarts: 10  # Maximum restarts for elastic training
+  rdzvTimeout: 1800  # Timeout for rendezvous in seconds (optimized for high latency)
+  
+  # GPU distribution policy (used when gpu.*.minNodes/maxNodes are null)
+  # Options: "auto" (split evenly), "prefer-nvidia" (NVIDIA first, AMD fallback), "prefer-amd" (AMD first, NVIDIA fallback)
+  gpuDistribution: "auto"
+  
+  # NCCL/RCCL configuration for high-latency environments
+  nccl:
+    debug: "INFO"  # Options: WARN, INFO, TRACE (INFO recommended for troubleshooting)
+    asyncErrorHandling: 1  # Enable async error handling for better fault tolerance
+    timeout: 1800  # NCCL operation timeout in seconds (default 1800)
+    ibTimeout: 22  # InfiniBand timeout (default 14, increase for high latency)
+    nsocksPerThread: 8  # Number of sockets per thread (default 4, increase for high latency)
+    socketNthreads: 4  # Number of threads per socket (default 1, increase for better utilization)
+    # Optional: Uncomment to specify network interface
+    # socketIfname: "eth0"  # Network interface to use (e.g., eth0, ib0)
   
   # etcd rendezvous backend configuration
   etcd:
@@ -16,27 +26,53 @@ elastic:
     externalEndpoint: ""  # e.g., "etcd.infrastructure.svc.cluster.local:2379"
     prefix: "/torchelastic"  # etcd key prefix for job isolation
     protocol: "http"         # "http" or "https"
+    runId: ""                # Leave empty for auto-generated timestamp-based ID
+
+# GPU-specific configurations
+# If explicitly set, these override the elastic.minNodes/maxNodes/gpuDistribution
+# If not set (or values are null), they will be calculated from elastic config
+gpu:
+  nvidia:
+    enabled: true
+    image: "ghcr.io/exalsius/diloco-training:cuda-dev"
+    minNodes: null  # null means: calculate from elastic.minNodes + gpuDistribution
+    maxNodes: null  # null means: calculate from elastic.maxNodes + gpuDistribution
+    runtimeClassName: "nvidia"
+  amd:
+    enabled: true
+    image: "ghcr.io/exalsius/diloco-training:rocm-dev"
+    minNodes: null  # null means: calculate from elastic.minNodes + gpuDistribution
+    maxNodes: null  # null means: calculate from elastic.maxNodes + gpuDistribution
+    runtimeClassName: ""  # Empty for default runtime
+
+# Ephemeral storage configuration
+ephemeralStorageGb: 50
+
+# Resource configuration for a single worker pod
+cpuCores: 12
+memoryGb: 32
+gpuCountPerNode: 1  # Number of GPUs per node (also determines PyTorch processes per node)
 
 # DiLoCo Training Environment Variables
 diloco:
   model: "gpt-neo-x"
   dataset: "c4"
-  localSteps: "50"
+  localSteps: "10"
   lr: "4e-4"
   outerLr: "0.7"
   warmupSteps: "500"
-  totalSteps: "1000"
+  totalSteps: "20"
   perDeviceTrainBatchSize: "64"
   batchSize: "512"
-  optimMethod: "demo"
+  optimMethod: "sgd"
   quantization: "false"
   asyncCommunication: "false"
   checkpointPath: "checkpoint.pth"
-  checkpointInterval: "512"
+  checkpointInterval: "5"
   device: "cuda"
   wandbProjectName: "diloco-training"
-  wandbGroup: "diloco-gptneo-c4-elastic"
-  wandbRunId: "gpt-4e-4"
+  wandbGroup: "diloco-heterogenous"
+  wandbRunId: "gpt-neo-x"
   heterogeneous: "true"
   minBatchSize: "32"
   maxBatchSize: "512"
@@ -47,18 +83,22 @@ diloco:
   experimentTags: "[\"diloco\", \"gpt-neo-x\", \"c4\"]"
   seed: "42"
   wandbLogging: "true"
-  wandbUserKey: "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
-  huggingfaceToken: "XXXXXXXXXXXXXXXXXXXXXXXX"
+  wandbUserKey: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx"
+  huggingfaceToken: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
   compileModel: "false"
   compileBackend: "inductor"
   compileMode: "default"
-  hfUpload: "false"
-  trainedModelHfName: ""
+  hfUpload: "true"
+  trainedModelHfName: "test-model"
+  pgroupBackend: ""
+  
 
 # etcd subchart configuration (bitnami/etcd)
 # Set enabled: false to use an external etcd cluster (configure elastic.etcd.externalEndpoint)
 etcd:
   enabled: true
+  persistence:
+    enabled: false  # Disable persistence - etcd will use emptyDir volume
   replicaCount: 1
   image:
     registry: docker.io
@@ -77,6 +117,19 @@ etcd:
   extraEnvVars:
     - name: ETCD_ENABLE_V2
       value: "true"
+    # High-latency network optimization
+    - name: ETCD_HEARTBEAT_INTERVAL
+      value: "500"  # 500ms (default 100ms) - match network RTT
+    - name: ETCD_ELECTION_TIMEOUT
+      value: "5000"  # 5000ms (default 1000ms) - 10x heartbeat for stability
+    # Increase snapshot and compaction intervals for stability
+    - name: ETCD_SNAPSHOT_COUNT
+      value: "100000"  # More operations before snapshot (default 10000)
+    - name: ETCD_AUTO_COMPACTION_RETENTION
+      value: "1"  # Keep 1 hour of history
+    - name: ETCD_AUTO_COMPACTION_MODE
+      value: "periodic"
+
 
 ##################################################################
 ########## ONLY HERE FOR REFERENCE OR LOCAL TESTING ##############
