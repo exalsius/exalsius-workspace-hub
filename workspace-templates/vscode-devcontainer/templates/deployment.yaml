@@ -24,6 +24,7 @@ spec:
       containers:
         - name: devpod
           image: {{ include "vscode-devcontainer.image" . }}
+          imagePullPolicy: Always
           ports:
             - containerPort: 22
               name: ssh

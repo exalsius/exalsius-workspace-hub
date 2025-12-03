@@ -24,6 +24,7 @@ spec:
       containers:
         - name: {{ include "jupyter-notebook.deploymentName" . }}
           image: {{ .Values.deploymentImage }}
+          imagePullPolicy: Always
           volumeMounts:
             - name: {{ include "jupyter-notebook.storageVolumeName" . }}
               mountPath: /tf
