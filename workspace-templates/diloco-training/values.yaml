@@ -53,14 +53,14 @@ diloco:
   lr: 4e-4
   outerLr: 0.7
   warmupSteps: 500
-  totalSteps: 20
+  totalSteps: 16000
   perDeviceTrainBatchSize: 64
   batchSize: 512
   optimMethod: "sgd"
   quantization: false
   asyncCommunication: false
   checkpointPath: "checkpoint.pth"
-  checkpointInterval: 5
+  checkpointInterval: 10
   device: "cuda"
   wandbProjectName: "diloco-training"
   wandbGroup: "diloco-heterogenous"

@@ -224,7 +224,7 @@ These parameters configure the DiLoCo training process and are passed as environ
 | `diloco.lr`                    | The learning rate for the local optimizer (number).                      | `4e-4`                         |
 | `diloco.outerLr`               | The learning rate for the outer optimizer (number).                     | `0.7`                          |
 | `diloco.warmupSteps`           | The number of warmup steps for the learning rate scheduler (integer).    | `500`                          |
-| `diloco.totalSteps`            | The total number of training steps (integer).                            | `20`                           |
+| `diloco.totalSteps`            | The total number of training steps (integer).                            | `16000`                           |
 | `diloco.perDeviceTrainBatchSize` | The training batch size per device (integer).                            | `64`                           |
 | `diloco.batchSize`             | The total batch size across all devices (integer).                       | `512`                          |
 | `diloco.optimMethod`           | The optimization method to use.                                          | `sgd`                          |
@@ -233,7 +233,7 @@ These parameters configure the DiLoCo training process and are passed as environ
 | `diloco.modelCacheDir`         | Directory path for HuggingFace model cache.                              | `/data/models`                 |
 | `diloco.datasetCacheDir`       | Directory path for HuggingFace dataset cache.                            | `/data/datasets`               |
 | `diloco.checkpointPath`        | The path to save checkpoints.                                            | `checkpoint.pth`                |
-| `diloco.checkpointInterval`    | The interval (in steps) for saving checkpoints (integer).                | `5`                            |
+| `diloco.checkpointInterval`    | The interval (in steps) for saving checkpoints (integer).                | `10`                            |
 | `diloco.device`                | The device to use for training.                                          | `cuda`                         |
 | `diloco.wandbProjectName`      | The project name for Weights & Biases logging.                           | `diloco-training`              |
 | `diloco.wandbGroup`            | The group name for Weights & Biases logging.                             | `diloco-heterogenous`          |
