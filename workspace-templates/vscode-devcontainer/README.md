@@ -55,8 +55,8 @@ All configurable options are defined in the `values.yaml` file and can be overri
 
 | Parameter          | Description                                                        | Default Value |
 | ------------------ | ------------------------------------------------------------------ | ------------- |
-| `sshPassword`      | **Required.** Password for SSH authentication.                                   | `"testpassword"` |
-| `sshPublicKey`     | **Required.** SSH public key(s) for key-based authentication. Can contain multiple keys, one per line. | `""` |
+| `sshPassword`      | **Optional.** Password for SSH authentication. At least one of `sshPassword` or `sshPublicKey` must be provided. | `"testpassword"` |
+| `sshPublicKey`     | **Optional.** SSH public key(s) for key-based authentication. Can contain multiple keys, one per line. At least one of `sshPassword` or `sshPublicKey` must be provided. | `""` |
 | `shmSizeGb`        | **Required.** The size of shared memory (`/dev/shm`) in GB for the pod.          | `8`           |
 
 ### Resource Configuration
