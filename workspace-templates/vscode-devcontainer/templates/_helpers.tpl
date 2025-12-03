@@ -52,13 +52,6 @@ Create a safe secret name specifically for vscode-devcontainer secret.
 {{- end -}}
 
 {{/*
-Create a safe configmap name specifically for vscode-devcontainer configmap.
-*/}}
-{{- define "vscode-devcontainer.configmapName" -}}
-{{- include "vscode-devcontainer.safeName" (dict "base" .Values.global.deploymentName "suffix" "code-configmap") -}}
-{{- end -}}
-
-{{/*
 Determine the image to use based on deploymentImage or gpuVendor.
 If deploymentImage is provided, use it. Otherwise, auto-select based on gpuVendor.
 */}}
