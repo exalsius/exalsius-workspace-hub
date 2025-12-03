@@ -55,8 +55,8 @@ All configurable options are defined in the `values.yaml` file and can be overri
 
 | Parameter          | Description                                                        | Default Value |
 | ------------------ | ------------------------------------------------------------------ | ------------- |
-| `sshPassword`      | **Required.** Password for SSH authentication.                                   | `"testpassword"` |
-| `sshPublicKey`     | **Required.** SSH public key(s) for key-based authentication. Can contain multiple keys, one per line. | `""` |
+| `sshPassword`      | **Optional.** Password for SSH authentication. At least one of `sshPassword` or `sshPublicKey` must be provided. | `"testpassword"` |
+| `sshPublicKey`     | **Optional.** SSH public key(s) for key-based authentication. Can contain multiple keys, one per line. At least one of `sshPassword` or `sshPublicKey` must be provided. | `""` |
 | `shmSizeGb`        | **Required.** The size of shared memory (`/dev/shm`) in GB for the pod.          | `8`           |
 
 ### Resource Configuration
@@ -70,8 +70,8 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | `resources.gpuCount`         | The number of GPUs to allocate.                                    | `1`           | Yes |
 | `resources.gpuVendor`        | GPU vendor configuration. Valid values: `"NVIDIA"` or `"AMD"`. Used for automatic image selection and GPU resource allocation. | `"NVIDIA"` | Yes |
 | `resources.storageGb`        | The size of the persistent volume for your workspace.              | `50`          | Yes |
-| `resources.gpuType`          | GPU type/model.                                                    | `"L40"`       | No |
-| `resources.gpuMemory`        | GPU memory in gigabytes.                                          | `24`          | No |
+| `resources.gpuType`          | GPU type/model (informational only, not used by templates).                                                    | `"L40"`       | No |
+| `resources.gpuMemory`        | GPU memory in gigabytes (informational only, not used by templates).                                          | `24`          | No |
 
 ## Remote SSH Connection
 

@@ -61,6 +61,6 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | `resources.memoryGb`         | The amount of memory in GB to allocate.               | `32`          | Yes |
 | `resources.gpuCount`         | The number of GPUs to allocate.                       | `1`           | Yes |
 | `resources.storageGb`        | The size of the persistent volume for your workspace. | `50`          | Yes |
-| `resources.gpuVendor`        | GPU vendor configuration. Valid values: `"NVIDIA"` or `"AMD"`. | `"NVIDIA"` | No |
-| `resources.gpuType`          | GPU type/model.                                       | `"L40"`       | No |
-| `resources.gpuMemory`        | GPU memory in gigabytes.                             | `24`          | No |
+| `resources.gpuVendor`        | GPU vendor configuration (informational only, not used by templates). Valid values: `"NVIDIA"` or `"AMD"`. | `"NVIDIA"` | No |
+| `resources.gpuType`          | GPU type/model (informational only, not used by templates).                                       | `"L40"`       | No |
+| `resources.gpuMemory`        | GPU memory in gigabytes (informational only, not used by templates).                             | `24`          | No |

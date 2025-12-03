@@ -94,7 +94,8 @@
     "sshPublicKey": {
       "type": "string",
       "description": "SSH public key for authentication (multi-line string, can contain multiple keys)",
-      "default": ""
+      "default": "",
+      "minLength": 0
     },
     "shmSizeGb": {
       "type": "integer",
@@ -106,14 +107,24 @@
       "$ref": "#/$defs/resources"
     }
   },
-  "required": [
-    "global",
-    "deploymentNumReplicas",
-    "deploymentImage",
-    "sshPassword",
-    "sshPublicKey",
-    "shmSizeGb",
-    "resources"
-  ],
+  "anyOf": [{
+    "required": [
+        "global",
+        "deploymentNumReplicas",
+        "deploymentImage",
+        "sshPassword",
+        "shmSizeGb",
+        "resources"
+      ]
+  }, {
+    "required": [
+        "global",
+        "deploymentNumReplicas",
+        "deploymentImage",
+        "sshPublicKey",
+        "shmSizeGb",
+        "resources"
+      ]
+  }],
   "additionalProperties": false
 }

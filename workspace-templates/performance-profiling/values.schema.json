@@ -111,6 +111,12 @@
       },
       "default": []
     },
+    "imagePullPolicy": {
+      "type": "string",
+      "description": "Image pull policy for the container",
+      "enum": ["Always", "IfNotPresent", "Never"],
+      "default": "Always"
+    },
     "resources": {
       "$ref": "#/$defs/resources"
     }
