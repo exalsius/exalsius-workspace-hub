@@ -70,16 +70,16 @@ spec:
                     key: hf_api_token
 {{- end }}
               resources:
-                limits:
-                  cpu: {{ .Values.resources.cpuCores }}
-                  memory: {{ .Values.resources.memoryGb }}Gi
-                  nvidia.com/gpu: {{ .Values.resources.gpuCount }}
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
                 requests:
+                  ephemeral-storage: 5Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.resources.gpuCount }}
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+                limits:
+                  ephemeral-storage: 10Gi
+                  cpu: {{ .Values.resources.cpuCores }}
+                  memory: {{ .Values.resources.memoryGb }}Gi
+                  nvidia.com/gpu: {{ .Values.resources.gpuCount }}
               volumeMounts:
               - mountPath: /tmp/files
                 name: ray-head-files

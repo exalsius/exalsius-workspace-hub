@@ -1,9 +1,6 @@
 # Test Workspace Helm Chart Values
 deploymentImage: "ubuntu:22.04"
 
-# Ephemeral storage configuration
-ephemeralStorageGb: 10
-
 ##################################################################
 ########## ONLY HERE FOR REFERENCE OR LOCAL TESTING ##############
 ########## Values are set automatically by exalsius ##############

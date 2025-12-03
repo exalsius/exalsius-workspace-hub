@@ -255,12 +255,6 @@
       "required": ["nvidia", "amd"],
       "additionalProperties": false
     },
-    "ephemeralStorageGb": {
-      "type": "integer",
-      "description": "Ephemeral storage size in gigabytes",
-      "minimum": 1,
-      "default": 50
-    },
     "diloco": {
       "type": "object",
       "description": "DiLoCo Training Environment Variables",
@@ -481,7 +475,6 @@
   "required": [
     "elastic",
     "gpu",
-    "ephemeralStorageGb",
     "diloco",
     "etcd",
     "global",

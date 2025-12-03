@@ -1,9 +1,6 @@
 # Performance Profiling Workspace Helm Chart Values
 deploymentImage: ghcr.io/exalsius/exalsius-performance-modeling:dev
 
-# Ephemeral storage configuration
-ephemeralStorageGb: 100
-
 # Job configuration
 nodes: 1  # Number of nodes for distributed training
 

@@ -86,12 +86,6 @@
       "default": "ghcr.io/exalsius/exalsius-performance-modeling:dev",
       "minLength": 1
     },
-    "ephemeralStorageGb": {
-      "type": "integer",
-      "description": "Ephemeral storage size in gigabytes",
-      "minimum": 1,
-      "default": 100
-    },
     "nodes": {
       "type": "integer",
       "description": "Number of nodes for distributed training",
@@ -125,7 +119,6 @@
     "global",
     "deploymentNumReplicas",
     "deploymentImage",
-    "ephemeralStorageGb",
     "nodes",
     "extraEnvironmentVariables",
     "resources"

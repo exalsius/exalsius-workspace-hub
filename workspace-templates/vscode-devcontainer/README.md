@@ -50,7 +50,6 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | --------------------- | ---------------------------------------------------- | --------------------------------- |
 | `deploymentImage`     | **Required.** The Docker image for the development container. If empty, image will be auto-selected based on `resources.gpuVendor`. | `""` (auto-selected) |
 | `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
-| `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB for the pod.    | `50`          |
 
 ### SSH Configuration
 

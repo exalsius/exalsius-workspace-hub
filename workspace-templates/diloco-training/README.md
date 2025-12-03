@@ -61,7 +61,6 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | Parameter             | Description                                       | Default Value                |
 | --------------------- | ------------------------------------------------- | ---------------------------- |
 | `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
-| `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB to allocate.  | `50`         |
 | `elastic`            | **Required.** PyTorch Elastic training configuration with etcd rendezvous. | See PyTorch Elastic Configuration below |
 | `diloco`             | **Required.** DiLoCo Training Environment Variables. | See DiLoCo Training Parameters below |
 | `etcd`               | **Required.** etcd subchart configuration (bitnami/etcd). | See PyTorch Elastic Configuration below |
@@ -79,42 +78,6 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | `resources.gpuType`          | GPU type/model.                           | `"A100"`       | No |
 | `resources.gpuMemory`        | GPU memory in gigabytes.                 | `80`          | No |
 | `resources.storageGb`       | The size of the persistent volume for your workspace. | `20`          | No |
-
-### Persistent Storage Configuration
-
-This chart supports per-pod persistent storage using Volcano's native `volumeClaim` feature. When enabled, each worker pod receives its own isolated persistent volume mounted at `/data` with subdirectories for models, datasets, and checkpoints.
-
-| Parameter                  | Description                                                    | Default Value        |
-| -------------------------- | -------------------------------------------------------------- | -------------------- |
-| `storage.enabled`          | Enable persistent storage for each worker pod                  | `true`               |
-| `storage.sizeGb`           | Storage size in GB per worker pod                              | `100`                |
-| `storage.storageClassName` | Kubernetes storage class (empty = cluster default)             | `""`                 |
-| `storage.accessMode`       | Volume access mode (ReadWriteOnce for per-pod isolation)       | `ReadWriteOnce`      |
-| `diloco.modelCacheDir`     | Directory path for HuggingFace model cache                     | `/data/models`       |
-| `diloco.datasetCacheDir`   | Directory path for HuggingFace dataset cache                   | `/data/datasets`     |
-| `diloco.checkpointPath`    | Path for training checkpoints                                  | `/data/checkpoints/checkpoint.pth` |
-
-**Storage Architecture:**
-
-Each worker pod gets its own persistent volume with the following structure:
-
-```
-/data/
-├── models/       (HuggingFace model cache - DILOCO_MODEL_CACHE_DIR)
-├── datasets/     (HuggingFace dataset cache - DILOCO_DATASET_CACHE_DIR)
-└── checkpoints/  (Training checkpoints - DILOCO_CHECKPOINT_PATH)
-```
-
-**Benefits:**
-- **Persistence**: Storage survives pod restarts and rescheduling
-- **Isolation**: Each worker has its own storage (no sharing conflicts)
-- **Performance**: Models and datasets cached locally, reducing download times
-- **Checkpointing**: Training state preserved across failures
-
-**Notes:**
-- Volcano automatically creates PVCs with names like `{job-name}-worker-0-data`, `{job-name}-worker-1-data`, etc.
-- PVCs are not automatically deleted when the job completes (manual cleanup required)
-- To disable persistent storage, set `storage.enabled: false` (cache directories will use container ephemeral storage)
 
 ### PyTorch Elastic Configuration
 

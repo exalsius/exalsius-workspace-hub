@@ -176,15 +176,17 @@ spec:
               name: nvidia-worker
               resources:
                 requests:
+                  # PVCs can not easily be used with Volcano, so we use the storageGb value for ephemeral storage
+                  ephemeral-storage: {{ .Values.resources.storageGb }}Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.resources.gpuCount }}
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
                 limits:
+                  # PVCs can not easily be used with Volcano, so we use the storageGb value for ephemeral storage
+                  ephemeral-storage: {{ .Values.resources.storageGb }}Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.resources.gpuCount }}
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
               workingDir: /app
           restartPolicy: OnFailure
 {{- end }}
@@ -344,15 +346,17 @@ spec:
               name: amd-worker
               resources:
                 requests:
+                  # PVCs can not easily be used with Volcano, so we use the storageGb value for ephemeral storage
+                  ephemeral-storage: {{ .Values.resources.storageGb }}Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   amd.com/gpu: {{ .Values.resources.gpuCount }}
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
                 limits:
+                  # PVCs can not easily be used with Volcano, so we use the storageGb value for ephemeral storage
+                  ephemeral-storage: {{ .Values.resources.storageGb }}Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   amd.com/gpu: {{ .Values.resources.gpuCount }}
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
               workingDir: /app
           restartPolicy: OnFailure
 {{- end }}

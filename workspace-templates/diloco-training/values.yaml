@@ -45,9 +45,6 @@ gpu:
     maxNodes: null  # null means: calculate from elastic.maxNodes + gpuDistribution
     runtimeClassName: ""  # Empty for default runtime
 
-# Ephemeral storage configuration
-ephemeralStorageGb: 50
-
 # DiLoCo Training Environment Variables (will be converted to strings in the configmap)
 diloco:
   model: "gpt-neo-x"
@@ -140,6 +137,6 @@ resources:
   gpuMemory: 80
   cpuCores: 12
   memoryGb: 32
-  storageGb: 20
+  storageGb: 50
 
 deploymentNumReplicas: 1

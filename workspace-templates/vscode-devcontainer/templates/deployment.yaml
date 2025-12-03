@@ -48,6 +48,7 @@ spec:
 {{- end }}
           resources:
             requests:
+              ephemeral-storage: 5Gi
               cpu: {{ .Values.resources.cpuCores }}
               memory: {{ .Values.resources.memoryGb }}Gi
 {{- if and .Values.resources.gpuCount (gt (int .Values.resources.gpuCount) 0) }}
@@ -58,6 +59,7 @@ spec:
 {{- end }}
 {{- end }}
             limits:
+              ephemeral-storage: 10Gi
               cpu: {{ .Values.resources.cpuCores }}
               memory: {{ .Values.resources.memoryGb }}Gi
 {{- if and .Values.resources.gpuCount (gt (int .Values.resources.gpuCount) 0) }}

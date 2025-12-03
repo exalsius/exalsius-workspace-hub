@@ -1,9 +1,6 @@
 # Marimo Helm Chart Values
 deploymentImage: "ghcr.io/exalsius/marimo:latest-nvidia"
 
-# Ephemeral storage storage configuration
-ephemeralStorageGb: 50
-
 # Marimo configuration
 tokenPassword: "mysecurepassword"
 
