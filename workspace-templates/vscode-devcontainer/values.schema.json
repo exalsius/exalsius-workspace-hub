@@ -87,15 +87,13 @@
     },
     "sshPassword": {
       "type": "string",
-      "description": "Password for SSH authentication",
       "default": "testpassword",
-      "minLength": 1
+      "description": "Password for SSH authentication"
     },
     "sshPublicKey": {
       "type": "string",
-      "description": "SSH public key for authentication (multi-line string, can contain multiple keys)",
       "default": "",
-      "minLength": 0
+      "description": "SSH public key for authentication (multi-line string, can contain multiple keys)"
     },
     "shmSizeGb": {
       "type": "integer",
@@ -125,6 +123,36 @@
         "shmSizeGb",
         "resources"
       ]
+  }, {
+    "required": [
+        "global",
+        "deploymentNumReplicas",
+        "deploymentImage",
+        "sshPassword",
+        "sshPublicKey",
+        "shmSizeGb",
+        "resources"
+      ]
+  }],
+  "allOf": [{
+    "anyOf": [
+      {
+        "required": ["sshPassword"],
+        "properties": {
+          "sshPassword": {
+            "minLength": 1
+          }
+        }
+      },
+      {
+        "required": ["sshPublicKey"],
+        "properties": {
+          "sshPublicKey": {
+            "minLength": 1
+          }
+        }
+      }
+    ]
   }],
   "additionalProperties": false
 }
