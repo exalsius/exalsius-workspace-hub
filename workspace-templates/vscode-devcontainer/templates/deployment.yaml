@@ -35,17 +35,18 @@ spec:
                   name: {{ include "vscode-devcontainer.secretName" . }}
                   key: SSH_PASSWORD
 {{- end }}
+{{- if .Values.sshPublicKey }}
+            - name: DEV_SSH_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vscode-devcontainer.secretName" . }}
+                  key: SSH_PUBLIC_KEY
+{{- end }}
           volumeMounts:
             - name: {{ include "vscode-devcontainer.storageVolumeName" . }}
               mountPath: /workspace
             - name: dshm
               mountPath: /dev/shm
-{{- if .Values.sshPublicKey }}
-            - name: ssh-authorized-keys
-              mountPath: /workspace/.ssh/authorized_keys
-              subPath: authorized_keys
-              readOnly: true
-{{- end }}
           resources:
             requests:
               ephemeral-storage: 5Gi
@@ -77,8 +78,3 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: {{ .Values.shmSizeGb }}Gi
-{{- if .Values.sshPublicKey }}
-        - name: ssh-authorized-keys
-          configMap:
-            name: {{ include "vscode-devcontainer.configmapName" . }}
-{{- end }}
