@@ -176,12 +176,14 @@ spec:
               name: nvidia-worker
               resources:
                 requests:
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+                  # PVCs can not easily be used with Volcano, so we use the storageGb value for ephemeral storage
+                  ephemeral-storage: {{ .Values.resources.storageGb }}Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.resources.gpuCount }}
                 limits:
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+                  # PVCs can not easily be used with Volcano, so we use the storageGb value for ephemeral storage
+                  ephemeral-storage: {{ .Values.resources.storageGb }}Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.resources.gpuCount }}
@@ -344,12 +346,14 @@ spec:
               name: amd-worker
               resources:
                 requests:
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+                  # PVCs can not easily be used with Volcano, so we use the storageGb value for ephemeral storage
+                  ephemeral-storage: {{ .Values.resources.storageGb }}Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   amd.com/gpu: {{ .Values.resources.gpuCount }}
                 limits:
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
+                  # PVCs can not easily be used with Volcano, so we use the storageGb value for ephemeral storage
+                  ephemeral-storage: {{ .Values.resources.storageGb }}Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   amd.com/gpu: {{ .Values.resources.gpuCount }}
