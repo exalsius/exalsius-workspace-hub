@@ -85,12 +85,6 @@
       "description": "Container image for the devcontainer deployment. If empty, image will be auto-selected based on gpuVendor",
       "default": ""
     },
-    "ephemeralStorageGb": {
-      "type": "integer",
-      "description": "Ephemeral storage size in gigabytes",
-      "minimum": 1,
-      "default": 50
-    },
     "sshPassword": {
       "type": "string",
       "description": "Password for SSH authentication",
@@ -116,7 +110,6 @@
     "global",
     "deploymentNumReplicas",
     "deploymentImage",
-    "ephemeralStorageGb",
     "sshPassword",
     "sshPublicKey",
     "shmSizeGb",

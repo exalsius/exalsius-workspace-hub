@@ -1,9 +1,6 @@
 # Jupyter Notebook Helm Chart Values
 deploymentImage: "ghcr.io/exalsius/jupyter-notebook:latest-nvidia"
 
-# Ephemeral storage configuration
-ephemeralStorageGb: 50
-
 # Jupyter Notebook configuration
 notebookPassword: "mysecurepassword"
 

@@ -86,12 +86,6 @@
       "default": "ghcr.io/exalsius/jupyter-notebook:latest-nvidia",
       "minLength": 1
     },
-    "ephemeralStorageGb": {
-      "type": "integer",
-      "description": "Ephemeral storage size in gigabytes",
-      "minimum": 1,
-      "default": 50
-    },
     "notebookPassword": {
       "type": "string",
       "description": "Password for jupyter notebook authentication",
@@ -106,7 +100,6 @@
     "global",
     "deploymentNumReplicas",
     "deploymentImage",
-    "ephemeralStorageGb",
     "notebookPassword",
     "resources"
   ],

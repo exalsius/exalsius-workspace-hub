@@ -5,9 +5,6 @@
 # AMD -> ghcr.io/exalsius/devpod:rocm-pytorch-latest
 deploymentImage: ""
 
-# Ephemeral storage configuration
-ephemeralStorageGb: 50
-
 # SSH configuration
 # Password authentication (optional)
 sshPassword: "testpassword"

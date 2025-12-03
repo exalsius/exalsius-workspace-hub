@@ -86,12 +86,6 @@
       "default": "ubuntu:22.04",
       "minLength": 1
     },
-    "ephemeralStorageGb": {
-      "type": "integer",
-      "description": "Ephemeral storage size in gigabytes",
-      "minimum": 1,
-      "default": 10
-    },
     "resources": {
       "$ref": "#/$defs/resources"
     }
@@ -100,7 +94,6 @@
     "global",
     "deploymentNumReplicas",
     "deploymentImage",
-    "ephemeralStorageGb",
     "resources"
   ],
   "additionalProperties": false

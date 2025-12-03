@@ -50,7 +50,6 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | `deploymentImage`     | **Required.** The Docker image for the Jupyter Notebook.           | `ghcr.io/exalsius/jupyter-notebook:latest-nvidia` |
 | `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
 | `notebookPassword`    | **Required.** The password to access the Jupyter Notebook. | `mysecurepassword`                   |
-| `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB for the pod.    | `50`          |
 
 ### Resource Configuration
 

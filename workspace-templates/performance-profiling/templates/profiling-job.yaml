@@ -48,15 +48,15 @@ spec:
                 {{ end }}
               resources:
                 requests:
+                  ephemeral-storage: 5Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.resources.gpuCount }}
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
                 limits:
+                  ephemeral-storage: 10Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.resources.gpuCount }}
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
               volumeMounts:
                 - name: profiling-config
                   mountPath: /app/profiling_config.json
@@ -95,15 +95,15 @@ spec:
                 {{ end }}
               resources:
                 requests:
+                  ephemeral-storage: 5Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.resources.gpuCount }}
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
                 limits:
+                  ephemeral-storage: 10Gi
                   cpu: {{ .Values.resources.cpuCores }}
                   memory: {{ .Values.resources.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.resources.gpuCount }}
-                  ephemeral-storage: {{ .Values.ephemeralStorageGb }}Gi
               volumeMounts:
                 - name: profiling-config
                   mountPath: /app/profiling_config.json

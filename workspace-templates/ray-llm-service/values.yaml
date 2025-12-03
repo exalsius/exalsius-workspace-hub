@@ -1,9 +1,6 @@
 # Ray LLM Service Helm Chart Values
 deploymentImage: "rayproject/ray-ml:2.46.0.0e19ea"
 
-# Ephemeral storage configuration
-ephemeralStorageGb: 50
-
 # If you require access to access-restricted models, you can specify a Hugging Face token here.
 # huggingfaceToken: "my-hugging-face-token"
 

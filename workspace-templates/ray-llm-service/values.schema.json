@@ -86,12 +86,6 @@
       "default": "rayproject/ray-ml:2.46.0.0e19ea",
       "minLength": 1
     },
-    "ephemeralStorageGb": {
-      "type": "integer",
-      "description": "Ephemeral storage size in gigabytes",
-      "minimum": 1,
-      "default": 50
-    },
     "huggingfaceToken": {
       "type": "string",
       "description": "Hugging Face token for access-restricted models",
@@ -153,7 +147,6 @@
     "global",
     "deploymentNumReplicas",
     "deploymentImage",
-    "ephemeralStorageGb",
     "numModelReplicas",
     "runtimeEnvironmentPipPackages",
     "huggingfaceModel",

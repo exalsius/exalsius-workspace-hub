@@ -39,7 +39,6 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | --------------------- | -------------------------------------------- | ------------------ |
 | `deploymentImage`     | **Required.** The Docker image for the container.          | `ubuntu:22.04`     |
 | `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
-| `ephemeralStorageGb` | **Required.** The amount of ephemeral storage in GB for the pod. | `10`          |
 
 ### Resource Configuration
 
