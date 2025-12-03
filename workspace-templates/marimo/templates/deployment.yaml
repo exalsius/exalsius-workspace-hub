@@ -24,6 +24,7 @@ spec:
       containers:
         - name: {{ include "marimo.deploymentName" . }}
           image: {{ .Values.deploymentImage }}
+          imagePullPolicy: Always
           workingDir: /data
           env:
             - name: TOKEN_PASSWORD

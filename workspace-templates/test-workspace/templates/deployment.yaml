@@ -19,6 +19,7 @@ spec:
       containers:
         - name: {{ include "test-workspace.deploymentName" . }}
           image: {{ .Values.deploymentImage }}
+          imagePullPolicy: Always
           command: ["sleep", "infinity"]
           resources:
             requests:
