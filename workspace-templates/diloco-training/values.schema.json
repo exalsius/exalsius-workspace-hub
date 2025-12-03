@@ -69,7 +69,7 @@
           "minimum": 1
         }
       },
-      "required": ["gpuCount", "gpuVendor", "cpuCores", "memoryGb", "storageGb"],
+      "required": ["gpuCount", "cpuCores", "memoryGb", "storageGb"],
       "additionalProperties": false
     }
   },

@@ -74,10 +74,10 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | `resources.cpuCores`         | The number of CPU cores to allocate per worker pod.      | `2`          | Yes |
 | `resources.memoryGb`         | The amount of memory in GB to allocate per worker pod.   | `8`          | Yes |
 | `resources.gpuCount`         | The number of GPUs per node (also determines PyTorch processes per node).           | `1`           | Yes |
-| `resources.gpuVendor`        | GPU vendor configuration. Valid values: `"NVIDIA"` or `"AMD"`. | `"NVIDIA"` | No |
-| `resources.gpuType`          | GPU type/model.                           | `"A100"`       | No |
-| `resources.gpuMemory`        | GPU memory in gigabytes.                 | `80`          | No |
-| `resources.storageGb`       | The size of the persistent volume for your workspace. | `20`          | No |
+| `resources.storageGb`       | The size of ephemeral storage for your workspace (used for PVCs). | `20`          | Yes |
+| `resources.gpuVendor`        | GPU vendor configuration (informational only, not used by templates). Valid values: `"NVIDIA"` or `"AMD"`. | `"NVIDIA"` | No |
+| `resources.gpuType`          | GPU type/model (informational only, not used by templates).                           | `"A100"`       | No |
+| `resources.gpuMemory`        | GPU memory in gigabytes (informational only, not used by templates).                 | `80`          | No |
 
 ### PyTorch Elastic Configuration
 

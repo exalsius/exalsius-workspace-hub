@@ -70,8 +70,8 @@ All configurable options are defined in the `values.yaml` file and can be overri
 | `resources.gpuCount`         | The number of GPUs to allocate.                                    | `1`           | Yes |
 | `resources.gpuVendor`        | GPU vendor configuration. Valid values: `"NVIDIA"` or `"AMD"`. Used for automatic image selection and GPU resource allocation. | `"NVIDIA"` | Yes |
 | `resources.storageGb`        | The size of the persistent volume for your workspace.              | `50`          | Yes |
-| `resources.gpuType`          | GPU type/model.                                                    | `"L40"`       | No |
-| `resources.gpuMemory`        | GPU memory in gigabytes.                                          | `24`          | No |
+| `resources.gpuType`          | GPU type/model (informational only, not used by templates).                                                    | `"L40"`       | No |
+| `resources.gpuMemory`        | GPU memory in gigabytes (informational only, not used by templates).                                          | `24`          | No |
 
 ## Remote SSH Connection
 

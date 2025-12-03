@@ -4,6 +4,8 @@ deploymentImage: ghcr.io/exalsius/exalsius-performance-modeling:dev
 # Job configuration
 nodes: 1  # Number of nodes for distributed training
 
+imagePullPolicy: Always
+
 extraEnvironmentVariables:
   - name: MACHINE_NAME
     value: my-machine
