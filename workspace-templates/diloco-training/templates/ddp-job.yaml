@@ -188,6 +188,13 @@ spec:
                   memory: {{ .Values.resources.memoryGb }}Gi
                   nvidia.com/gpu: {{ .Values.resources.gpuCount }}
               workingDir: /app
+              volumeMounts:
+                - mountPath: /dev/shm
+                  name: dshm
+          volumes:
+            - name: dshm
+              emptyDir:
+                medium: Memory
           restartPolicy: OnFailure
 {{- end }}
 {{- if .Values.gpu.amd.enabled }}
@@ -358,6 +365,13 @@ spec:
                   memory: {{ .Values.resources.memoryGb }}Gi
                   amd.com/gpu: {{ .Values.resources.gpuCount }}
               workingDir: /app
+              volumeMounts:
+                - mountPath: /dev/shm
+                  name: dshm
+          volumes:
+            - name: dshm
+              emptyDir:
+                medium: Memory
           restartPolicy: OnFailure
 {{- end }}
 
