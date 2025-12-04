@@ -1,26 +1,28 @@
+{{- range .Values.exlsConfig.deviceConfigs }}
+---
 apiVersion: amd.com/v1alpha1
 kind: DeviceConfig
 metadata:
-  name: {{ .Values.exlsConfig.deviceConfig.name | default "default" }}
-  namespace: {{ .Values.exlsConfig.deviceConfig.namespace | default .Release.Namespace }}
+  name: {{ .name | default "default" }}
+  namespace: {{ $.Values.exlsConfig.namespace | default $.Release.Namespace }}
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/version: {{ .Chart.AppVersion | default .Chart.Version }}
-    {{- with .Values.exlsConfig.deviceConfig.labels }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/version: {{ $.Chart.AppVersion | default $.Chart.Version }}
+    {{- with .labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with .Values.exlsConfig.deviceConfig.annotations }}
+  {{- with .annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- with .Values.exlsConfig.deviceConfig.selector }}
+  {{- with .selector }}
   selector:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 
-  {{- with .Values.exlsConfig.deviceConfig.driver }}
+  {{- with .driver }}
   driver:
     {{- if (hasKey . "enable") }}
     enable: {{ .enable }}
@@ -93,307 +95,283 @@ spec:
       {{- toYaml . | nindent 6 }}
     {{- end }}
 
-    {{- with .upgradePolicy }}
     upgradePolicy:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
+      {{- $driverUpgradePolicy := .upgradePolicy | default dict }}
+      {{- if (hasKey $driverUpgradePolicy "enable") }}
+      enable: {{ $driverUpgradePolicy.enable }}
+      {{- else }}
+      enable: true
+      {{- end }}
+      maxParallelUpgrades: {{ $driverUpgradePolicy.maxParallelUpgrades | default 3 }}
+      maxUnavailableNodes: {{ $driverUpgradePolicy.maxUnavailableNodes | default "25%" }}
+      {{- if (hasKey $driverUpgradePolicy "rebootRequired") }}
+      rebootRequired: {{ $driverUpgradePolicy.rebootRequired }}
+      {{- else }}
+      rebootRequired: true
+      {{- end }}
+      nodeDrainPolicy:
+        {{- $nodeDrainPolicy := $driverUpgradePolicy.nodeDrainPolicy | default dict }}
+        {{- if (hasKey $nodeDrainPolicy "force") }}
+        force: {{ $nodeDrainPolicy.force }}
+        {{- else }}
+        force: true
+        {{- end }}
+        timeoutSeconds: {{ $nodeDrainPolicy.timeoutSeconds | default 300 }}
+        gracePeriodSeconds: {{ $nodeDrainPolicy.gracePeriodSeconds | default -1 }}
+      podDeletionPolicy:
+        {{- $podDeletionPolicy := $driverUpgradePolicy.podDeletionPolicy | default dict }}
+        {{- if (hasKey $podDeletionPolicy "force") }}
+        force: {{ $podDeletionPolicy.force }}
+        {{- else }}
+        force: true
+        {{- end }}
+        timeoutSeconds: {{ $podDeletionPolicy.timeoutSeconds | default 300 }}
+        gracePeriodSeconds: {{ $podDeletionPolicy.gracePeriodSeconds | default -1 }}
   {{- end }}
 
-  {{- with .Values.exlsConfig.deviceConfig.commonConfig }}
   commonConfig:
-    {{- with .initContainerImage }}
-    initContainerImage: {{ . }}
-    {{- end }}
-
-    {{- with .utilsContainer }}
+    {{- $commonConfig := .commonConfig | default dict }}
+    initContainerImage: {{ $commonConfig.initContainerImage | default "busybox:1.36" }}
     utilsContainer:
-      {{- with .image }}
-      image: {{ . }}
-      {{- end }}
-
-      {{- with .imagePullPolicy }}
-      imagePullPolicy: {{ . }}
-      {{- end }}
-
-      {{- with .imageRegistrySecret }}
+      {{- $utilsContainer := $commonConfig.utilsContainer | default dict }}
+      image: {{ $utilsContainer.image | default "docker.io/rocm/gpu-operator-utils:v1.4.0" }}
+      imagePullPolicy: {{ $utilsContainer.imagePullPolicy | default "IfNotPresent" }}
+      {{- with $utilsContainer.imageRegistrySecret }}
       imageRegistrySecret:
         {{- toYaml . | nindent 8 }}
+      {{- else }}
+      imageRegistrySecret: {}
       {{- end }}
-    {{- end }}
-  {{- end }}
 
-  {{- with .Values.exlsConfig.deviceConfig.devicePlugin }}
   devicePlugin:
-    {{- with .devicePluginImage }}
-    devicePluginImage: {{ . }}
-    {{- end }}
-
-    {{- with .devicePluginImagePullPolicy }}
-    devicePluginImagePullPolicy: {{ . }}
-    {{- end }}
-
-    {{- with .devicePluginTolerations }}
+    {{- $devicePlugin := .devicePlugin | default dict }}
+    devicePluginImage: {{ $devicePlugin.devicePluginImage | default "rocm/k8s-device-plugin:latest" }}
+    devicePluginImagePullPolicy: {{ $devicePlugin.devicePluginImagePullPolicy | default "IfNotPresent" }}
+    {{- with $devicePlugin.devicePluginTolerations }}
     devicePluginTolerations:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    devicePluginTolerations: []
     {{- end }}
-
-    {{- with .devicePluginArguments }}
+    {{- with $devicePlugin.devicePluginArguments }}
     devicePluginArguments:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    devicePluginArguments: {}
     {{- end }}
-
-    {{- if (hasKey . "enableNodeLabeller") }}
-    enableNodeLabeller: {{ .enableNodeLabeller }}
+    {{- if (hasKey $devicePlugin "enableNodeLabeller") }}
+    enableNodeLabeller: {{ $devicePlugin.enableNodeLabeller }}
+    {{- else }}
+    enableNodeLabeller: true
     {{- end }}
-
-    {{- with .nodeLabellerImage }}
-    nodeLabellerImage: {{ . }}
-    {{- end }}
-
-    {{- with .nodeLabellerImagePullPolicy }}
-    nodeLabellerImagePullPolicy: {{ . }}
-    {{- end }}
-
-    {{- with .nodeLabellerTolerations }}
+    nodeLabellerImage: {{ $devicePlugin.nodeLabellerImage | default "rocm/k8s-device-plugin:labeller-latest" }}
+    nodeLabellerImagePullPolicy: {{ $devicePlugin.nodeLabellerImagePullPolicy | default "IfNotPresent" }}
+    {{- with $devicePlugin.nodeLabellerTolerations }}
     nodeLabellerTolerations:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    nodeLabellerTolerations: []
     {{- end }}
-
-    {{- with .nodeLabellerArguments }}
+    {{- with $devicePlugin.nodeLabellerArguments }}
     nodeLabellerArguments:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    nodeLabellerArguments: []
     {{- end }}
-
-    {{- with .imageRegistrySecret }}
+    {{- with $devicePlugin.imageRegistrySecret | default dict }}
     imageRegistrySecret:
       {{- toYaml . | nindent 6 }}
     {{- end }}
-
-    {{- with .upgradePolicy }}
     upgradePolicy:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-  {{- end }}
+      {{- $upgradePolicy := $devicePlugin.upgradePolicy | default dict }}
+      upgradeStrategy: {{ $upgradePolicy.upgradeStrategy | default "RollingUpdate" }}
+      {{- if (hasKey $upgradePolicy "maxUnavailable") }}
+      maxUnavailable: {{ $upgradePolicy.maxUnavailable }}
+      {{- else }}
+      maxUnavailable: 1
+      {{- end }}
 
-  {{- with .Values.exlsConfig.deviceConfig.metricsExporter }}
   metricsExporter:
-    {{- if (hasKey . "enable") }}
-    enable: {{ .enable }}
+    {{- $metricsExporter := .metricsExporter | default dict }}
+    {{- if (hasKey $metricsExporter "enable") }}
+    enable: {{ $metricsExporter.enable }}
+    {{- else }}
+    enable: true
     {{- end }}
-
-    {{- with .serviceType }}
-    serviceType: {{ . }}
-    {{- end }}
-
-    {{- if (hasKey . "port") }}
-    port: {{ .port }}
-    {{- end }}
-
-    {{- if (hasKey . "nodePort") }}
-    nodePort: {{ .nodePort }}
-    {{- end }}
-
-    {{- with .image }}
-    image: {{ . }}
-    {{- end }}
-
-    {{- with .imagePullPolicy }}
-    imagePullPolicy: {{ . }}
-    {{- end }}
-
-    {{- with .config }}
+    serviceType: {{ $metricsExporter.serviceType | default "ClusterIP" }}
+    port: {{ $metricsExporter.port | default 5000 }}
+    nodePort: {{ $metricsExporter.nodePort | default 32500 }}
+    image: {{ $metricsExporter.image | default "docker.io/rocm/device-metrics-exporter:v1.4.0" }}
+    imagePullPolicy: {{ $metricsExporter.imagePullPolicy | default "IfNotPresent" }}
     config:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-
-    {{- with .tolerations }}
+      {{- $config := $metricsExporter.config | default dict }}
+      name: {{ $config.name | default "metrics-config" }}
+    {{- with $metricsExporter.tolerations }}
     tolerations:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    tolerations: []
     {{- end }}
-
-    {{- with .imageRegistrySecret }}
+    {{- with $metricsExporter.imageRegistrySecret | default dict }}
     imageRegistrySecret:
       {{- toYaml . | nindent 6 }}
     {{- end }}
-
-    {{- with .selector }}
+    {{- with $metricsExporter.selector }}
     selector:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    selector: {}
     {{- end }}
-
-    {{- with .upgradePolicy }}
+    podResourceAPISocketPath: {{ $metricsExporter.podResourceAPISocketPath | default "/var/lib/k0s/kubelet/pod-resources" }}
     upgradePolicy:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-
-    {{- with .podResourceAPISocketPath }}
-    podResourceAPISocketPath: {{ . }}
-    {{- end }}
-
-    {{- with .rbacConfig }}
+      {{- $meUpgradePolicy := $metricsExporter.upgradePolicy | default dict }}
+      upgradeStrategy: {{ $meUpgradePolicy.upgradeStrategy | default "RollingUpdate" }}
+      maxUnavailable: {{ $meUpgradePolicy.maxUnavailable | default 1 }}
     rbacConfig:
-      {{- if (hasKey . "enable") }}
-      enable: {{ .enable }}
-      {{- end }}
-
-      {{- with .image }}
-      image: {{ . }}
-      {{- end }}
-
-      {{- if (hasKey . "disableHttps")}}
-      disableHttps: {{ .disableHttps }}
-      {{- end }}
-
-      {{- with .secret }}
+      {{- $rbacConfig := $metricsExporter.rbacConfig | default dict }}
+      enable: {{ $rbacConfig.enable | default false }}
+      image: {{ $rbacConfig.image | default "quay.io/brancz/kube-rbac-proxy:v0.18.1" }}
+      disableHttps: {{ $rbacConfig.disableHttps | default false }}
+      {{- with $rbacConfig.secret }}
       secret:
         {{- toYaml . | nindent 8 }}
+      {{- else }}
+      secret: {}
       {{- end }}
-
-      {{- with .clientCAConfigMap }}
+      {{- with $rbacConfig.clientCAConfigMap }}
       clientCAConfigMap:
         {{- toYaml . | nindent 8 }}
+      {{- else }}
+      clientCAConfigMap: {}
       {{- end }}
-
-      {{- with .staticAuthorization }}
       staticAuthorization:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-    {{- end }}
-
-    {{- with .prometheus }}
+        {{- $staticAuth := $rbacConfig.staticAuthorization | default dict }}
+        enable: {{ $staticAuth.enable | default false }}
+        clientName: {{ $staticAuth.clientName | default "" }}
     prometheus:
-      {{- with .serviceMonitor }}
+      {{- $prometheus := $metricsExporter.prometheus | default dict }}
       serviceMonitor:
-        {{- if (hasKey . "enable") }}
-        enable: {{ .enable }}
-        {{- end }}
-
-        {{- if (hasKey . "interval") }}
-        interval: {{ .interval }}
-        {{- end }}
-
-        {{- with .attachMetadata }}
+        {{- $serviceMonitor := $prometheus.serviceMonitor | default dict }}
+        enable: {{ $serviceMonitor.enable | default false }}
+        interval: {{ $serviceMonitor.interval | default "30s" }}
+        {{- with $serviceMonitor.attachMetadata }}
         attachMetadata:
           {{- toYaml . | nindent 10 }}
+        {{- else }}
+        attachMetadata: {}
         {{- end }}
-
-        {{- if (hasKey . "honorLabels") }}
-        honorLabels: {{ .honorLabels }}
+        {{- if (hasKey $serviceMonitor "honorLabels") }}
+        honorLabels: {{ $serviceMonitor.honorLabels }}
+        {{- else }}
+        honorLabels: true
         {{- end }}
-
-        {{- if (hasKey . "honorTimestamps") }}
-        honorTimestamps: {{ .honorTimestamps }}
-        {{- end }}
-
-        {{- with .labels }}
+        honorTimestamps: {{ $serviceMonitor.honorTimestamps | default false }}
+        {{- with $serviceMonitor.labels }}
         labels:
           {{- toYaml . | nindent 10 }}
+        {{- else }}
+        labels: {}
         {{- end }}
-
-        {{- with .relabelings }}
+        {{- with $serviceMonitor.relabelings }}
         relabelings:
           {{- toYaml . | nindent 10 }}
+        {{- else }}
+        relabelings: []
         {{- end }}
-
-        {{- with .metricRelabelings }}
+        {{- with $serviceMonitor.metricRelabelings }}
         metricRelabelings:
           {{- toYaml . | nindent 10 }}
+        {{- else }}
+        metricRelabelings: []
         {{- end }}
-
-        {{- with .authorization }}
+        {{- with $serviceMonitor.authorization }}
         authorization:
           {{- toYaml . | nindent 10 }}
+        {{- else }}
+        authorization: {}
         {{- end }}
-
-        {{- with .tlsConfig }}
+        {{- with $serviceMonitor.tlsConfig }}
         tlsConfig:
           {{- toYaml . | nindent 10 }}
+        {{- else }}
+        tlsConfig: {}
         {{- end }}
-      {{- end }}
-    {{- end }}
-  {{- end }}
 
-  {{- with .Values.exlsConfig.deviceConfig.testRunner }}
   testRunner:
-    {{- if (hasKey . "enable") }}
-    enable: {{ .enable }}
-    {{- end }}
-
-    {{- with .image }}
-    image: {{ . }}
-    {{- end }}
-
-    {{- with .imagePullPolicy }}
-    imagePullPolicy: {{ . }}
-    {{- end }}
-
-    {{- with .config }}
+    {{- $testRunner := .testRunner | default dict }}
+    enable: {{ $testRunner.enable | default false }}
+    image: {{ $testRunner.image | default "docker.io/rocm/test-runner:v1.4.0" }}
+    imagePullPolicy: {{ $testRunner.imagePullPolicy | default "IfNotPresent" }}
+    {{- with $testRunner.config }}
     config:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    config: {}
     {{- end }}
-
-    {{- with .logsLocation }}
     logsLocation:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-
-    {{- with .upgradePolicy }}
+      {{- $logsLocation := $testRunner.logsLocation | default dict }}
+      mountPath: {{ $logsLocation.mountPath | default "/var/log/amd-test-runner" }}
+      hostPath: {{ $logsLocation.hostPath | default "/var/log/amd-test-runner" }}
+      {{- with $logsLocation.logsExportSecrets }}
+      logsExportSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- else }}
+      logsExportSecrets: []
+      {{- end }}
     upgradePolicy:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-
-    {{- with .tolerations }}
+      {{- $trUpgradePolicy := $testRunner.upgradePolicy | default dict }}
+      upgradeStrategy: {{ $trUpgradePolicy.upgradeStrategy | default "RollingUpdate" }}
+      maxUnavailable: {{ $trUpgradePolicy.maxUnavailable | default 1 }}
+    {{- with $testRunner.tolerations }}
     tolerations:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    tolerations: []
     {{- end }}
-
-    {{- with .imageRegistrySecret }}
+    {{- with $testRunner.imageRegistrySecret }}
     imageRegistrySecret:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    imageRegistrySecret: {}
     {{- end }}
-
-    {{- with .selector }}
+    {{- with $testRunner.selector }}
     selector:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    selector: {}
     {{- end }}
-  {{- end }}
 
-  {{- with .Values.exlsConfig.deviceConfig.configManager }}
   configManager:
-    {{- if (hasKey . "enable") }}
-    enable: {{ .enable }}
-    {{- end }}
-
-    {{- with .image }}
-    image: {{ . }}
-    {{- end }}
-
-    {{- with .imagePullPolicy }}
-    imagePullPolicy: {{ . }}
-    {{- end }}
-
-    {{- with .imageRegistrySecret }}
+    {{- $configManager := .configManager | default dict }}
+    enable: {{ $configManager.enable | default false }}
+    image: {{ $configManager.image | default "docker.io/rocm/device-config-manager:v1.4.0" }}
+    imagePullPolicy: {{ $configManager.imagePullPolicy | default "IfNotPresent" }}
+    {{- with $configManager.imageRegistrySecret }}
     imageRegistrySecret:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    imageRegistrySecret: {}
     {{- end }}
-
-    {{- with .config }}
+    {{- with $configManager.config }}
     config:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    config: {}
     {{- end }}
-
-    {{- with .selector }}
+    {{- with $configManager.selector }}
     selector:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    selector: {}
     {{- end }}
-
-    {{- with .upgradePolicy }}
     upgradePolicy:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-
-    {{- with .configManagerTolerations }}
+      {{- $cmUpgradePolicy := $configManager.upgradePolicy | default dict }}
+      upgradeStrategy: {{ $cmUpgradePolicy.upgradeStrategy | default "RollingUpdate" }}
+      maxUnavailable: {{ $cmUpgradePolicy.maxUnavailable | default 1 }}
+    {{- with $configManager.configManagerTolerations }}
     configManagerTolerations:
       {{- toYaml . | nindent 6 }}
+    {{- else }}
+    configManagerTolerations: []
     {{- end }}
-  {{- end }}
+{{- end }}
