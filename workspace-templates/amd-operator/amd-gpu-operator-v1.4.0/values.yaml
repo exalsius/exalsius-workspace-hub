@@ -28,6 +28,10 @@ exlsConfig:
           insecureSkipTLSVerify: false
         # -- specify an out-of-tree driver version to install
         version: "7.0"
+      metricsExporter:
+        enable: true
+        selector:
+          cluster.exalsius.ai/amd-gpu-mode: "adopted"
     
     - name: "amd-gpu-managed"
       # -- Set node selector for the default DeviceConfig
@@ -47,6 +51,7 @@ exlsConfig:
           insecureSkipTLSVerify: false
         # -- specify an out-of-tree driver version to install
         version: "7.0"
-      # We do not want it to run twice, as it is a daemonset and will be deployed already by the other device-config
       metricsExporter:
-        enable: false
+        enable: true
+        selector:
+          cluster.exalsius.ai/amd-gpu-mode: "managed"
