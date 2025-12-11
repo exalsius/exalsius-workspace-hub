@@ -5,6 +5,26 @@ gpu-operator-charts:
   crds:
     defaultCR:
       install: false
+  controllerManager:
+    nodeSelector:
+      node.exalsius.ai/gpu-vendor: "amd"
+  kmm:
+    controller:
+      nodeSelector:
+        node.exalsius.ai/gpu-vendor: "amd"
+    webhookServer:
+      nodeSelector:
+        node.exalsius.ai/gpu-vendor: "amd"
+  node-feature-discovery:
+    master:
+      nodeSelector:
+        node.exalsius.ai/gpu-vendor: "amd"
+    worker:
+      nodeSelector:
+        node.exalsius.ai/gpu-vendor: "amd"
+    gc:
+      nodeSelector:
+        node.exalsius.ai/gpu-vendor: "amd"
 
 # Values for configuring the DeviceConfig in templates/
 exlsConfig:
@@ -13,7 +33,8 @@ exlsConfig:
     - name: "amd-gpu-adopted"
       # -- Set node selector for the default DeviceConfig
       selector:
-        cluster.exalsius.ai/amd-gpu-mode: "adopted"
+        node.exalsius.ai/gpu-vendor: "amd"
+        node.exalsius.ai/gpu-drivers: "adopted"
       driver:
         # -- enable/disable out-of-tree driver management, set to false to use inbox driver
         enable: false
@@ -31,12 +52,14 @@ exlsConfig:
       metricsExporter:
         enable: true
         selector:
-          cluster.exalsius.ai/amd-gpu-mode: "adopted"
+          node.exalsius.ai/gpu-vendor: "amd"
+          node.exalsius.ai/gpu-drivers: "adopted"
     
     - name: "amd-gpu-managed"
       # -- Set node selector for the default DeviceConfig
       selector:
-        cluster.exalsius.ai/amd-gpu-mode: "managed"
+        node.exalsius.ai/gpu-vendor: "amd"
+        node.exalsius.ai/gpu-drivers: "managed"
       driver:
         # -- enable/disable out-of-tree driver management, set to false to use inbox driver
         enable: true
@@ -54,4 +77,5 @@ exlsConfig:
       metricsExporter:
         enable: true
         selector:
-          cluster.exalsius.ai/amd-gpu-mode: "managed"
+          node.exalsius.ai/gpu-vendor: "amd"
+          node.exalsius.ai/gpu-drivers: "managed"
