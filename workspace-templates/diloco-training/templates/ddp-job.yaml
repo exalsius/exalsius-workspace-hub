@@ -168,6 +168,15 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.namespace
+                # HuggingFace Hub settings
+                - name: HF_HUB_DOWNLOAD_TIMEOUT
+                  value: "120"
+                - name: HF_HUB_ETAG_TIMEOUT
+                  value: "1800"
+                - name: HF_HUB_DISABLE_PROGRESS_BARS
+                  value: "1"
+                - name: HF_HUB_VERBOSITY
+                  value: "info"
               envFrom:
                 - configMapRef:
                     name: {{ include "diloco-training.configmapName" . }}
@@ -345,6 +354,15 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.namespace
+                # HuggingFace Hub settings
+                - name: HF_HUB_DOWNLOAD_TIMEOUT
+                  value: "120"
+                - name: HF_HUB_ETAG_TIMEOUT
+                  value: "1800"
+                - name: HF_HUB_DISABLE_PROGRESS_BARS
+                  value: "1"
+                - name: HF_HUB_VERBOSITY
+                  value: "info"
               envFrom:
                 - configMapRef:
                     name: {{ include "diloco-training.configmapName" . }}
