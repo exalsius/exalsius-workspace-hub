@@ -61,7 +61,7 @@ spec:
 {{- end }}
 {{- end }}
             limits:
-              ephemeral-storage: 10Gi
+              ephemeral-storage: 50Gi
               cpu: {{ .Values.resources.cpuCores }}
               memory: {{ .Values.resources.memoryGb }}Gi
 {{- if and .Values.resources.gpuCount (gt (int .Values.resources.gpuCount) 0) }}
