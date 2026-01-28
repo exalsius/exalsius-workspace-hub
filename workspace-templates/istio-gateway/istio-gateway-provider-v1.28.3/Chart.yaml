@@ -1,0 +1,14 @@
+apiVersion: v2
+name: istio-gateway-provider
+description: A Helm chart that installs GAIE CRDs and hence configures istio as a gateway provider
+type: application
+version: 0.1.0
+appVersion: 1.28.3
+
+dependencies:
+  - name: base
+    version: 1.28.3
+    repository: https://istio-release.storage.googleapis.com/charts
+  - name: istiod
+    version: 1.28.3
+    repository: https://istio-release.storage.googleapis.com/charts
