@@ -1,0 +1,16 @@
+infra:
+  gateway:
+    enabled: true
+    gatewayClassName: istio
+    fullnameOverride: llm-d-inference-gateway
+    service:
+      type: NodePort
+
+bbr:
+  bbr:
+    # Makes it possible to watch for configmaps across namespaces
+    multiNamespace: true
+  provider:
+    name: istio
+  inferenceGateway:
+    name: llm-d-inference-gateway
