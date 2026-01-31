@@ -17,4 +17,8 @@ dependencies:
     alias: bbr
     version: "v0"
     repository: "oci://us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/charts"
-  
+  # 3) open-webui
+  - name: open-webui
+    alias: ow
+    version: "10.2.0"
+    repository: "https://helm.openwebui.com/"

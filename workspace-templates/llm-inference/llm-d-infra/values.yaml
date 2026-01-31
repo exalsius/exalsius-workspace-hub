@@ -1,3 +1,26 @@
+modelRegistry:
+  enabled: true
+  replicas: 1
+  image:
+    repository: ghcr.io/astral-sh/uv
+    tag: python3.12-bookworm-slim
+    pullPolicy: IfNotPresent
+  configMapLabel:
+    key: inference.networking.k8s.io/bbr-managed
+    value: "true"
+  modelsDataKey: baseModel
+  pollIntervalSec: "30"
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
 infra:
   gateway:
     enabled: true
@@ -5,6 +28,24 @@ infra:
     fullnameOverride: llm-d-inference-gateway
     service:
       type: NodePort
+      ports:
+        # This port is for the inference gateway
+        - port: 80
+        # This port is for the open-webui
+        - port: 8080
+    listeners:
+    - name: llm-d-inference
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: open-webui
+      port: 8080
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
 
 bbr:
   bbr:
@@ -12,5 +53,23 @@ bbr:
     multiNamespace: true
   provider:
     name: istio
+    istio:
+      # This is important as we only want the EnvoyFilter to apply to the inference gateway
+      context: GATEWAY
+      portNumber: 80
   inferenceGateway:
     name: llm-d-inference-gateway
+
+ow:
+  enableOpenaiApi: true
+  openaiBaseApiUrl: http://llm-d-inference-gateway-istio.llm-d.svc.cluster.local:80/v1
+  image:
+    pullPolicy: Always
+  ollama:
+    enabled: false
+  pipelines:
+    enabled: false
+  tika:
+    enabled: false
+  websocket:
+    enabled: false

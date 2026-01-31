@@ -5,5 +5,8 @@ dependencies:
 - name: body-based-routing
   repository: oci://us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/charts
   version: v0
-digest: sha256:6234a29be46c2d4484bd4b126c5b6e6e5b4fdd196c99d12e209e88d838d9b6af
-generated: "2026-01-29T09:49:36.067704085+01:00"
+- name: open-webui
+  repository: https://helm.openwebui.com/
+  version: 10.2.0
+digest: sha256:da44ec85fbb82c9e95b9de0af62576a05a59bb011d59a12747367cb573a71f36
+generated: "2026-01-30T10:48:07.185745971+01:00"
