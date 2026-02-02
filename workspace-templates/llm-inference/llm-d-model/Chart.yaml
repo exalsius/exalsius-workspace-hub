@@ -1,0 +1,19 @@
+apiVersion: v2
+name: llm-d-model
+description: A Helm chart that installs the llm-d-model stack
+type: application
+version: 0.1.0
+# With appVersion we refer to the llm-d version
+appVersion: 0.4.0
+
+dependencies:
+  # 1) GAIE inference pool
+  - name: inferencepool
+    alias: ip
+    version: "v1.2.0-rc.1"
+    repository: "oci://registry.k8s.io/gateway-api-inference-extension/charts"
+  # 2) modelservice
+  - name: llm-d-modelservice
+    alias: ms
+    version: "v0.3.8"
+    repository: "https://llm-d-incubation.github.io/llm-d-modelservice"
