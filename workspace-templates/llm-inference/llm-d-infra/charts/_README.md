@@ -1,0 +1,1 @@
+**Note**: The archived chart `body-based-routing-v0.tgz` has been modified by us. In particular, we extended the `istio.yaml` template to conditionally configure a `context` and a `portNumber` via the `values.yaml` file.
