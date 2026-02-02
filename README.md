@@ -12,7 +12,7 @@ A collection of Helm chart templates for deploying containerized AI/ML developme
 - Templates available for:
   - `vscode-devcontainer`: VS Code development container.
   - `jupyter-notebook`: Jupyter Notebook environment.
-  - `ray-llm-service`: Ray-based LLM service.
+  - `llm-inference`: LLM inference deployments based on the [llm-d](https://llm-d.ai/) reference architecture.
   - `diloco-training`: Distributed AI training jobs.
   - `marimo`: Marimo Notebook environment.
 
@@ -79,10 +79,11 @@ workspace-templates/
 │   ├── Chart.yaml
 │   ├── templates/
 │   └── values.yaml
-├── ray-llm-service/
-│   ├── Chart.yaml
-│   ├── templates/
-│   └── values.yaml
+├── llm-inference/
+│   ├── llm-d-model/
+│   │   ├── Chart.yaml
+│   │   ├── templates/
+│   │   └── values.yaml
 ├── test-workspace/
 │   ├── Chart.yaml
 │   ├── templates/
