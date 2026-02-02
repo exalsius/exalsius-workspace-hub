@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # We need to add a hash to the configmap name in order for BBR to reconcile (it maintains an internal cache based on configmap names)
+  name: '{{ .Release.Name }}-cm-{{ include "modelService.configMapHash" . }}'
+  namespace: {{ .Release.Namespace }}
+  labels:
+    inference.networking.k8s.io/bbr-managed: "true"
+data:
+  baseModel: {{ .Values.ms.modelArtifacts.name }}
