@@ -4,13 +4,13 @@ description: A Helm chart that installs the llm-d-infra stack
 type: application
 version: 0.1.0
 # With appVersion we refer to the llm-d version
-appVersion: 0.4.0
+appVersion: 0.5.0
 
 dependencies:
   # 1) infra
   - name: llm-d-infra
     alias: infra
-    version: "v1.3.4"
+    version: "v1.3.6"
     repository: "https://llm-d-incubation.github.io/llm-d-infra"
   # 2) body-based router (experimental)
   - name: body-based-routing
@@ -20,5 +20,5 @@ dependencies:
   # 3) open-webui
   - name: open-webui
     alias: ow
-    version: "10.2.0"
+    version: "10.2.1"
     repository: "https://helm.openwebui.com/"
