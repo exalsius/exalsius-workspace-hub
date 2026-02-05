@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-model-registry-app
+  name: model-registry-app
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: model-registry
@@ -15,7 +15,7 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-model-registry
+  name: model-registry
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: model-registry
@@ -32,7 +32,7 @@ spec:
         app.kubernetes.io/name: model-registry
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      serviceAccountName: {{ .Release.Name }}-model-registry
+      serviceAccountName: model-registry
       containers:
         - name: model-registry
           image: {{ .Values.modelRegistry.image.repository }}:{{ .Values.modelRegistry.image.tag }}
@@ -70,12 +70,12 @@ spec:
       volumes:
         - name: app
           configMap:
-            name: {{ .Release.Name }}-model-registry-app
+            name: model-registry-app
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-model-registry
+  name: model-registry
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: model-registry

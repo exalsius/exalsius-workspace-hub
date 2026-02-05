@@ -1,1 +1,5 @@
-**Note**: The archived chart `body-based-routing-v0.tgz` has been modified by us. In particular, we extended the `istio.yaml` template to conditionally configure a `context` and a `portNumber` via the `values.yaml` file.
+**Note:** The archived chart `body-based-routing-v0.tgz` has been modified.
+
+We extended the `istio.yaml` template to optionally configure a **workloadSelector** via `values.yaml`. When `provider.istio.workloadSelector` is set (as a map of labels), the EnvoyFilter is applied only to workloads (e.g. gateway pods) that match those labels. If omitted or empty, the filter applies to all workloads in the release namespace.
+
+This allows restricting the body-based routing EnvoyFilter to the inference gateway only, by passing labels that match the gateway deployment (e.g. `gateway-role: llm-inference`).
