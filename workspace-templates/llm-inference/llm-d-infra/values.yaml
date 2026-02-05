@@ -52,9 +52,9 @@ bbr:
   provider:
     name: istio
     istio:
-      # This is important as we only want the EnvoyFilter to apply to the inference gateway
-      context: GATEWAY
-      portNumber: 80
+      # Apply EnvoyFilter only to the inference gateway (must match gateway pod labels)
+      workloadSelector:
+        gateway-role: llm-inference
   inferenceGateway:
     name: llm-d-inference-gateway
 
