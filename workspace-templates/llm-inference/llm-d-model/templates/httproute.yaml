@@ -9,7 +9,6 @@ spec:
       kind: Gateway
       name: llm-d-inference-gateway
       namespace: llm-d
-      sectionName: llm-d-inference
   rules:
     - timeouts:
         request: 300s

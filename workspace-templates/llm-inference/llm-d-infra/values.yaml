@@ -26,26 +26,24 @@ infra:
     enabled: true
     gatewayClassName: istio
     fullnameOverride: llm-d-inference-gateway
+    listeners:
+      - name: llm-inference
+        port: 80
+        protocol: HTTP
+        allowedRoutes:
+          namespaces:
+            from: All
     service:
       type: NodePort
-      ports:
-        # This port is for the inference gateway
-        - port: 80
-        # This port is for the open-webui
-        - port: 8080
-    listeners:
-    - name: llm-d-inference
-      port: 80
-      protocol: HTTP
-      allowedRoutes:
-        namespaces:
-          from: All
-    - name: open-webui
-      port: 8080
-      protocol: HTTP
-      allowedRoutes:
-        namespaces:
-          from: All
+    labels:
+      gateway-role: llm-inference
+    annotations:
+      workspace.exalsius.ai/access-info: "true"
+      workspace.exalsius.ai/access-type: "nodeport"
+      workspace.exalsius.ai/access-description: "Endpoint for LLM inference"
+      workspace.exalsius.ai/protocol: "tcp"
+      workspace.exalsius.ai/port-name: "llm-inference"
+      workspace.exalsius.ai/shared-service: "true"
 
 bbr:
   bbr:
@@ -73,3 +71,26 @@ ow:
     enabled: false
   websocket:
     enabled: false
+
+owgateway:
+  gatewayClassName: istio
+  listeners:
+    - name: open-webui
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+  service:
+    type: NodePort
+  labels:
+    gateway-role: open-webui
+  annotations:
+    workspace.exalsius.ai/access-info: "true"
+    workspace.exalsius.ai/access-type: "nodeport"
+    workspace.exalsius.ai/access-description: "Endpoint for Open WebUI"
+    workspace.exalsius.ai/protocol: "tcp"
+    workspace.exalsius.ai/port-name: "open-webui"
+    workspace.exalsius.ai/shared-service: "true"
+  gatewayParameters:
+    logLevel: "warn"

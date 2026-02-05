@@ -1,14 +1,94 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: open-webui-config
+  namespace: {{ .Release.Namespace }}
+data:
+  deployment: |
+    spec:
+      template:
+        spec:
+          containers:
+          - name: istio-proxy
+            args:
+              - proxy
+              - router
+              - --domain
+              - $(POD_NAMESPACE).svc.cluster.local
+              - --proxyLogLevel
+              - {{ .Values.owgateway.gatewayParameters.logLevel }}
+              - --proxyComponentLogLevel
+              - misc:{{ .Values.owgateway.gatewayParameters.logLevel }}
+              - --log_output_level
+              - default:{{ .Values.owgateway.gatewayParameters.logLevel }}
+  service: |
+    spec:
+      type: {{ .Values.owgateway.service.type | quote }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: open-webui-gateway
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- if .Values.owgateway.labels }}
+    {{- .Values.owgateway.labels | toYaml | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- if .Values.owgateway.annotations }}
+    {{- .Values.owgateway.annotations | toYaml | nindent 8 }}
+    {{- end }}
+spec:
+  gatewayClassName: {{ .Values.owgateway.gatewayClassName }}
+  {{- $listeners := required "gateway.listeners must have at least 1 item" .Values.owgateway.listeners }}
+  listeners:
+  {{- range $i, $l := $listeners }}
+    - port: {{ $l.port }}
+      protocol: {{ $l.protocol }}
+      {{- with $l.name }}
+      name: {{ . }}
+      {{- end }}
+      {{- with $l.allowedRoutes }}
+      allowedRoutes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if $l.tls }}
+      hostname: {{ $l.tls.hostname | quote }}
+      tls:
+        mode: {{ $l.tls.mode | quote }}
+        {{- with $l.tls.certificateRefs }}
+        certificateRefs:
+        {{- range . }}
+          - name: {{ .name | quote }}
+            {{- if hasKey . "group" }}
+            group: {{ .group | quote }}
+            {{- end }}
+            {{- if hasKey . "kind" }}
+            kind: {{ .kind | quote }}
+            {{- end }}
+            {{- if hasKey . "namespace" }}
+            namespace: {{ .namespace | quote }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
+  {{- end}}
+  infrastructure:
+    parametersRef:
+      name: open-webui-config
+      group: ""
+      kind: ConfigMap
+---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: "{{ .Release.Name }}-open-webui-httproute"
+  name: "open-webui-httproute"
   namespace: {{ .Release.Namespace }}
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
-      name: llm-d-inference-gateway
-      sectionName: open-webui
+      name: open-webui-gateway
   rules:
     - matches:
         - path:
