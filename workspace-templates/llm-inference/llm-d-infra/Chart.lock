@@ -3,10 +3,10 @@ dependencies:
   repository: https://llm-d-incubation.github.io/llm-d-infra
   version: v1.3.6
 - name: body-based-routing
-  repository: oci://us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/charts
-  version: v0
+  repository: oci://registry.k8s.io/gateway-api-inference-extension/charts
+  version: v1.3.0
 - name: open-webui
   repository: https://helm.openwebui.com/
   version: 10.2.1
-digest: sha256:e64873de55015ca504be86cf23eb19e5b5b81d7d271b0af4a54ea435fc806723
-generated: "2026-02-05T10:20:54.858631244+01:00"
+digest: sha256:0e26efac8519cca9a52761ddeb4bab42354ed5de69f866a0bcf3de96303c747b
+generated: "2026-02-06T14:14:24.843201774+01:00"

@@ -12,11 +12,11 @@ dependencies:
     alias: infra
     version: "v1.3.6"
     repository: "https://llm-d-incubation.github.io/llm-d-infra"
-  # 2) body-based router (experimental)
+  # 2) body-based router
   - name: body-based-routing
     alias: bbr
-    version: "v0"
-    repository: "oci://us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/charts"
+    version: "v1.3.0"
+    repository: "oci://registry.k8s.io/gateway-api-inference-extension/charts"
   # 3) open-webui
   - name: open-webui
     alias: ow
