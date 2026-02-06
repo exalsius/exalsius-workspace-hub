@@ -8,6 +8,7 @@ metadata:
   annotations:
     workspace.exalsius.ai/access-info: "true"
     workspace.exalsius.ai/access-type: "nodeport"
+    workspace.exalsius.ai/access-description: "SSH Access to Development Container"
     workspace.exalsius.ai/protocol: "tcp"
     workspace.exalsius.ai/port-name: "ssh"
 spec:

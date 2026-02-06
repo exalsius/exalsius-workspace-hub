@@ -52,5 +52,5 @@ These values must be set when deploying a model. The inference pool selector and
 | `huggingfaceToken` | **Required.** Hugging Face token for downloading models (stored in a Kubernetes secret). | `""` |
 | `ms.modelArtifacts.uri` | **Required.** Hugging Face URI for the model (e.g. `hf://Qwen/Qwen3-1.7B`). | `"hf://Qwen/Qwen3-1.7B"` |
 | `ms.modelArtifacts.name` | **Required.** Display name for the model. | `"Qwen/Qwen3-1.7B"` |
-| `ms.modelArtifacts.labels` | **Required.** Labels for the model deployment. Must include `llm-d.ai/model` and `llm-d.ai/inferenceServing: "true"` to match the inference pool. | See values.yaml |
+| `ms.modelArtifacts.labels` | **Required.** Labels for the model deployment. Must include `llm-d.ai/model` to match the inference pool. | See values.yaml |
 | `ip.inferencePool.modelServers.matchLabels` | **Required.** Labels to select model server pods. Must match `ms.modelArtifacts.labels` (same `llm-d.ai/model` value). | See values.yaml |

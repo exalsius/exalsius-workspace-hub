@@ -8,6 +8,7 @@ metadata:
   annotations:
     workspace.exalsius.ai/access-info: "true"
     workspace.exalsius.ai/access-type: "nodeport"
+    workspace.exalsius.ai/access-description: "Test Workspace HTTP Endpoint"
     workspace.exalsius.ai/protocol: "http"
     workspace.exalsius.ai/port-name: "http"
 spec:
