@@ -6,7 +6,7 @@ modelRegistry:
     tag: python3.12-bookworm-slim
     pullPolicy: IfNotPresent
   configMapLabel:
-    key: inference.networking.k8s.io/bbr-managed
+    key: inference-gateway.k8s.io/managed
     value: "true"
   modelsDataKey: baseModel
   pollIntervalSec: "30"
