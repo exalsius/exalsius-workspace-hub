@@ -27,12 +27,16 @@ ip:
       matchLabels:
         llm-d.ai/model: Qwen3-1.7B
       ### CHANGES REQUIRED ###
-        llm-d.ai/inferenceServing: "true"
 
 ### CHANGES REQUIRED ###
 huggingfaceToken: "my-hugging-face-token"
 ### CHANGES REQUIRED ###
 
+# The chart automatically calculates accelerator resources (e.g., nvidia.com/gpu) based on parallelism settings.
+# However, you can override this by explicitly setting resources in the container spec.
+# 1) If you explicitly set resources.limits.<accelerator> in the container spec, that value is used.
+# 2) Otherwise, the value is auto-calculated from parallelism.tensor * parallelism.dataLocal.
+# --> If you use this strategy, vLLM parallelism arguments like --tensor-parallel-size and --data-parallel-size-local and the corresponding value will be added automatically to the first container.
 ms:
   multinode: false
   modelArtifacts:
@@ -44,7 +48,6 @@ ms:
     labels:
       llm-d.ai/model: Qwen3-1.7B
     ### CHANGES REQUIRED ###
-      llm-d.ai/inferenceServing: "true"
   routing:
     proxy:
       enabled: false
@@ -54,6 +57,12 @@ ms:
   decode:
     create: true
     replicas: 1
+    # VLLM parallelism configuration
+    parallelism:
+      tensor: 1
+      data: 1
+      dataLocal: 1
+      workers: 1
     monitoring:
       podmonitor:
         enabled: true
@@ -113,5 +122,6 @@ ms:
       emptyDir:
         medium: Memory
         sizeLimit: 20Gi
+  # Disabled here, but mostly same configuration options as for decode component
   prefill:
     create: false
