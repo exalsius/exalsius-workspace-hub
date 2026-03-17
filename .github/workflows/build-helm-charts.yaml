@@ -3,7 +3,7 @@ name: "Build and push helm charts"
 on:
   push:
     branches:
-      - feat/build_oci_charts
+      - main
     paths:
       - "workspace-templates/**"
       - ".github/workflows/build-helm-charts.yaml"
@@ -49,7 +49,7 @@ jobs:
               | map("helm repo add " + .name + " " + .repository)[]' "$chart_yaml" | sh
             helm dependency update "$dir"
 
-            version=$(yq .version "$chart_yaml")-${{ github.sha }}
+            version=$(yq .version "$chart_yaml")
             helm package "$dir" --version "$version" --app-version "$version"
             chart_name=$(yq .name "$chart_yaml")
             mv "$chart_name-$version.tgz" build/
