@@ -47,7 +47,20 @@ jobs:
               | ( . // [] )
               | filter(.repository | test("^https?://"))
               | map("helm repo add " + .name + " " + .repository)[]' "$chart_yaml" | sh
-            helm dependency update "$dir"
+
+            if yq '.dependencies | ( . // [] ) | length > 0' "$chart_yaml" | grep -q '^true$'; then
+              if [ -d "$dir/charts" ] && [ -n "$(ls -A "$dir/charts" 2>/dev/null)" ]; then
+                echo "Using existing vendored dependencies in $dir/charts (skipping dependency build/update)."
+              elif [ -f "$dir/Chart.lock" ]; then
+                echo "Building dependencies from Chart.lock for $dir"
+                helm dependency build "$dir"
+              else
+                echo "No vendored deps or Chart.lock; updating dependencies for $dir"
+                helm dependency update "$dir"
+              fi
+            else
+              echo "No dependencies declared for $dir"
+            fi
 
             version=$(yq .version "$chart_yaml")
             helm package "$dir" --version "$version" --app-version "$version"
