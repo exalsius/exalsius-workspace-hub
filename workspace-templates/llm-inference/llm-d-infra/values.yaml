@@ -43,7 +43,7 @@ infra:
       workspace.exalsius.ai/access-description: "Endpoint for LLM inference"
       workspace.exalsius.ai/protocol: "tcp"
       workspace.exalsius.ai/port-name: "llm-inference"
-      workspace.exalsius.ai/shared-service: "true"
+      workspace.exalsius.ai/associated-templates: "llm-d-model-template"
 
 bbr:
   bbr:
@@ -91,6 +91,6 @@ owgateway:
     workspace.exalsius.ai/access-description: "Endpoint for Open WebUI"
     workspace.exalsius.ai/protocol: "tcp"
     workspace.exalsius.ai/port-name: "open-webui"
-    workspace.exalsius.ai/shared-service: "true"
+    workspace.exalsius.ai/associated-templates: "llm-d-model-template"
   gatewayParameters:
     logLevel: "warn"
