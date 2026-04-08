@@ -5,6 +5,6 @@ metadata:
   name: '{{- if and (hasKey .Values "global") (hasKey .Values.global "deploymentName") .Values.global.deploymentName }}{{ .Values.global.deploymentName }}{{- else }}{{ .Release.Name }}{{- end }}-cm-{{ include "modelService.configMapHash" . }}'
   namespace: {{ .Release.Namespace }}
   labels:
-    inference-gateway.k8s.io/managed: "true"
+    inference.networking.k8s.io/bbr-managed: "true"
 data:
   baseModel: {{ .Values.ms.modelArtifacts.name }}
