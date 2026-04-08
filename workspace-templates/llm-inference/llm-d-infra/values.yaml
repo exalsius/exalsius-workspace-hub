@@ -49,6 +49,10 @@ bbr:
   bbr:
     # Makes it possible to watch for configmaps across namespaces
     multiNamespace: true
+    plugins:
+      - type: body-field-to-header
+        name: model-extractor
+        json: {"field_name":"model","header_name":"X-Gateway-Base-Model-Name"}
   provider:
     name: istio
     istio:
