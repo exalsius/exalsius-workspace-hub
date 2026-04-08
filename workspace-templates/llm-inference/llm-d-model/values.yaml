@@ -18,13 +18,6 @@ ip:
         enabled: true
         auth:
           enabled: false
-    resources:
-      requests:
-        cpu: "1"
-        memory: 2Gi
-      limits:
-        cpu: "1"
-        memory: 2Gi
   provider:
     name: istio
     istio:
