@@ -36,12 +36,16 @@ spec:
               ephemeral-storage: 5Gi
               cpu: {{ .Values.resources.cpuCores }}
               memory: {{ .Values.resources.memoryGb }}Gi
+{{- if and .Values.resources.gpuCount (gt (int .Values.resources.gpuCount) 0) }}
               nvidia.com/gpu: {{ .Values.resources.gpuCount }}
+{{- end }}
             limits:
               ephemeral-storage: 10Gi
               cpu: {{ .Values.resources.cpuCores }}
               memory: {{ .Values.resources.memoryGb }}Gi
+{{- if and .Values.resources.gpuCount (gt (int .Values.resources.gpuCount) 0) }}
               nvidia.com/gpu: {{ .Values.resources.gpuCount }}
+{{- end }}
           ports:
             - containerPort: 8888
               name: notebook
