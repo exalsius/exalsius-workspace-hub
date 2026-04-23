@@ -46,11 +46,6 @@ spec:
         {{- end }}
       {{- end }}
   {{- end}}
-  infrastructure:
-    parametersRef:
-      name: open-webui-config
-      group: ""
-      kind: ConfigMap
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
