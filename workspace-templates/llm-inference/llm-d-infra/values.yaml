@@ -85,16 +85,13 @@ owgateway:
       allowedRoutes:
         namespaces:
           from: All
-  service:
-    type: NodePort
   labels:
     gateway-role: open-webui
   annotations:
+    networking.istio.io/service-type: NodePort
     workspace.exalsius.ai/access-info: "true"
     workspace.exalsius.ai/access-type: "nodeport"
     workspace.exalsius.ai/access-description: "Endpoint for Open WebUI"
     workspace.exalsius.ai/protocol: "tcp"
     workspace.exalsius.ai/port-name: "open-webui"
     workspace.exalsius.ai/associated-templates: "llm-d-model-template"
-  gatewayParameters:
-    logLevel: "warn"
