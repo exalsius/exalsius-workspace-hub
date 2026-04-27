@@ -101,6 +101,7 @@ ms:
             secretKeyRef:
               name: llm-d-model-auth-details
               key: VLLM_API_KEY
+              optional: true # in case the lookup fails or the api-key is an empty string, we do not want the deployment to fail
       ports:
         - containerPort: 8000
           name: vllm
