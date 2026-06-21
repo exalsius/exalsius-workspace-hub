@@ -2,65 +2,62 @@
 
 # Jupyter Notebook Workspace
 
-This workspace provides a Helm chart for deploying a Jupyter Notebook environment on Kubernetes. 
-It is designed for rapid setup of a personal data science and machine learning workspace, complete with configurable resources and persistent storage.
+A single-user Jupyter Notebook workspace for the exalsius operator. **One
+framework-free image** runs on CPU, NVIDIA, and AMD ROCm nodes — install PyTorch
+(cuda or rocm wheels) inside the notebook as needed. Resources, GPU placement,
+the GPU resource name, and the GPU vendor are injected by the operator via the
+`_exalsius` contract; the service is exposed as **ClusterIP** and
+reached through operator-owned routing.
+
+The management-cluster CRs that make this chart selectable as a workspace — its
+`ServiceTemplate`, `WorkspaceClass`, and an example `WorkspaceDeployment` — live
+in [`exalsius/`](./exalsius), versioned together with the chart.
 
 ## Quickstart
 
 ### Using the exalsius CLI
 
-The recommended way to deploy this workspace is with the `exls` command-line tool. You can deploy it with a secure password for your notebook.
-
 ```sh
-exls workspace deploy jupyter <CLI parameters>
+exls workspace deploy jupyter --notebook-password <your-secure-password>
 ```
 
-### Using Helm
+### Using Helm (chart authoring / local testing)
 
-You can also deploy the workspace directly using Helm.
+```sh
+helm install my-notebook ./jupyter-notebook --set notebookPassword=<password>
+```
 
-1.  **Clone the repository:**
-    ```sh
-    git clone https://github.com/exalsius/exalsius-workspace-hub.git
-    cd exalsius-workspace-templates/workspace-templates
-    ```
+When installed directly with Helm, the `fallback.*` resources apply. When
+deployed via the operator, `_exalsius.*` injection overrides them. See
+`values-{nvidia,amd,cpu}.yaml` for examples that simulate the injection:
 
-2.  **Install the chart:**
-    ```sh
-    helm install my-notebook ./jupyter-notebook --set notebookPassword=<your-secure-password>
-    ```
+```sh
+helm template t ./jupyter-notebook -f ./jupyter-notebook/values-nvidia.yaml
+```
+
+## How GPUs work
+
+- **NVIDIA**: the operator injects `gpuResourceName: nvidia.com/gpu`, a GPU
+  count, and the GPU node selector; the chart applies `runtimeClassName`
+  (`gpu.nvidia.runtimeClassName`, default `nvidia`) only for NVIDIA.
+- **AMD ROCm**: the operator injects `gpuResourceName: amd.com/gpu`; no runtime
+  class is set. The notebook runs as root group (`fsGroup: 0`) so the ROCm
+  devices attached by the AMD device plugin are usable.
+- **CPU-only**: no GPU is requested, no node selector, no runtime class.
+
+Pick a GPU node by label in the `WorkspaceDeployment` via
+`resources.perReplica.gpuNodeSelector`, copying the selector straight from the
+Colony GPU inventory (`Colony.status.gpuInventory[].offerings[].selector`).
 
 ## Configuration
 
-All configurable options are defined in the `values.yaml` file and can be overridden through `exls` CLI flags or Helm parameters.
-
-### Global Configuration
-
-**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
-
-| Parameter             | Description                                       | Default Value                |
-| --------------------- | ------------------------------------------------- | ---------------------------- |
-| `global.deploymentName`      | **Required.** The name of the deployment.                       | `my-notebook`                |
-| `global.deploymentNamespace` | **Required.** The Kubernetes namespace for the deployment.      | `default`                    |
-
-### Deployment Configuration
-
-| Parameter             | Description                                          | Default Value                        |
-| --------------------- | ---------------------------------------------------- | ------------------------------------ |
-| `deploymentImage`     | **Required.** The Docker image for the Jupyter Notebook.           | `ghcr.io/exalsius/jupyter-notebook:latest-nvidia` |
-| `deploymentNumReplicas` | **Required.** Number of deployment replicas. | `1` (constant) |
-| `notebookPassword`    | **Required.** The password to access the Jupyter Notebook. | `mysecurepassword`                   |
-
-### Resource Configuration
-
-**Note:** These values are typically set automatically by exalsius and are only shown here for reference or local testing.
-
-| Parameter          | Description                                           | Default Value | Required |
-| ------------------ | ----------------------------------------------------- | ------------- | -------- |
-| `resources.cpuCores`         | The number of CPU cores to allocate.                  | `16`          | Yes |
-| `resources.memoryGb`         | The amount of memory in GB to allocate.               | `32`          | Yes |
-| `resources.gpuCount`         | The number of GPUs to allocate.                       | `1`           | Yes |
-| `resources.storageGb`        | The size of the persistent volume for your workspace. | `50`          | Yes |
-| `resources.gpuVendor`        | GPU vendor configuration (informational only, not used by templates). Valid values: `"NVIDIA"` or `"AMD"`. | `"NVIDIA"` | No |
-| `resources.gpuType`          | GPU type/model (informational only, not used by templates).                                       | `"L40"`       | No |
-| `resources.gpuMemory`        | GPU memory in gigabytes (informational only, not used by templates).                             | `24`          | No |
+| Parameter | Description | Default |
+| --- | --- | --- |
+| `image.repository` | Container image (framework-free base). | `ghcr.io/exalsius/jupyter-notebook` |
+| `image.tag` | Image tag — pinned, never `latest`. | chart version |
+| `image.pullPolicy` | Image pull policy. | `IfNotPresent` |
+| `notebookPassword` | Password for the Jupyter web UI (set by the WorkspaceClass userFacingConfig). | `changeme` |
+| `service.port` | ClusterIP Service port for the `http` endpoint (targetPort is 8888). | `80` |
+| `gpu.nvidia.runtimeClassName` | RuntimeClass applied only for NVIDIA; `""` disables. | `nvidia` |
+| `fallback.cpu` / `fallback.memory` / `fallback.storage` | Resources used only for a plain `helm install`; overridden by `_exalsius` injection. | `2` / `4Gi` / `10Gi` |
+| `_exalsius` | Operator-injected resources/scheduling — **do not set by hand**. | `{}` |

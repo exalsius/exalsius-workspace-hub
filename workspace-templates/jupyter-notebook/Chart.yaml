@@ -1,5 +1,9 @@
 apiVersion: v2
 name: jupyter-notebook
-description: A Helm chart for a Jupyter Notebook
-version: 0.1.0
+description: >-
+  Jupyter Notebook workspace for the exalsius operator. One framework-free image
+  runs on CPU, NVIDIA, and AMD ROCm nodes; resources, GPU placement, and routing
+  are driven by the operator's _exalsius contract.
 type: application
+version: 0.2.0
+appVersion: "0.2.0"

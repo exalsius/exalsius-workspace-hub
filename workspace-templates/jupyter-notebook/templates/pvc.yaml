@@ -1,11 +1,14 @@
+{{- $exPer := (((.Values._exalsius | default dict).resources | default dict).perReplica) | default dict -}}
+{{- $storage := $exPer.storage | default .Values.fallback.storage -}}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "jupyter-notebook.pvcName" . }}
-  namespace: {{ .Values.global.deploymentNamespace | default "default" }}
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "jupyter-notebook.labels" . | nindent 4 }}
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.resources.storageGb }}Gi
+      storage: {{ $storage | quote }}

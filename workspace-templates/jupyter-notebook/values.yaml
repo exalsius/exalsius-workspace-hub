@@ -1,24 +1,56 @@
-# Jupyter Notebook Helm Chart Values
-deploymentImage: "ghcr.io/exalsius/jupyter-notebook:latest-nvidia"
+# jupyter-notebook workspace chart values
+#
+# One framework-free image runs on CPU, NVIDIA, and AMD ROCm nodes — install
+# PyTorch (cuda/rocm wheels) inside the notebook as needed. When deployed via
+# the exalsius operator, resources, GPU placement, the GPU resource name, and
+# the GPU vendor are injected under `_exalsius.*` and override the `fallback.*`
+# values below. The fallbacks exist only so a plain `helm install` works for
+# chart authoring.
 
-# Jupyter Notebook configuration
-notebookPassword: "mysecurepassword"
+image:
+  repository: ghcr.io/exalsius/jupyter-notebook
+  # Pinned for immutability (never :latest). Bump with each chart release.
+  # A WorkspaceDeployment may override repository/tag (e.g. a framework-baked image).
+  tag: "0.2.0"
+  pullPolicy: IfNotPresent
 
-##################################################################
-########## ONLY HERE FOR REFERENCE OR LOCAL TESTING ##############
-########## Values are set automatically by exalsius ##############
-##################################################################
-global:
-  deploymentName: "my-notebook"
-  deploymentNamespace: "default"
+# Password for the Jupyter web UI. The operator sets this from the
+# WorkspaceClass userFacingConfig (type=secret).
+notebookPassword: "changeme"
 
-resources:
-  gpuCount: 1
-  gpuVendor: "NVIDIA"
-  gpuType: "L40"
-  gpuMemory: 24
-  cpuCores: 16
-  memoryGb: 32
-  storageGb: 50
+service:
+  # Service port exposed as the "http" AccessEndpoint; targetPort is the
+  # notebook container port (8888). ClusterIP only — routing is operator-owned.
+  port: 80
 
-deploymentNumReplicas: 1
+gpu:
+  nvidia:
+    # Applied as the pod runtimeClassName ONLY when the operator-injected GPU
+    # vendor is NVIDIA. Set to "" when the NVIDIA runtime is already the node's
+    # default runtime (GPU Operator default) — pinning a non-existent
+    # RuntimeClass makes the pod fail admission. Never applied for AMD/CPU.
+    runtimeClassName: "nvidia"
+
+# Fallback resources used ONLY for a plain `helm install`. The operator injects
+# `_exalsius.resources.perReplica.*`, which override these.
+fallback:
+  cpu: "2"
+  memory: "4Gi"
+  storage: "10Gi"
+
+# Operator-injected contract — DO NOT set by hand. Shown (commented) for
+# reference and local testing; see values-{nvidia,amd,cpu}.yaml for examples.
+# _exalsius:
+#   resources:
+#     replicas: 1
+#     perReplica:
+#       cpu: "16"
+#       memory: "32Gi"
+#       storage: "50Gi"
+#       gpuCount: 1
+#       gpuVendor: "NVIDIA"          # or "AMD"
+#       gpuResourceName: "nvidia.com/gpu"
+#   scheduling:
+#     nodeSelector:
+#       nvidia.com/gpu.product: "NVIDIA-L40"
+_exalsius: {}

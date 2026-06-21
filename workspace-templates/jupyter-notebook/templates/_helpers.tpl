@@ -1,59 +1,23 @@
 {{/*
-Create a safe resource name that respects Kubernetes naming limits.
-This helper ensures the final name doesn't exceed 63 characters.
-Usage: {{ include "jupyter-notebook.safeName" (dict "base" .Values.global.deploymentName "suffix" "notebook-configmap") }}
+Resource names derive from the Helm release name, which the operator sets to
+`wsd-<clusterdeployment>-<workspace>`. The routing provider looks for a Service
+named `<release>-<endpoint>`, so naming off .Release.Name keeps the
+chart and the operator's routing in lockstep with no hardcoded label keys.
 */}}
-{{- define "jupyter-notebook.safeName" -}}
-{{- $base := .base -}}
-{{- $suffix := .suffix -}}
-{{- $fullSuffix := printf "-%s" $suffix -}}
-{{- $maxBaseLength := sub 63 (len $fullSuffix) -}}
-{{- if gt (len $base) $maxBaseLength -}}
-{{- $truncatedBase := $base | trunc (int $maxBaseLength) -}}
-{{- printf "%s%s" $truncatedBase $fullSuffix -}}
-{{- else -}}
-{{- printf "%s%s" $base $fullSuffix -}}
-{{- end -}}
+
+{{/*
+Common labels.
+*/}}
+{{- define "jupyter-notebook.labels" -}}
+app.kubernetes.io/name: jupyter-notebook
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" }}
 {{- end -}}
 
 {{/*
-Create a safe deployment name specifically for jupyter-notebook resources.
+Selector labels — also the Service selector and pod label.
 */}}
-{{- define "jupyter-notebook.deploymentName" -}}
-{{- include "jupyter-notebook.safeName" (dict "base" .Values.global.deploymentName "suffix" "notebook") -}}
-{{- end -}}
-
-{{/*
-Create a safe configmap name specifically for jupyter-notebook configmap.
-*/}}
-{{- define "jupyter-notebook.configmapName" -}}
-{{- include "jupyter-notebook.safeName" (dict "base" .Values.global.deploymentName "suffix" "nb-configmap") -}}
-{{- end -}}
-
-{{/*
-Create a safe PVC name specifically for jupyter-notebook storage.
-*/}}
-{{- define "jupyter-notebook.pvcName" -}}
-{{- include "jupyter-notebook.safeName" (dict "base" .Values.global.deploymentName "suffix" "nb-pvc") -}}
-{{- end -}}
-
-{{/*
-Create a safe service name specifically for jupyter-notebook service.
-*/}}
-{{- define "jupyter-notebook.serviceName" -}}
-{{- include "jupyter-notebook.safeName" (dict "base" .Values.global.deploymentName "suffix" "notebook") -}}
-{{- end -}}
-
-{{/*
-Create a safe volume name for notebook storage.
-*/}}
-{{- define "jupyter-notebook.storageVolumeName" -}}
-{{- include "jupyter-notebook.safeName" (dict "base" .Values.global.deploymentName "suffix" "nb-storage") -}}
-{{- end -}}
-
-{{/*
-Create a safe volume name for configmap volume.
-*/}}
-{{- define "jupyter-notebook.configmapVolumeName" -}}
-{{- include "jupyter-notebook.safeName" (dict "base" .Values.global.deploymentName "suffix" "cm-volume") -}}
+{{- define "jupyter-notebook.selectorLabels" -}}
+app: {{ .Release.Name }}
 {{- end -}}

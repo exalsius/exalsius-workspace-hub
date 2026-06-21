@@ -1,0 +1,11 @@
+# Simulates the operator injection for a CPU-only node (no GPU requested).
+# Use: helm template t . -f values-cpu.yaml
+# Expect: NO runtimeClassName, NO gpu resource, NO nodeSelector.
+_exalsius:
+  resources:
+    replicas: 1
+    perReplica:
+      cpu: "8"
+      memory: "16Gi"
+      storage: "20Gi"
+      gpuCount: 0
