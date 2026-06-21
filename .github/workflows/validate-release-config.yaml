@@ -1,0 +1,34 @@
+name: Validate release config
+
+# Fast guard that the release-please config stays consistent with the charts:
+# valid JSON, matching package keys, and every package pointing at a real
+# Chart.yaml whose version matches the manifest. See scripts/check-release-config.sh.
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'release-please-config.json'
+      - '.release-please-manifest.json'
+      - 'workspace-templates/**/Chart.yaml'
+      - 'scripts/check-release-config.sh'
+      - '.github/workflows/validate-release-config.yaml'
+  push:
+    branches: [ main ]
+    paths:
+      - 'release-please-config.json'
+      - '.release-please-manifest.json'
+      - 'workspace-templates/**/Chart.yaml'
+      - 'scripts/check-release-config.sh'
+      - '.github/workflows/validate-release-config.yaml'
+
+jobs:
+  validate-release-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install yq
+        uses: mikefarah/yq@v4
+      - name: Validate release-please config
+        run: ./scripts/check-release-config.sh

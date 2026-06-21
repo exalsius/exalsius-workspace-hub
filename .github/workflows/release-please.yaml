@@ -1,0 +1,25 @@
+name: release-please
+
+# Per-chart versioning for workspace templates. Conventional commits
+# scoped to a chart (e.g. `feat(jupyter-notebook): ...`) drive that chart's
+# SemVer bump, CHANGELOG, and tag (e.g. jupyter-notebook-v1.0.1). Merging the
+# release PR bumps the chart's Chart.yaml on main; build-helm-charts then
+# publishes the new (immutable) version to OCI and renders its manifests.
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
