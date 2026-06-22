@@ -54,7 +54,8 @@ Colony GPU inventory (`Colony.status.gpuInventory[].offerings[].selector`).
 | Parameter | Description | Default |
 | --- | --- | --- |
 | `image.repository` | Container image (framework-free base). | `ghcr.io/exalsius/jupyter-notebook` |
-| `image.tag` | Image tag — pinned, never `latest`. | chart version |
+| `image.tag` | Human-readable image label (immutability comes from `image.digest`). | `latest` |
+| `image.digest` | Immutable image digest pin, decoupled from chart version ([ADR 0001](../../docs/adr/0001-decouple-workspace-image-tag-from-chart-version.md)). | _(set before release)_ |
 | `image.pullPolicy` | Image pull policy. | `IfNotPresent` |
 | `notebookPassword` | Password for the Jupyter web UI (set by the WorkspaceClass userFacingConfig). | `changeme` |
 | `service.port` | ClusterIP Service port for the `http` endpoint (targetPort is 8888). | `80` |

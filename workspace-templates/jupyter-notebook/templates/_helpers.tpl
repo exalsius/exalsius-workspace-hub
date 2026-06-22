@@ -21,3 +21,14 @@ Selector labels — also the Service selector and pod label.
 {{- define "jupyter-notebook.selectorLabels" -}}
 app: {{ .Release.Name }}
 {{- end -}}
+
+{{/*
+Fully-qualified container image reference. Pinned by digest (immutable) and
+decoupled from the chart version (see docs/adr/0001). Renders
+`repository:tag@digest` when a digest is set, `repository:tag` otherwise.
+*/}}
+{{- define "jupyter-notebook.image" -}}
+{{- $img := .Values.image -}}
+{{- printf "%s:%s" $img.repository $img.tag -}}
+{{- if $img.digest }}{{- printf "@%s" $img.digest -}}{{- end -}}
+{{- end -}}

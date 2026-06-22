@@ -1,3 +1,4 @@
 {
-  "workspace-templates/jupyter-notebook": "0.2.0"
+  "workspace-templates/jupyter-notebook": "0.2.0",
+  "workspace-templates/marimo": "0.2.0"
 }

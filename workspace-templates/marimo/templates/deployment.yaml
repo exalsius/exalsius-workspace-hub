@@ -1,68 +1,95 @@
+{{- /*
+Resources and GPU placement are read from the operator-injected `_exalsius`
+contract when present (always, when deployed via the workspace operator) and
+fall back to chart-local defaults otherwise so plain `helm install` works.
+
+  - _exalsius.resources.perReplica.{cpu,memory}      -> container requests/limits
+  - _exalsius.resources.perReplica.{gpuResourceName,gpuCount} -> GPU request (count>0)
+  - _exalsius.resources.perReplica.gpuVendor         -> selects NVIDIA runtimeClass
+  - _exalsius.scheduling.nodeSelector                -> pod nodeSelector (verbatim)
+
+The chart hardcodes no GPU label key or vendor resource name. A marimo notebook
+is single-instance, so replicas are pinned to 1 regardless of the injected
+replica count.
+*/ -}}
+{{- $exalsius := .Values._exalsius | default dict -}}
+{{- $exPer := (($exalsius.resources | default dict).perReplica) | default dict -}}
+{{- $cpu := $exPer.cpu | default .Values.fallback.cpu -}}
+{{- $memory := $exPer.memory | default .Values.fallback.memory -}}
+{{- $nodeSelector := (($exalsius.scheduling | default dict).nodeSelector) | default dict -}}
+{{- $gpuResource := $exPer.gpuResourceName | default "" -}}
+{{- $gpuCount := $exPer.gpuCount | default 0 -}}
+{{- $gpuVendor := $exPer.gpuVendor | default "" -}}
+{{- $wantGPU := and (ne $gpuResource "") (gt (int $gpuCount) 0) -}}
+{{- $runtimeClass := "" -}}
+{{- if and $wantGPU (eq (lower (toString $gpuVendor)) "nvidia") -}}
+{{- $runtimeClass = .Values.gpu.nvidia.runtimeClassName -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "marimo.deploymentName" . }}
-  namespace: {{ .Values.global.deploymentNamespace | default "default" }}
+  name: {{ .Release.Name }}
   labels:
-    app: {{ include "marimo.deploymentName" . }}
+    {{- include "marimo.labels" . | nindent 4 }}
+    {{- include "marimo.selectorLabels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.deploymentNumReplicas }}
+  replicas: 1
   selector:
     matchLabels:
-      app: {{ include "marimo.deploymentName" . }}
+      {{- include "marimo.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ include "marimo.deploymentName" . }}
-        workspace.exalsius.ai/database-id: {{ .Release.Name }}
+        {{- include "marimo.selectorLabels" . | nindent 8 }}
     spec:
       securityContext:
+        # Run as root group so marimo can write to the PVC, and (on AMD) access
+        # the ROCm /dev/kfd and /dev/dri devices that the AMD GPU device plugin
+        # attaches when amd.com/gpu is requested.
         fsGroup: 0
-{{- if and .Values.resources.gpuCount (gt (int .Values.resources.gpuCount) 0) (eq (lower .Values.resources.gpuVendor) "nvidia") }}
-      runtimeClassName: nvidia
-{{- end }}
+      {{- if $runtimeClass }}
+      runtimeClassName: {{ $runtimeClass }}
+      {{- end }}
+      {{- if $nodeSelector }}
+      nodeSelector:
+        {{- toYaml $nodeSelector | nindent 8 }}
+      {{- end }}
       containers:
-        - name: {{ include "marimo.deploymentName" . }}
-          image: {{ .Values.deploymentImage }}
-          imagePullPolicy: Always
+        - name: marimo
+          image: {{ include "marimo.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           workingDir: /data
           env:
             - name: TOKEN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "marimo.secretName" . }}
+                  name: {{ .Release.Name }}
                   key: TOKEN_PASSWORD
           command: ["sh", "-c"]
           args:
             - >
               marimo edit --token --token-password="${TOKEN_PASSWORD}"
               -p 8080 --host 0.0.0.0
+          ports:
+            - name: http
+              containerPort: 8080
           volumeMounts:
-            - name: {{ include "marimo.storageVolumeName" . }}
+            - name: data
               mountPath: /data
           resources:
             requests:
-              ephemeral-storage: 5Gi
-              cpu: {{ .Values.resources.cpuCores }}
-              memory: {{ .Values.resources.memoryGb }}Gi
-{{- if eq (lower .Values.resources.gpuVendor) "nvidia" }}
-              nvidia.com/gpu: {{ .Values.resources.gpuCount }}
-{{- else if eq (lower .Values.resources.gpuVendor) "amd" }}
-              amd.com/gpu: {{ .Values.resources.gpuCount }}
-{{- end }}
+              cpu: {{ $cpu | quote }}
+              memory: {{ $memory | quote }}
+              {{- if $wantGPU }}
+              {{ $gpuResource }}: {{ $gpuCount }}
+              {{- end }}
             limits:
-              ephemeral-storage: 10Gi
-              cpu: {{ .Values.resources.cpuCores }}
-              memory: {{ .Values.resources.memoryGb }}Gi
-{{- if eq (lower .Values.resources.gpuVendor) "nvidia" }}
-              nvidia.com/gpu: {{ .Values.resources.gpuCount }}
-{{- else if eq (lower .Values.resources.gpuVendor) "amd" }}
-              amd.com/gpu: {{ .Values.resources.gpuCount }}
-{{- end }}
-          ports:
-            - containerPort: 8080
-              name: marimo
+              cpu: {{ $cpu | quote }}
+              memory: {{ $memory | quote }}
+              {{- if $wantGPU }}
+              {{ $gpuResource }}: {{ $gpuCount }}
+              {{- end }}
       volumes:
-        - name: {{ include "marimo.storageVolumeName" . }}
+        - name: data
           persistentVolumeClaim:
-            claimName: {{ include "marimo.pvcName" . }}
+            claimName: {{ .Release.Name }}

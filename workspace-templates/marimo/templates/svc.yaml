@@ -1,21 +1,19 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "marimo.serviceName" . }}
-  namespace: {{ .Values.global.deploymentNamespace | default "default" }}
+  # Named "<release>-http" to match the workspace routing convention
+  # (<release-name>-<endpoint-name>) for the "http" AccessEndpoint declared on
+  # the WorkspaceClass. The routing provider's mirror Service on the regional
+  # cluster looks for exactly this name. ClusterIP only — no NodePort.
+  name: {{ .Release.Name }}-http
   labels:
-    app: {{ include "marimo.deploymentName" . }}
-  annotations:
-    workspace.exalsius.ai/access-info: "true"
-    workspace.exalsius.ai/access-type: "nodeport"
-    workspace.exalsius.ai/access-description: "Marimo Notebook UI"
-    workspace.exalsius.ai/protocol: "http"
-    workspace.exalsius.ai/port-name: "http"
+    {{- include "marimo.labels" . | nindent 4 }}
+    {{- include "marimo.selectorLabels" . | nindent 4 }}
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
-    - port: 80
-      name: http
-      targetPort: 8080
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
   selector:
-    app: {{ include "marimo.deploymentName" . }}
+    {{- include "marimo.selectorLabels" . | nindent 4 }}

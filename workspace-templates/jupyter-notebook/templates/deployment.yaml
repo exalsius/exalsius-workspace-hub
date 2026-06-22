@@ -56,7 +56,7 @@ spec:
       {{- end }}
       containers:
         - name: notebook
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "jupyter-notebook.image" . | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http

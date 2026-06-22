@@ -9,9 +9,13 @@
 
 image:
   repository: ghcr.io/exalsius/jupyter-notebook
-  # Pinned for immutability (never :latest). Bump with each chart release.
-  # A WorkspaceDeployment may override repository/tag (e.g. a framework-baked image).
-  tag: "0.2.0"
+  # The image is built in a separate repo on its own cadence, so it is pinned by
+  # DIGEST and decoupled from this chart's version (see docs/adr/0001). `tag` is
+  # a human-readable label only; immutability comes from `digest`. Never rely on
+  # a bare moving tag. A WorkspaceDeployment may override repository/tag/digest.
+  tag: "latest"
+  # TODO: replace with the real published image digest before release.
+  digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   pullPolicy: IfNotPresent
 
 # Password for the Jupyter web UI. The operator sets this from the

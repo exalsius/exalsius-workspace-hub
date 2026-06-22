@@ -7,8 +7,13 @@
     "workspace-templates/jupyter-notebook": {
       "component": "jupyter-notebook",
       "extra-files": [
-        { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" },
-        { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.appVersion" }
+        { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" }
+      ]
+    },
+    "workspace-templates/marimo": {
+      "component": "marimo",
+      "extra-files": [
+        { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" }
       ]
     }
   }

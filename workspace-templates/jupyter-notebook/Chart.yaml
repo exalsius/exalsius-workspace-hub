@@ -6,4 +6,5 @@ description: >-
   are driven by the operator's _exalsius contract.
 type: application
 version: 0.2.0
-appVersion: "0.2.0"
+# No appVersion: the image is pinned by digest in values.yaml, decoupled from
+# this chart's version (see docs/adr/0001).

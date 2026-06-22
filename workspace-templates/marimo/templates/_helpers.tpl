@@ -1,52 +1,34 @@
 {{/*
-Create a safe resource name that respects Kubernetes naming limits.
-This helper ensures the final name doesn't exceed 63 characters.
-Usage: {{ include "marimo.safeName" (dict "base" .Values.global.deploymentName "suffix" "marimo") }}
+Resource names derive from the Helm release name, which the operator sets to
+`wsd-<clusterdeployment>-<workspace>`. The routing provider looks for a Service
+named `<release>-<endpoint>`, so naming off .Release.Name keeps the
+chart and the operator's routing in lockstep with no hardcoded label keys.
 */}}
-{{- define "marimo.safeName" -}}
-{{- $base := .base -}}
-{{- $suffix := .suffix -}}
-{{- $fullSuffix := printf "-%s" $suffix -}}
-{{- $maxBaseLength := sub 63 (len $fullSuffix) -}}
-{{- if gt (len $base) $maxBaseLength -}}
-{{- $truncatedBase := $base | trunc (int $maxBaseLength) -}}
-{{- printf "%s%s" $truncatedBase $fullSuffix -}}
-{{- else -}}
-{{- printf "%s%s" $base $fullSuffix -}}
-{{- end -}}
+
+{{/*
+Common labels.
+*/}}
+{{- define "marimo.labels" -}}
+app.kubernetes.io/name: marimo
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" }}
 {{- end -}}
 
 {{/*
-Create a safe deployment name specifically for marimo resources.
+Selector labels — also the Service selector and pod label.
 */}}
-{{- define "marimo.deploymentName" -}}
-{{- include "marimo.safeName" (dict "base" .Values.global.deploymentName "suffix" "marimo") -}}
+{{- define "marimo.selectorLabels" -}}
+app: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
-Create a safe service name specifically for marimo service.
+Fully-qualified container image reference. Pinned by digest (immutable) and
+decoupled from the chart version (see docs/adr/0001). Renders
+`repository:tag@digest` when a digest is set, `repository:tag` otherwise.
 */}}
-{{- define "marimo.serviceName" -}}
-{{- include "marimo.safeName" (dict "base" .Values.global.deploymentName "suffix" "marimo") -}}
-{{- end -}}
-
-{{/*
-Create a safe PVC name specifically for marimo storage.
-*/}}
-{{- define "marimo.pvcName" -}}
-{{- include "marimo.safeName" (dict "base" .Values.global.deploymentName "suffix" "marimo-pvc") -}}
-{{- end -}}
-
-{{/*
-Create a safe secret name specifically for marimo secret.
-*/}}
-{{- define "marimo.secretName" -}}
-{{- include "marimo.safeName" (dict "base" .Values.global.deploymentName "suffix" "marimo-secret") -}}
-{{- end -}}
-
-{{/*
-Create a safe volume name for marimo storage.
-*/}}
-{{- define "marimo.storageVolumeName" -}}
-{{- include "marimo.safeName" (dict "base" .Values.global.deploymentName "suffix" "marimo-storage") -}}
+{{- define "marimo.image" -}}
+{{- $img := .Values.image -}}
+{{- printf "%s:%s" $img.repository $img.tag -}}
+{{- if $img.digest }}{{- printf "@%s" $img.digest -}}{{- end -}}
 {{- end -}}

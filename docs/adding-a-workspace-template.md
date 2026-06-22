@@ -106,8 +106,17 @@ makes it a *workspace* template rather than just a chart):
   simulate the injection; CI renders the chart against each (the per-accelerator
   matrix).
 
-Set `version` and `appVersion` in `Chart.yaml` (start in `0.x` while the chart is stabilizing; cut `1.0.0` once the contract is stable). Pin the image
-to a real, pullable tag — never `:latest`.
+Set `version` in `Chart.yaml` (start in `0.x` while the chart is stabilizing; cut
+`1.0.0` once the contract is stable). **Omit `appVersion`** — the image is pinned
+independently (below), so an `appVersion` that tracks the chart would only mislead.
+
+**Pin the image by an explicit, immutable reference, decoupled from the chart
+version** ([ADR 0001](adr/0001-decouple-workspace-image-tag-from-chart-version.md)).
+Images are built in a separate repo on their own cadence, so never derive the tag
+from `.Chart.AppVersion`. Model it as `image.{repository,tag,digest}` and render
+`repository:tag@digest`. Immutability comes from the `@sha256:<digest>`, not the
+tag: a bare moving tag (`:latest`, `:latest-nvidia`) is forbidden, but
+`:latest@sha256:<digest>` is fine — the digest pins it, the tag is just a label.
 
 ## 2. Add the operator CRs — `workspace-templates/<name>/exalsius/`
 
@@ -194,5 +203,8 @@ rollback are explicit edits of `workspaceClassRef`; old versions remain availabl
 - **No `sourceRef.namespace`** in the ServiceTemplate.
 - **The default image must be real and pullable**; use `IMAGE_TAG=` in the
   harness until it is published.
+- **The image is pinned by digest, decoupled from the chart version** — don't
+  derive `image.tag` from `.Chart.AppVersion`, and don't add `appVersion`
+  ([ADR 0001](adr/0001-decouple-workspace-image-tag-from-chart-version.md)).
 - **Generated trees** (`manifests/`, `examples/`) are not edited by hand — change
   the `exalsius/` templates and re-render.
