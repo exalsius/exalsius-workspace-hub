@@ -1,0 +1,46 @@
+# Example WorkspaceDeployment (user intent — applied by an end user).
+#
+# TEMPLATE — rendered at release time into
+#   examples/llm-d-model/${VERSION}/example-workspacedeployment.yaml
+# Placeholders ${VERSION} / ${VERSION_DASHED} are substituted from Chart.yaml.
+#
+# The operator auto-installs the llm-d-infra prerequisite on first use.
+#
+# Apply:  kubectl apply -f example-workspacedeployment.yaml
+# Watch:  kubectl get wsd -n kcm-system -w
+apiVersion: workspaces.exalsius.ai/v1
+kind: WorkspaceDeployment
+metadata:
+  name: my-llm-model
+  namespace: kcm-system
+spec:
+  workspaceClassRef: llm-d-model-${VERSION_DASHED}
+  clusterDeploymentRef:
+    name: default-child-adopted          # Colony "default" + cluster "child-adopted"
+    namespace: kcm-system
+  resources:
+    perReplica:
+      cpu: "8"
+      memory: "16Gi"
+      storage: "50Gi"
+      # gpuCount drives vLLM tensor-parallelism (resourceInjection).
+      gpuCount: 1
+      # Pick a GPU node by a raw vendor label from the Colony GPU inventory:
+      #   kubectl get colony <name> -o jsonpath='{.status.gpuInventory}' | jq
+      gpuNodeSelector:
+        nvidia.com/gpu.product: "NVIDIA-L40"
+  values:
+    huggingfaceToken: "hf_replace_me"
+    # inferenceApiKey: "optional-bearer-token"
+    ms:
+      modelArtifacts:
+        uri: "hf://Qwen/Qwen3-1.7B"
+        name: "Qwen/Qwen3-1.7B"
+        # The model label must match the inference pool selector below.
+        labels:
+          llm-d.ai/model: Qwen3-1.7B
+    ip:
+      inferencePool:
+        modelServers:
+          matchLabels:
+            llm-d.ai/model: Qwen3-1.7B

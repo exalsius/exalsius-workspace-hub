@@ -15,6 +15,18 @@
       "extra-files": [
         { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" }
       ]
+    },
+    "workspace-templates/llm-inference/llm-d-infra": {
+      "component": "llm-d-infra",
+      "extra-files": [
+        { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" }
+      ]
+    },
+    "workspace-templates/llm-inference/llm-d-model": {
+      "component": "llm-d-model",
+      "extra-files": [
+        { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" }
+      ]
     }
   }
 }

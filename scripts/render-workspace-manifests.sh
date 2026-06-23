@@ -29,12 +29,31 @@ name="$(yq '.name' "$chart_dir/Chart.yaml")"
 version="$(yq '.version' "$chart_dir/Chart.yaml")"
 version_dashed="${version//./-}"
 
+# Cross-chart prerequisite reference: a chart whose WorkspaceClass lists a
+# sibling chart as a prerequisite (e.g. llm-d-model -> llm-d-infra) pins the
+# sibling's exact ServiceTemplate version via ${INFRA_VERSION[_DASHED]}, which
+# the per-chart ${VERSION} cannot express. Resolve it from the sibling
+# llm-d-infra Chart.yaml when present; otherwise leave the placeholder so a
+# stray reference fails loudly at apply time rather than rendering wrong.
+infra_chart="$(dirname "$chart_dir")/llm-d-infra/Chart.yaml"
+if [ -f "$infra_chart" ]; then
+  infra_version="$(yq '.version' "$infra_chart")"
+  infra_version_dashed="${infra_version//./-}"
+else
+  infra_version=""
+  infra_version_dashed=""
+fi
+
 mani_dir="manifests/$name/$version"
 ex_dir="examples/$name/$version"
 mkdir -p "$mani_dir" "$ex_dir"
 
 render() {
-  sed -e "s/\${VERSION_DASHED}/$version_dashed/g" -e "s/\${VERSION}/$version/g" "$1"
+  sed \
+    -e "s/\${VERSION_DASHED}/$version_dashed/g" -e "s/\${VERSION}/$version/g" \
+    -e "s/\${INFRA_VERSION_DASHED}/$infra_version_dashed/g" \
+    -e "s/\${INFRA_VERSION}/$infra_version/g" \
+    "$1"
 }
 
 for f in servicetemplate workspaceclass; do

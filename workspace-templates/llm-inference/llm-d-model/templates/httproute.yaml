@@ -1,28 +1,30 @@
+{{- /*
+Routes the model's per-workspace inference gateway to its InferencePool. The
+parentRef is the LOCAL gateway in this same namespace (templates/gateway.yaml),
+not a shared cross-namespace gateway. One model per gateway, so all /v1 traffic
+goes to this model's pool — no body-based model-name match is needed here (BBR /
+model discovery still run in llm-d-infra so Open WebUI can list models).
+*/ -}}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: "{{- if and (hasKey .Values "global") (hasKey .Values.global "deploymentName") .Values.global.deploymentName }}{{ .Values.global.deploymentName }}{{- else }}{{ .Release.Name }}{{- end }}-httproute"
+  name: {{ .Release.Name }}-httproute
   namespace: {{ .Release.Namespace }}
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: llm-d-inference-gateway
-      namespace: llm-d
   rules:
     - timeouts:
         request: 300s
       matches:
-        - headers:
-            - name: X-Gateway-Base-Model-Name
-              type: Exact
-              value: {{ .Values.ms.modelArtifacts.name }}
-          path:
+        - path:
             type: PathPrefix
             value: /v1
       backendRefs:
         - group: inference.networking.k8s.io
           kind: InferencePool
-          name: "{{- if and (hasKey .Values "global") (hasKey .Values.global "deploymentName") .Values.global.deploymentName }}{{ .Values.global.deploymentName }}{{- else }}{{ .Release.Name }}{{- end }}"
+          name: {{ .Release.Name }}
           namespace: {{ .Release.Namespace }}
           weight: 1

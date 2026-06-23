@@ -1,0 +1,30 @@
+# Workspace ServiceTemplate (management-cluster CR).
+#
+# TEMPLATE — rendered at release time into
+#   manifests/llm-d-infra/${VERSION}/servicetemplate.yaml
+# Placeholders ${VERSION} / ${VERSION_DASHED} are substituted from Chart.yaml.
+#
+# This ServiceTemplate serves two roles: it is the prerequisite that
+# llm-d-model's WorkspaceClass references (auto-installed once per cluster), and
+# it backs llm-d-infra's own WorkspaceClass (which routes Open WebUI).
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ServiceTemplate
+metadata:
+  name: llm-d-infra-${VERSION_DASHED}
+  namespace: kcm-system
+  labels:
+    app: llm-d-infra
+    template: workspace
+    workspaces.exalsius.ai/template: llm-d-infra
+    workspaces.exalsius.ai/version: "${VERSION}"
+spec:
+  helm:
+    chartSpec:
+      chart: llm-d-infra
+      version: "${VERSION}"
+      interval: 10m
+      sourceRef:
+        # HelmRepository must live in the same namespace (kcm-system);
+        # k0rdent's schema has no sourceRef.namespace.
+        kind: HelmRepository
+        name: exalsius-workspace-hub

@@ -63,5 +63,5 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: {{ .Release.Name }}-ow
+        - name: {{ .Release.Name }}-open-webui
           port: 80

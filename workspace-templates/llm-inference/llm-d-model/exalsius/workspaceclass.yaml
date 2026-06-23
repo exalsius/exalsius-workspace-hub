@@ -1,0 +1,86 @@
+# Workspace catalog entry (management-cluster CR).
+#
+# TEMPLATE — rendered at release time into
+#   manifests/llm-d-model/${VERSION}/workspaceclass.yaml
+# Placeholders substituted from Chart.yaml:
+#   ${VERSION} / ${VERSION_DASHED}        this chart's version
+#   ${INFRA_VERSION} / ${INFRA_VERSION_DASHED}  the sibling llm-d-infra chart's
+#       version (resolved by scripts/render-workspace-manifests.sh) — the
+#       prerequisite pins the exact infra ServiceTemplate version.
+#
+# Serves one model. The operator auto-installs the llm-d-infra prerequisite
+# (body-based routing + model discovery + Open WebUI) once per ClusterDeployment
+# and reuses it across all model workspaces. Each model runs its OWN inference
+# gateway and exposes a per-workspace OpenAI endpoint (see docs/adr/0002).
+apiVersion: workspaces.exalsius.ai/v1
+kind: WorkspaceClass
+metadata:
+  name: llm-d-model-${VERSION_DASHED}
+  labels:
+    workspaces.exalsius.ai/template: llm-d-model
+    workspaces.exalsius.ai/version: "${VERSION}"
+spec:
+  displayName: "LLM Inference (model)"
+  description: >-
+    Serve one LLM for inference with the llm-d stack (GAIE + vLLM). Exposes a
+    per-workspace OpenAI-compatible endpoint; auto-installs the shared llm-d-infra
+    prerequisite.
+  serviceTemplate:
+    name: llm-d-model-${VERSION_DASHED}
+    namespace: kcm-system
+  prerequisites:
+    - serviceTemplate:
+        name: llm-d-infra-${INFRA_VERSION_DASHED}
+  defaultResources:
+    replicas: 1
+    perReplica:
+      cpu: "8"
+      memory: "16Gi"
+      storage: "50Gi"
+      # A model needs at least one accelerator; a deployment can raise this.
+      gpuCount: 1
+  # Umbrella mapping: route resolved _exalsius fields into the modelservice
+  # subchart. gpuCount drives vLLM tensor-parallelism (the subchart auto-derives
+  # the GPU resource request from it); gpuVendor selects the accelerator family.
+  # cpu/memory are not injected — the modelservice container resources live in a
+  # list path with no clean scalar target (see docs/adr/0002).
+  resourceInjection:
+    gpuCount:
+      - "ms.decode.parallelism.tensor"
+    gpuVendor:
+      - "ms.accelerator.type"
+    replicas:
+      - "ms.decode.replicas"
+  accessEndpoints:
+    - name: llm-inference
+      protocol: HTTP
+      port: 80
+      # The per-model istio Gateway (templates/gateway.yaml) is auto-provisioned
+      # by istio as the Service "llm-d-inference-gateway-istio" in the workspace
+      # namespace; pin it explicitly since it doesn't follow <release>-<endpoint>.
+      serviceName: llm-d-inference-gateway-istio
+      description: "OpenAI-compatible inference API for this model"
+  userFacingConfig:
+    - helmValuePath: huggingfaceToken
+      displayName: "Hugging Face Token"
+      description: "Token for pulling the model from Hugging Face (stored in a Secret)"
+      type: secret
+      required: true
+    - helmValuePath: inferenceApiKey
+      displayName: "Inference API Key"
+      description: "Optional bearer token clients must present to call the model"
+      type: secret
+      required: false
+    - helmValuePath: ms.modelArtifacts.uri
+      displayName: "Model URI"
+      description: "Hugging Face model URI, e.g. hf://Qwen/Qwen3-1.7B"
+      type: string
+      required: true
+    - helmValuePath: ms.modelArtifacts.name
+      displayName: "Model Name"
+      description: "Served model name, e.g. Qwen/Qwen3-1.7B"
+      type: string
+      required: true
+  # vLLM/cuda images are large and the prerequisite installs a full stack.
+  deployTimeout: 30m
+  prerequisiteDeployTimeout: 20m

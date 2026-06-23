@@ -34,16 +34,13 @@ infra:
           namespaces:
             from: All
     service:
-      type: NodePort
+      # ClusterIP — routing is operator-owned (no NodePort). NOTE: with the
+      # per-model gateway design (docs/adr/0002), whether this shared gateway is
+      # still needed and how Open WebUI reaches per-model gateways is a flagged
+      # follow-up to validate against the dev harness.
+      type: ClusterIP
     labels:
       gateway-role: llm-inference
-    annotations:
-      workspace.exalsius.ai/access-info: "true"
-      workspace.exalsius.ai/access-type: "nodeport"
-      workspace.exalsius.ai/access-description: "Endpoint for LLM inference"
-      workspace.exalsius.ai/protocol: "tcp"
-      workspace.exalsius.ai/port-name: "llm-inference"
-      workspace.exalsius.ai/associated-templates: "llm-d-model-template"
 
 bbr:
   bbr:
@@ -63,7 +60,13 @@ bbr:
     name: llm-d-inference-gateway
 
 ow:
+  # nameOverride makes the Open WebUI Service "<release>-open-webui", matching
+  # the "open-webui" AccessEndpoint convention in exalsius/workspaceclass.yaml.
+  nameOverride: open-webui
   enableOpenaiApi: true
+  # TODO(flagged follow-up, docs/adr/0002): with per-model gateways, this shared
+  # base URL (and its hardcoded namespace) no longer reflects how Open WebUI
+  # should reach each model's gateway. Resolve against the dev harness.
   openaiBaseApiUrl: http://llm-d-inference-gateway-istio.llm-d.svc.cluster.local:80/v1
   image:
     pullPolicy: Always
@@ -88,10 +91,5 @@ owgateway:
   labels:
     gateway-role: open-webui
   annotations:
-    networking.istio.io/service-type: NodePort
-    workspace.exalsius.ai/access-info: "true"
-    workspace.exalsius.ai/access-type: "nodeport"
-    workspace.exalsius.ai/access-description: "Endpoint for Open WebUI"
-    workspace.exalsius.ai/protocol: "tcp"
-    workspace.exalsius.ai/port-name: "open-webui"
-    workspace.exalsius.ai/associated-templates: "llm-d-model-template"
+    # ClusterIP — routing is operator-owned (no NodePort).
+    networking.istio.io/service-type: ClusterIP

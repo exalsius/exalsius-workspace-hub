@@ -1,0 +1,46 @@
+# Workspace catalog entry (management-cluster CR).
+#
+# TEMPLATE — rendered at release time into
+#   manifests/llm-d-infra/${VERSION}/workspaceclass.yaml
+# Placeholders ${VERSION} / ${VERSION_DASHED} are substituted from Chart.yaml.
+#
+# llm-d-infra is primarily the auto-installed PREREQUISITE of llm-d-model (the
+# operator references its ServiceTemplate directly). This WorkspaceClass exists
+# so the shared Open WebUI gets an operator-routed endpoint — a bare prerequisite
+# has no class and so cannot own a routed AccessEndpoint (docs/adr/0002).
+#
+# Operational caveat: the operator's prerequisite detector recognizes colony- or
+# wsprereq-installed infra, NOT a class-deployed instance. On a given cluster,
+# either deploy infra via this class OR let models auto-install it as a
+# prerequisite — mixing both can yield two infra copies.
+apiVersion: workspaces.exalsius.ai/v1
+kind: WorkspaceClass
+metadata:
+  name: llm-d-infra-${VERSION_DASHED}
+  labels:
+    workspaces.exalsius.ai/template: llm-d-infra
+    workspaces.exalsius.ai/version: "${VERSION}"
+spec:
+  displayName: "LLM Inference (shared infra)"
+  description: >-
+    Shared llm-d inference infrastructure: body-based routing, model discovery,
+    and Open WebUI. Auto-installed as the llm-d-model prerequisite; deploy
+    directly to get the Open WebUI chat endpoint.
+  serviceTemplate:
+    name: llm-d-infra-${VERSION_DASHED}
+    namespace: kcm-system
+  defaultResources:
+    replicas: 1
+    perReplica:
+      cpu: "2"
+      memory: "4Gi"
+      storage: "5Gi"
+      gpuCount: 0
+  accessEndpoints:
+    # Backed by the "<release>-open-webui" Service (ow.nameOverride) — follows
+    # the <release>-<endpoint> convention, so no serviceName override is needed.
+    - name: open-webui
+      protocol: HTTP
+      port: 80
+      description: "Open WebUI chat interface"
+  deployTimeout: 20m

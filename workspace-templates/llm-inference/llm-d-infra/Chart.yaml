@@ -1,9 +1,13 @@
 apiVersion: v2
 name: llm-d-infra
-description: A Helm chart that installs the llm-d-infra stack
+description: >-
+  Shared llm-d inference infrastructure (body-based routing, model discovery,
+  Open WebUI). Auto-installed once per cluster as the llm-d-model prerequisite,
+  and exposes Open WebUI via its own WorkspaceClass.
 type: application
-version: 0.1.1
-# With appVersion we refer to the llm-d version
+version: 0.2.0
+# appVersion tracks the upstream llm-d stack version this chart pins
+# (kept deliberately; scoped exception to ADR-0001 — see docs/adr/0002).
 appVersion: 0.6.0
 
 dependencies:
