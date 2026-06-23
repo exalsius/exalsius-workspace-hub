@@ -1,5 +1,0 @@
-apiVersion: v2
-name: vscode-devcontainer
-description: A Helm chart for a VSCode devcontainer
-version: 0.1.0
-type: application

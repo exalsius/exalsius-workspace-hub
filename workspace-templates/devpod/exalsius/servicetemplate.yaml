@@ -1,0 +1,28 @@
+# Workspace ServiceTemplate (management-cluster CR).
+#
+# TEMPLATE — rendered at release time into
+#   manifests/devpod/${VERSION}/servicetemplate.yaml
+# Placeholders ${VERSION} / ${VERSION_DASHED} are substituted from Chart.yaml.
+#
+# One ServiceTemplate wraps exactly one immutable chart version.
+apiVersion: k0rdent.mirantis.com/v1beta1
+kind: ServiceTemplate
+metadata:
+  name: devpod-${VERSION_DASHED}
+  namespace: kcm-system
+  labels:
+    app: devpod
+    template: workspace
+    workspaces.exalsius.ai/template: devpod
+    workspaces.exalsius.ai/version: "${VERSION}"
+spec:
+  helm:
+    chartSpec:
+      chart: devpod
+      version: "${VERSION}"
+      interval: 10m
+      sourceRef:
+        # HelmRepository must live in the same namespace (kcm-system);
+        # k0rdent's schema has no sourceRef.namespace.
+        kind: HelmRepository
+        name: exalsius-workspace-hub

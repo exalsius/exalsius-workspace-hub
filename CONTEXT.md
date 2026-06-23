@@ -53,6 +53,19 @@ value paths — used to reach subchart paths in umbrella charts. The standard
 Scheduling (`nodeSelector`) is **not** injectable this way — it lands only at
 the fixed `_exalsius.scheduling.nodeSelector`.
 
+**Port pool**:
+How the operator routes a raw-TCP (SSH/TCP) `AccessEndpoint`: it allocates a
+port from the regional gateway's pool and attaches a `TCPRoute` (no hostname,
+since raw TCP carries none). HTTP endpoints get hostname routing instead.
+Requires the Gateway API experimental channel on the regional cluster.
+
+### Workspaces
+
+**devpod**:
+A single-user remote development container reached over SSH (Remote-SSH from
+VS Code, Cursor, or JetBrains). One framework-free image; GPU optional.
+_Avoid_: vscode-devcontainer (the former name), dev-pod, devcontainer.
+
 ### llm inference
 
 **llm-d-infra**:

@@ -1,0 +1,14 @@
+{{- $exPer := (((.Values._exalsius | default dict).resources | default dict).perReplica) | default dict -}}
+{{- $storage := $exPer.storage | default .Values.fallback.storage -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "devpod.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $storage | quote }}

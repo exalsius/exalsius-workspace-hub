@@ -27,6 +27,12 @@
       "extra-files": [
         { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" }
       ]
+    },
+    "workspace-templates/devpod": {
+      "component": "devpod",
+      "extra-files": [
+        { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" }
+      ]
     }
   }
 }

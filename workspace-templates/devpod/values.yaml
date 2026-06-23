@@ -1,0 +1,64 @@
+# devpod workspace chart values
+#
+# One framework-free image runs on CPU, NVIDIA, and AMD ROCm nodes — install
+# PyTorch (cuda/rocm wheels) inside the devpod as needed. When deployed via the
+# exalsius operator, resources, GPU placement, the GPU resource name, and the
+# GPU vendor are injected under `_exalsius.*` and override the `fallback.*`
+# values below. The fallbacks exist only so a plain `helm install` works for
+# chart authoring.
+
+image:
+  repository: ghcr.io/exalsius/devpod
+  # The image is built in a separate repo on its own cadence, so it is pinned by
+  # DIGEST and decoupled from this chart's version (see docs/adr/0001). `tag` is
+  # a human-readable label only; immutability comes from `digest`. Never rely on
+  # a bare moving tag. A WorkspaceDeployment may override repository/tag/digest.
+  tag: "latest"
+  # TODO: replace with the real published image digest before release.
+  digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  pullPolicy: IfNotPresent
+
+# SSH access. The operator sets these from the WorkspaceClass userFacingConfig.
+# A password is required (so the devpod is reachable on first deploy); a public
+# key is optional for key-based login. Both are stored in a Secret.
+sshPassword: "changeme"
+sshPublicKey: ""
+
+# Shared memory (/dev/shm) — PyTorch dataloaders need more than the 64Mi default.
+shmSizeGb: 8
+
+service:
+  # Service port exposed as the "ssh" AccessEndpoint; targetPort is the sshd
+  # container port (22). ClusterIP only — routing is operator-owned.
+  port: 22
+
+gpu:
+  nvidia:
+    # Applied as the pod runtimeClassName ONLY when the operator-injected GPU
+    # vendor is NVIDIA. Set to "" when the NVIDIA runtime is already the node's
+    # default runtime (GPU Operator default). Never applied for AMD/CPU.
+    runtimeClassName: "nvidia"
+
+# Fallback resources used ONLY for a plain `helm install`. The operator injects
+# `_exalsius.resources.perReplica.*`, which override these.
+fallback:
+  cpu: "2"
+  memory: "4Gi"
+  storage: "50Gi"
+
+# Operator-injected contract — DO NOT set by hand. Shown (commented) for
+# reference and local testing; see values-{nvidia,amd,cpu}.yaml for examples.
+# _exalsius:
+#   resources:
+#     replicas: 1
+#     perReplica:
+#       cpu: "16"
+#       memory: "32Gi"
+#       storage: "100Gi"
+#       gpuCount: 1
+#       gpuVendor: "NVIDIA"          # or "AMD"
+#       gpuResourceName: "nvidia.com/gpu"
+#   scheduling:
+#     nodeSelector:
+#       nvidia.com/gpu.product: "NVIDIA-L40"
+_exalsius: {}

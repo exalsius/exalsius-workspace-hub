@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "devpod Helm Chart Values",
+  "description": "Schema for validating devpod Helm chart values",
+  "type": "object",
+  "$defs": {
+    "image": {
+      "type": "object",
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string" },
+        "digest": {
+          "type": "string",
+          "description": "Immutable image digest pin (decoupled from chart version). Empty to pin by tag only.",
+          "pattern": "^(sha256:[a-f0-9]{64})?$"
+        },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
+      },
+      "required": ["repository"],
+      "additionalProperties": false
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      },
+      "required": ["port"],
+      "additionalProperties": false
+    },
+    "gpu": {
+      "type": "object",
+      "properties": {
+        "nvidia": {
+          "type": "object",
+          "properties": {
+            "runtimeClassName": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "fallback": {
+      "type": "object",
+      "description": "Resources used only for a plain helm install; overridden by _exalsius injection.",
+      "properties": {
+        "cpu": { "type": "string", "minLength": 1 },
+        "memory": { "type": "string", "minLength": 1 },
+        "storage": { "type": "string", "minLength": 1 }
+      },
+      "required": ["cpu", "memory", "storage"],
+      "additionalProperties": false
+    },
+    "exalsius": {
+      "type": "object",
+      "description": "Operator-injected resource/scheduling contract. Shape is owned by the operator, so it is intentionally not constrained here.",
+      "additionalProperties": true
+    }
+  },
+  "properties": {
+    "image": { "$ref": "#/$defs/image" },
+    "sshPassword": {
+      "type": "string",
+      "description": "Password for SSH authentication (required so the devpod is reachable).",
+      "minLength": 1
+    },
+    "sshPublicKey": {
+      "type": "string",
+      "description": "Optional SSH public key(s) for key-based auth (one per line)."
+    },
+    "shmSizeGb": {
+      "type": "integer",
+      "description": "Shared memory (/dev/shm) size in GiB.",
+      "minimum": 1
+    },
+    "service": { "$ref": "#/$defs/service" },
+    "gpu": { "$ref": "#/$defs/gpu" },
+    "fallback": { "$ref": "#/$defs/fallback" },
+    "_exalsius": { "$ref": "#/$defs/exalsius" }
+  },
+  "required": ["image", "sshPassword", "shmSizeGb", "service", "fallback"],
+  "additionalProperties": false
+}
