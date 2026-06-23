@@ -1,22 +1,28 @@
 # jupyter-notebook workspace chart values
 #
-# One framework-free image runs on CPU, NVIDIA, and AMD ROCm nodes — install
-# PyTorch (cuda/rocm wheels) inside the notebook as needed. When deployed via
-# the exalsius operator, resources, GPU placement, the GPU resource name, and
-# the GPU vendor are injected under `_exalsius.*` and override the `fallback.*`
-# values below. The fallbacks exist only so a plain `helm install` works for
-# chart authoring.
+# The image is selected by the operator-injected GPU vendor (docs/adr/0003):
+# `default` is framework-free for CPU + NVIDIA (install CUDA PyTorch via pip);
+# `amd` is ROCm-baked because the ROCm userspace can't be injected at runtime.
+# When deployed via the exalsius operator, resources, GPU placement, the GPU
+# resource name, and the GPU vendor are injected under `_exalsius.*` and override
+# the `fallback.*` values below. The fallbacks exist only so a plain
+# `helm install` works for chart authoring.
 
 image:
-  repository: ghcr.io/exalsius/jupyter-notebook
-  # The image is built in a separate repo on its own cadence, so it is pinned by
-  # DIGEST and decoupled from this chart's version (see docs/adr/0001). `tag` is
-  # a human-readable label only; immutability comes from `digest`. Never rely on
-  # a bare moving tag. A WorkspaceDeployment may override repository/tag/digest.
-  tag: "latest"
-  # TODO: replace with the real published image digest before release.
-  digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   pullPolicy: IfNotPresent
+  # Each variant is pinned by DIGEST, decoupled from the chart version
+  # (docs/adr/0001) — `tag` is a label only. A WorkspaceDeployment may override
+  # either variant.
+  default:
+    repository: ghcr.io/exalsius/jupyter-notebook
+    tag: "latest"
+    # TODO: replace with the real published image digest before release.
+    digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  amd:
+    repository: ghcr.io/exalsius/jupyter-notebook
+    tag: "latest-rocm"
+    # TODO: replace with the real published ROCm image digest before release.
+    digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
 
 # Password for the Jupyter web UI. The operator sets this from the
 # WorkspaceClass userFacingConfig (type=secret).

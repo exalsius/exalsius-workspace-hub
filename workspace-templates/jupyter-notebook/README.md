@@ -2,12 +2,12 @@
 
 # Jupyter Notebook Workspace
 
-A single-user Jupyter Notebook workspace for the exalsius operator. **One
-framework-free image** runs on CPU, NVIDIA, and AMD ROCm nodes — install PyTorch
-(cuda or rocm wheels) inside the notebook as needed. Resources, GPU placement,
-the GPU resource name, and the GPU vendor are injected by the operator via the
-`_exalsius` contract; the service is exposed as **ClusterIP** and
-reached through operator-owned routing.
+A single-user Jupyter Notebook workspace for the exalsius operator. The image is
+**selected by GPU vendor** ([ADR 0003](../../docs/adr/0003-gpu-workspace-images-are-vendor-selected.md)):
+a framework-free base for CPU + NVIDIA (install CUDA PyTorch via pip) and a
+ROCm-baked image for AMD. Resources, GPU placement, the GPU resource name, and
+the GPU vendor are injected by the operator via the `_exalsius` contract; the
+service is exposed as **ClusterIP** and reached through operator-owned routing.
 
 The management-cluster CRs that make this chart selectable as a workspace — its
 `ServiceTemplate`, `WorkspaceClass`, and an example `WorkspaceDeployment` — live
@@ -53,9 +53,8 @@ Colony GPU inventory (`Colony.status.gpuInventory[].offerings[].selector`).
 
 | Parameter | Description | Default |
 | --- | --- | --- |
-| `image.repository` | Container image (framework-free base). | `ghcr.io/exalsius/jupyter-notebook` |
-| `image.tag` | Human-readable image label (immutability comes from `image.digest`). | `latest` |
-| `image.digest` | Immutable image digest pin, decoupled from chart version ([ADR 0001](../../docs/adr/0001-decouple-workspace-image-tag-from-chart-version.md)). | _(set before release)_ |
+| `image.default.{repository,tag,digest}` | Framework-free image for CPU + NVIDIA (digest-pinned). | `ghcr.io/exalsius/jupyter-notebook:latest` |
+| `image.amd.{repository,tag,digest}` | ROCm-baked image, selected when `gpuVendor=AMD` ([ADR 0003](../../docs/adr/0003-gpu-workspace-images-are-vendor-selected.md)). | `ghcr.io/exalsius/jupyter-notebook:latest-rocm` |
 | `image.pullPolicy` | Image pull policy. | `IfNotPresent` |
 | `notebookPassword` | Password for the Jupyter web UI (set by the WorkspaceClass userFacingConfig). | `changeme` |
 | `service.port` | ClusterIP Service port for the `http` endpoint (targetPort is 8888). | `80` |

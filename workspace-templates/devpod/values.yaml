@@ -8,15 +8,23 @@
 # chart authoring.
 
 image:
-  repository: ghcr.io/exalsius/devpod
-  # The image is built in a separate repo on its own cadence, so it is pinned by
-  # DIGEST and decoupled from this chart's version (see docs/adr/0001). `tag` is
-  # a human-readable label only; immutability comes from `digest`. Never rely on
-  # a bare moving tag. A WorkspaceDeployment may override repository/tag/digest.
-  tag: "latest"
-  # TODO: replace with the real published image digest before release.
-  digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
   pullPolicy: IfNotPresent
+  # The image is selected by the operator-injected GPU vendor (see docs/adr/0003):
+  # NVIDIA injects its driver userspace at runtime, so `default` is framework-free
+  # and serves CPU + NVIDIA; AMD has no such injection, so `amd` must bake in the
+  # ROCm userspace. Each variant is pinned by DIGEST, decoupled from the chart
+  # version (docs/adr/0001) — `tag` is a label only. A WorkspaceDeployment may
+  # override either variant.
+  default:
+    repository: ghcr.io/exalsius/devpod
+    tag: "latest"
+    # TODO: replace with the real published image digest before release.
+    digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  amd:
+    repository: ghcr.io/exalsius/devpod
+    tag: "latest-rocm"
+    # TODO: replace with the real published ROCm image digest before release.
+    digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
 
 # SSH access. The operator sets these from the WorkspaceClass userFacingConfig.
 # A password is required (so the devpod is reachable on first deploy); a public

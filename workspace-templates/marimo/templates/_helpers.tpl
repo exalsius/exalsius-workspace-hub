@@ -23,12 +23,18 @@ app: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
-Fully-qualified container image reference. Pinned by digest (immutable) and
-decoupled from the chart version (see docs/adr/0001). Renders
+Fully-qualified container image reference, selected by the operator-injected GPU
+vendor (docs/adr/0003): the ROCm-baked `image.amd` for AMD, else the
+framework-free `image.default` (NVIDIA + CPU). Each variant is pinned by digest
+and decoupled from the chart version (docs/adr/0001); renders
 `repository:tag@digest` when a digest is set, `repository:tag` otherwise.
 */}}
 {{- define "marimo.image" -}}
-{{- $img := .Values.image -}}
+{{- $exPer := (((.Values._exalsius | default dict).resources | default dict).perReplica) | default dict -}}
+{{- $img := .Values.image.default -}}
+{{- if and (eq (lower (toString ($exPer.gpuVendor | default ""))) "amd") .Values.image.amd -}}
+{{- $img = .Values.image.amd -}}
+{{- end -}}
 {{- printf "%s:%s" $img.repository $img.tag -}}
 {{- if $img.digest }}{{- printf "@%s" $img.digest -}}{{- end -}}
 {{- end -}}

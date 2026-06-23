@@ -97,6 +97,12 @@ makes it a *workspace* template rather than just a chart):
   - apply `_exalsius.scheduling.nodeSelector` **verbatim** as the pod nodeSelector
   - gate any `runtimeClassName` on `_exalsius.resources.perReplica.gpuVendor`
     (e.g. set it only for NVIDIA)
+  - **select the image by vendor** ([ADR 0003](adr/0003-gpu-workspace-images-are-vendor-selected.md)).
+    NVIDIA injects its driver userspace via the container runtime, so a
+    framework-free image serves CPU + NVIDIA; AMD has no such injection, so the
+    ROCm userspace must be baked in. Model the image as `image.default`
+    (framework-free) + `image.amd` (ROCm-baked), each digest-pinned, and pick
+    `image.amd` when `gpuVendor` is `AMD`.
 - **Expose a ClusterIP Service** named `{{ .Release.Name }}-<endpoint>`
   (e.g. `{{ .Release.Name }}-http`). **No NodePort, Ingress, or LoadBalancer** —
   routing is operator-owned.

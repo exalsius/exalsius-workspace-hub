@@ -4,7 +4,7 @@
   "description": "Schema for validating marimo Helm chart values",
   "type": "object",
   "$defs": {
-    "image": {
+    "imageVariant": {
       "type": "object",
       "properties": {
         "repository": { "type": "string", "minLength": 1 },
@@ -13,10 +13,20 @@
           "type": "string",
           "description": "Immutable image digest pin (decoupled from chart version). Empty to pin by tag only.",
           "pattern": "^(sha256:[a-f0-9]{64})?$"
-        },
-        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
+        }
       },
       "required": ["repository"],
+      "additionalProperties": false
+    },
+    "image": {
+      "type": "object",
+      "description": "Image is selected by injected GPU vendor (ADR-0003): amd -> ROCm-baked, else default (framework-free).",
+      "properties": {
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
+        "default": { "$ref": "#/$defs/imageVariant" },
+        "amd": { "$ref": "#/$defs/imageVariant" }
+      },
+      "required": ["default"],
       "additionalProperties": false
     },
     "service": {

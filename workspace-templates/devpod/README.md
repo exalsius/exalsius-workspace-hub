@@ -14,11 +14,14 @@ The management-cluster CRs that make this chart selectable as a workspace — it
 `ServiceTemplate`, `WorkspaceClass`, and an example `WorkspaceDeployment` — live
 in [`exalsius/`](./exalsius), versioned together with the chart.
 
-The container image is built in a separate repository and **pinned by digest**,
-decoupled from this chart's version
+The image is **selected by GPU vendor**
+([ADR 0003](../../docs/adr/0003-gpu-workspace-images-are-vendor-selected.md)):
+`image.default` (framework-free) serves CPU + NVIDIA, while `image.amd` is
+ROCm-baked because AMD's userspace can't be injected at runtime. Each variant is
+**pinned by digest**, decoupled from the chart version
 ([ADR 0001](../../docs/adr/0001-decouple-workspace-image-tag-from-chart-version.md)).
-A real, published digest must be set in `values.yaml` (`image.digest`) before
-release; until then use the dev harness's `IMAGE_TAG=` override.
+Real published digests must be set in `values.yaml` before release; until then
+use the dev harness's `IMAGE_TAG=` override.
 
 ## Quickstart
 
@@ -64,9 +67,8 @@ to Host*.
 
 | Parameter | Description | Default |
 | --- | --- | --- |
-| `image.repository` | Container image (framework-free base). | `ghcr.io/exalsius/devpod` |
-| `image.tag` | Human-readable image label (immutability comes from `image.digest`). | `latest` |
-| `image.digest` | Immutable image digest pin, decoupled from chart version. | _(set before release)_ |
+| `image.default.{repository,tag,digest}` | Framework-free image for CPU + NVIDIA (digest-pinned). | `ghcr.io/exalsius/devpod:latest` |
+| `image.amd.{repository,tag,digest}` | ROCm-baked image, selected when `gpuVendor=AMD`. | `ghcr.io/exalsius/devpod:latest-rocm` |
 | `image.pullPolicy` | Image pull policy. | `IfNotPresent` |
 | `sshPassword` | SSH login password (set by the WorkspaceClass userFacingConfig). | `changeme` |
 | `sshPublicKey` | Optional SSH public key(s), one per line. | `""` |
