@@ -178,6 +178,29 @@ Access the workspace (HTTP) — the tenant Gateway is a LoadBalancer via cloud-p
 Iterate after editing the chart:   make dev-redeploy
 Tear down:                          make dev-down
 EOF
+    # SSH/TCP endpoints route via the tenant Gateway's TCP port pool (raw TCP,
+    # by PORT not hostname) — a different path from the HTTP block above.
+    if yq -e '.spec.accessEndpoints[] | select(.protocol != "HTTP")' "${TMP_DIR}/workspaceclass.yaml" >/dev/null 2>&1; then
+      ssh_ep="$(yq '.spec.accessEndpoints[] | select(.protocol != "HTTP") | .name' "${TMP_DIR}/workspaceclass.yaml" | head -1)"
+      ssh_port="$(yq '.spec.accessEndpoints[] | select(.protocol != "HTTP") | .port' "${TMP_DIR}/workspaceclass.yaml" | head -1)"
+      cat <<EOF
+
+Access the '${ssh_ep}' endpoint (SSH/TCP) — routed via the tenant Gateway's TCP
+port pool (raw TCP, so by allocated PORT, not hostname). Read the operator-
+assigned port once routing is programmed:
+  kubectl --context ${MGMT} -n ${NS} get wsd ${WSD_NAME} -o jsonpath='{.status.access}' | jq .
+  # -> {"name":"${ssh_ep}","protocol":"SSH","url":"ssh://<domain>:<port>","ready":true}
+
+  GW_IP=\$(kubectl --context ${REG_CTX} -n ${GW_NS} get svc ${GW_SVC} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p <port> root@\$GW_IP
+  # auth comes from the WSD's spec.values (sshPassword / sshPublicKey)
+
+  ready:false? read .message (port pool exhausted / TCPRoute CRD missing).
+  Isolate the pod's sshd from routing by port-forwarding the child Service:
+  kubectl --context ${CHILD_CTX} -n ws-${WSD_NAME} port-forward svc/wsd-${CD}-${WSD_NAME}-${ssh_ep} 2222:${ssh_port}
+  ssh -o StrictHostKeyChecking=no -p 2222 root@localhost
+EOF
+    fi
     ;;
   redeploy)
     require_chart; load_chart_meta
