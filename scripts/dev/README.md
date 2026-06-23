@@ -93,7 +93,7 @@ both CPU and GPU: the harness synthesizes the GPU selector from `VENDOR`, and
 
 ```sh
 make dev-fake-gpu VENDOR=nvidia     # label node + patch status allocatable nvidia.com/gpu=1
-make dev-up GPU=1 VENDOR=nvidia IMAGE_TAG=latest-nvidia   # WSD selecting that node
+make dev-up GPU=1 VENDOR=nvidia IMAGE_REPO=srnbckr/devpod IMAGE_TAG=latest   # WSD selecting that node
 ```
 
 Swap `VENDOR=amd` to exercise the ROCm branch (selector `amd.com/gpu.device-id=74a1`,
@@ -150,5 +150,9 @@ everything except real GPU *execution*, which kind can't do.
 | `GPU` / `VENDOR` | `0` / `nvidia` | request a GPU; vendor for fake + selector |
 | `IMAGE_REPO` / `IMAGE_TAG` | (chart default) | override the workspace image |
 
-> The chart's default image tag may not be published yet — pass
-> `IMAGE_TAG=<a-pullable-tag>` until it is.
+> GPU-workspace charts pin their image by digest and select it by vendor
+> (`image.default` for NVIDIA/CPU, `image.amd` for AMD — ADR-0003). The
+> override targets the variant the run will use (`image.amd` only when
+> `GPU=1 VENDOR=amd`, else `image.default`), clears that variant's pinned digest,
+> and forces `Always` pull. Pass `IMAGE_REPO`/`IMAGE_TAG` until a real digest is
+> published, e.g. `IMAGE_REPO=srnbckr/devpod IMAGE_TAG=latest`.

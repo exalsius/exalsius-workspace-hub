@@ -124,8 +124,23 @@ apply_wsd() {
     yq -i 'del(.spec.resources.perReplica.gpuCount) | del(.spec.resources.perReplica.gpuNodeSelector)' "${WSD_FILE}"
   fi
 
-  [ -n "${IMAGE_REPO}" ] && IMG="${IMAGE_REPO}" yq -i '.spec.values.image.repository = strenv(IMG)' "${WSD_FILE}"
-  [ -n "${IMAGE_TAG}" ]  && IMG="${IMAGE_TAG}"  yq -i '.spec.values.image.tag = strenv(IMG)' "${WSD_FILE}"
+  # Image override targets the vendor-keyed image map (image.<variant>.*) the
+  # GPU-workspace charts use (ADR-0003). The chart selects image.amd only when
+  # the injected gpuVendor is AMD (GPU=1 VENDOR=amd); otherwise image.default —
+  # so override the variant the chart will actually pick. Clear that variant's
+  # pinned digest (so a moving override tag pulls) and force Always so redeploys
+  # re-pull a moving tag.
+  if [ -n "${IMAGE_REPO}" ] || [ -n "${IMAGE_TAG}" ]; then
+    if [ "${GPU}" = "1" ] && [ "${VENDOR}" = "amd" ]; then
+      yq -i '.spec.values.image.amd.digest = "" | .spec.values.image.pullPolicy = "Always"' "${WSD_FILE}"
+      [ -n "${IMAGE_REPO}" ] && IMG="${IMAGE_REPO}" yq -i '.spec.values.image.amd.repository = strenv(IMG)' "${WSD_FILE}"
+      [ -n "${IMAGE_TAG}" ]  && IMG="${IMAGE_TAG}"  yq -i '.spec.values.image.amd.tag = strenv(IMG)' "${WSD_FILE}"
+    else
+      yq -i '.spec.values.image.default.digest = "" | .spec.values.image.pullPolicy = "Always"' "${WSD_FILE}"
+      [ -n "${IMAGE_REPO}" ] && IMG="${IMAGE_REPO}" yq -i '.spec.values.image.default.repository = strenv(IMG)' "${WSD_FILE}"
+      [ -n "${IMAGE_TAG}" ]  && IMG="${IMAGE_TAG}"  yq -i '.spec.values.image.default.tag = strenv(IMG)' "${WSD_FILE}"
+    fi
+  fi
 
   echo ">> applying WorkspaceDeployment ${WSD_NAME} (cluster ${CD}, gpu=${GPU})"
   kubectl --context "${MGMT}" apply -f "${WSD_FILE}"
