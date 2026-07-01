@@ -11,7 +11,7 @@ From the [`local-dev-env`](../../../local-dev-env) repo:
 
 ```sh
 make up                       # kind mgmt cluster, k0rdent, operator, source-controller
-make setup-kcm-regional-child # regional + 2 child clusters, Gateway API CRDs, tenant Gateway
+make setup-kcm-regional-child # regional + 2 child clusters, Gateway API CRDs
 ```
 
 The operator must be built from the branch you want to test (set

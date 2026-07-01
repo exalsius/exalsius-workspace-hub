@@ -9,7 +9,7 @@
 # ServiceTemplate/WorkspaceClass templates is tested too.
 #
 # Assumes local-dev-env `make up` + `make setup-kcm-regional-child` have run
-# (mgmt + regional + child clusters, source-controller, and the tenant Gateway).
+# (mgmt + regional + child clusters, source-controller).
 #
 # Commands: up | redeploy | down | fake-gpu | unfake-gpu
 # Config via env (see Makefile for the make-target wrappers and defaults):
@@ -33,8 +33,8 @@ IMAGE_TAG="${IMAGE_TAG:-}"
 REGISTRY_HOST="${REGISTRY_HOST:-localhost:5050}"
 HELMREPO="exalsius-workspace-hub"
 REG_CTX="${REG_CTX:-kind-regional-adopted}"
-GW_NS="${GW_NS:-exalsius-gateway}"
-GW_SVC="${GW_SVC:-exalsius-workspaces-istio}"
+GW_NS="${GW_NS:-istio-system}"
+GW_SVC="${GW_SVC:-istio-ingressgateway-istio}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${REPO_ROOT}"
@@ -90,8 +90,21 @@ reconcile_source() {
 
 render_and_apply_crs() {
   mkdir -p "${TMP_DIR}"
+
+  infra_chart="$(dirname "${CHART_DIR}")/llm-d-infra/Chart.yaml"
+  if [ -f "${infra_chart}" ]; then
+    infra_version="$(yq '.version' "${infra_chart}")"
+    infra_version_dashed="${infra_version//./-}"
+  else
+    infra_version=""
+    infra_version_dashed=""
+  fi
+
   for f in servicetemplate workspaceclass; do
-    sed -e "s/\${VERSION_DASHED}/${VERSION_DASHED}/g" -e "s/\${VERSION}/${VERSION}/g" \
+    sed -e "s|\${VERSION_DASHED}|${VERSION_DASHED}|g" \
+      -e "s|\${VERSION}|${VERSION}|g" \
+      -e "s|\${INFRA_VERSION_DASHED}|${infra_version_dashed}|g" \
+      -e "s|\${INFRA_VERSION}|${infra_version}|g" \
       "${EXALSIUS_DIR}/${f}.yaml" > "${TMP_DIR}/${f}.yaml"
   done
   echo ">> applying ServiceTemplate + WorkspaceClass (${WSC_NAME})"
@@ -162,7 +175,7 @@ Deployed. Watch it come up:
   kubectl --context ${MGMT} -n ${NS} get wsd ${WSD_NAME} -w
   kubectl --context ${CHILD_CTX} -n ws-${WSD_NAME} get deploy,pod,svc,pvc
 
-Access the workspace (HTTP) — the tenant Gateway is a LoadBalancer via cloud-provider-kind:
+Access the workspace (HTTP) — the ingress Gateway is a LoadBalancer via cloud-provider-kind:
   # resolved URL(s) for this workspace (read the host from here):
   kubectl --context ${MGMT} -n ${NS} get wsd ${WSD_NAME} -o jsonpath='{.status.access}' | jq .
   # the Gateway's external IP on the regional cluster:
@@ -178,14 +191,14 @@ Access the workspace (HTTP) — the tenant Gateway is a LoadBalancer via cloud-p
 Iterate after editing the chart:   make dev-redeploy
 Tear down:                          make dev-down
 EOF
-    # SSH/TCP endpoints route via the tenant Gateway's TCP port pool (raw TCP,
+    # SSH/TCP endpoints route via the ingress Gateway's TCP port pool (raw TCP,
     # by PORT not hostname) — a different path from the HTTP block above.
     if yq -e '.spec.accessEndpoints[] | select(.protocol != "HTTP")' "${TMP_DIR}/workspaceclass.yaml" >/dev/null 2>&1; then
       ssh_ep="$(yq '.spec.accessEndpoints[] | select(.protocol != "HTTP") | .name' "${TMP_DIR}/workspaceclass.yaml" | head -1)"
       ssh_port="$(yq '.spec.accessEndpoints[] | select(.protocol != "HTTP") | .port' "${TMP_DIR}/workspaceclass.yaml" | head -1)"
       cat <<EOF
 
-Access the '${ssh_ep}' endpoint (SSH/TCP) — routed via the tenant Gateway's TCP
+Access the '${ssh_ep}' endpoint (SSH/TCP) — routed via the ingress Gateway's TCP
 port pool (raw TCP, so by allocated PORT, not hostname). Read the operator-
 assigned port once routing is programmed:
   kubectl --context ${MGMT} -n ${NS} get wsd ${WSD_NAME} -o jsonpath='{.status.access}' | jq .
