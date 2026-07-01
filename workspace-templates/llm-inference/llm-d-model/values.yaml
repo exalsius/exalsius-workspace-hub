@@ -17,20 +17,7 @@ ip:
         auth:
           enabled: false
   provider:
-    name: istio
-    istio:
-      destinationRule:
-        trafficPolicy:
-          connectionPool:
-            http:
-              http1MaxPendingRequests: 256000
-              maxRequestsPerConnection: 256000
-              http2MaxRequests: 256000
-              idleTimeout: "900s"
-            tcp:
-              maxConnections: 256000
-              maxConnectionDuration: "1800s"
-              connectTimeout: "900s"
+    name: none
   inferencePool:
     targetPorts:
       - number: 8000

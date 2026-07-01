@@ -46,7 +46,7 @@ spec:
         - group: ""
           kind: Service
           name: llm-d-inference-gateway
-          namespace: llm-d
+          namespace: default
           port: 80
 ---
 # The reference grant is needed because the llm-d-inference-gateway service lives in another namespace
@@ -54,7 +54,7 @@ apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:
   name: {{ .Release.Name }}-httproute-referencegrant
-  namespace: llm-d
+  namespace: default
 spec:
   from:
     - group: gateway.networking.k8s.io
@@ -81,7 +81,7 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: llm-d-inference-gateway
-      namespace: llm-d
+      namespace: default
       sectionName: external
   rules:
     {{- include "llm-d-model.modelRouteRules" . | nindent 4 }}
@@ -95,7 +95,7 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: llm-d-inference-gateway
-      namespace: llm-d
+      namespace: default
       sectionName: internal
   rules:
     {{- include "llm-d-model.modelRouteRules" . | nindent 4 }}

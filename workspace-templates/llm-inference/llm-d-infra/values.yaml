@@ -59,7 +59,7 @@ ow:
   # the "open-webui" AccessEndpoint convention in exalsius/workspaceclass.yaml.
   nameOverride: open-webui
   enableOpenaiApi: true
-  openaiBaseApiUrl: http://llm-d-inference-gateway.llm-d.svc.cluster.local:8080/v1
+  openaiBaseApiUrl: http://llm-d-inference-gateway:8080/v1
   image:
     pullPolicy: Always
   ollama:

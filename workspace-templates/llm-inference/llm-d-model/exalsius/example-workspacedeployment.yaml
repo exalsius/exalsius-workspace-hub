@@ -31,7 +31,7 @@ spec:
         nvidia.com/gpu.product: "NVIDIA-L40"
   values:
     huggingfaceToken: "hf_replace_me"
-    # inferenceApiKey: "optional-bearer-token"
+    inferenceApiKey: "api_key"
     ms:
       modelArtifacts:
         uri: "hf://Qwen/Qwen3-1.7B"
