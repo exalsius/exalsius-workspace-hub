@@ -52,14 +52,10 @@ spec:
     replicas:
       - "ms.decode.replicas"
   accessEndpoints:
-    - name: llm-inference
+    - name: http
       protocol: HTTP
-      port: 80
-      # The per-model istio Gateway (templates/gateway.yaml) is auto-provisioned
-      # by istio as the Service "llm-d-inference-gateway-istio" in the workspace
-      # namespace; pin it explicitly since it doesn't follow <release>-<endpoint>.
-      serviceName: llm-d-inference-gateway-istio
-      description: "OpenAI-compatible inference API for this model"
+      port: 8000
+      description: "LLM Inference OpenAI-compatible REST API"
   userFacingConfig:
     - helmValuePath: huggingfaceToken
       displayName: "Hugging Face Token"

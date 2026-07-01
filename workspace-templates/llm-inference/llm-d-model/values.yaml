@@ -44,6 +44,7 @@ ip:
 ### CHANGES REQUIRED ###
 huggingfaceToken: "my-hugging-face-token"
 inferenceApiKey: ""
+httpRequestTimeout: 300s
 ### CHANGES REQUIRED ###
 
 # The chart automatically calculates accelerator resources (e.g., nvidia.com/gpu) based on parallelism settings.

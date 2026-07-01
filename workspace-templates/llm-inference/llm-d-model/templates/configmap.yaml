@@ -5,7 +5,6 @@ metadata:
   # internal cache on configmap names. The bbr-managed label is how the infra
   # model-registry discovers this model for Open WebUI.
   name: '{{ .Release.Name }}-cm-{{ include "modelService.configMapHash" . }}'
-  namespace: {{ .Release.Namespace }}
   labels:
     inference.networking.k8s.io/bbr-managed: "true"
 data:
