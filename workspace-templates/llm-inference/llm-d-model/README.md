@@ -57,4 +57,4 @@ route to the pool.
 | `ms.modelArtifacts.name` | **Required.** Served model name, e.g. `Qwen/Qwen3-1.7B`. |
 | `ms.modelArtifacts.labels."llm-d.ai/model"` | **Required.** Must equal the pool selector below. |
 | `ip.inferencePool.modelServers.matchLabels."llm-d.ai/model"` | **Required.** Must equal the model label above. |
-| `inferenceApiKey` | Optional bearer token clients must present. |
+| `inferenceApiKey` | Optional bearer token for **external** access. Enforced at the inference gateway's `external` listener (not in vLLM); the `internal` listener is not gated by it. |

@@ -1,0 +1,21 @@
+{{- if .Values.inferenceApiKey }}
+# API-key enforcement for external access. Attached to the external route only
+# (see networking.yaml), so it gates the per-workspace public endpoint while
+# leaving the internal route untouched. Strict mode: requests without a valid
+# key (Authorization: Bearer <key>) are rejected at the gateway. Keys come from
+# the {{ .Release.Name }}-external-apikey secret (see secret.yaml).
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: {{ .Release.Name }}-external-apikey
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: {{ .Release.Name }}-httproute-external
+  traffic:
+    apiKeyAuthentication:
+      mode: Strict
+      secretRef:
+        name: {{ .Release.Name }}-external-apikey
+{{- end }}

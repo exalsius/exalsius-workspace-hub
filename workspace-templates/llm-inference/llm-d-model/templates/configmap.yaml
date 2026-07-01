@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   # Hashed name so body-based routing (in llm-d-infra) reconciles — BBR keys an
   # internal cache on configmap names. The bbr-managed label is how the infra
-  # model-registry discovers this model for Open WebUI.
+  # model-registry discovers this model.
   name: '{{ .Release.Name }}-cm-{{ include "modelService.configMapHash" . }}'
   labels:
     inference.networking.k8s.io/bbr-managed: "true"

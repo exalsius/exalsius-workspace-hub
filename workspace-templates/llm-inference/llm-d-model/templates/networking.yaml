@@ -18,7 +18,7 @@ spec:
     # IMPORTANT: This selector must actually select "something" in the target cluster, in order for the service mesh to announce endpoint slices
     {{- include "llm-d-model.selectorLabels" . | nindent 4 }}
 ---
-# With this HTTPRoute, we redirect traffic to the "dummy" service above to the llm-d-inference-gateway.
+# With this HTTPRoute, we redirect traffic from the "dummy" service above to the llm-d-inference-gateway.
 # The latter will route traffic to the correct inference pool based on the X-Gateway-Model-Name header.
 # Here, we set the X-Gateway-Model-Name header to the model name from the workspace deployment values.
 # This is in order to mitigate tampering of the header by the client, which could otherwise allow a client to access a different model than intended.
@@ -64,32 +64,38 @@ spec:
     - group: ""
       kind: Service
 ---
-# Finally, we create an HTTPRoute that will route traffic to the inference pool for this model.
-# Here, we route based on the X-Gateway-Model-Name header.
-# This header is either set by the redirect HTTPRoute above, or by the body-based-routing utility (only applies to open-webui requests).
+# Finally, we route traffic to the inference pool for this model, based on the
+# X-Gateway-Model-Name header (set by the redirect HTTPRoute above for external
+# clients, or upstream on the gateway's internal listener).
+#
+# The route is split per gateway listener so that authentication can differ:
+#   - "external" carries the optional API-key policy (per-workspace public endpoint)
+#   - "internal" is intentionally left open so cluster-internal consumers can
+#     list and call every model without a key.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: {{ .Release.Name }}-httproute
+  name: {{ .Release.Name }}-httproute-external
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: llm-d-inference-gateway
       namespace: llm-d
+      sectionName: external
   rules:
-    - timeouts:
-        request: {{ .Values.httpRequestTimeout }}
-      matches:
-        - headers:
-            - name: X-Gateway-Model-Name
-              type: Exact
-              value: {{ .Values.ms.modelArtifacts.name }}
-          path:
-            type: PathPrefix
-            value: /v1
-      backendRefs:
-        - group: inference.networking.k8s.io
-          kind: InferencePool
-          name: {{ .Release.Name }}
-          weight: 1
+    {{- include "llm-d-model.modelRouteRules" . | nindent 4 }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Release.Name }}-httproute-internal
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: llm-d-inference-gateway
+      namespace: llm-d
+      sectionName: internal
+  rules:
+    {{- include "llm-d-model.modelRouteRules" . | nindent 4 }}
