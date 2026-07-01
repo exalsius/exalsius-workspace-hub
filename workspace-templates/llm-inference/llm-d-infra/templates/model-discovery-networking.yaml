@@ -1,3 +1,5 @@
+# HTTPRoute for model discovery service
+# The model discovery service is used by the open-webui to discover which models are available for inference.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -8,6 +10,7 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: llm-d-inference-gateway
+      sectionName: internal
   rules:
     - backendRefs:
         - name: model-registry

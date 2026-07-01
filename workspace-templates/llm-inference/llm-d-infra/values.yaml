@@ -10,6 +10,7 @@ modelRegistry:
     value: "true"
   modelsDataKey: baseModel
   pollIntervalSec: "30"
+  pollBackoffMaxSec: "300"
   service:
     type: ClusterIP
     port: 8000
@@ -21,14 +22,27 @@ modelRegistry:
       cpu: 200m
       memory: 256Mi
 
+agentgateway:
+  inferenceExtension:
+    enabled: true
+
 infra:
   gateway:
     enabled: true
-    gatewayClassName: istio
+    provider: agentgateway
+    gatewayClassName: agentgateway
     fullnameOverride: llm-d-inference-gateway
     listeners:
-      - name: llm-inference
+      # This "external" listener is for workspaces and their services, attached via HTTPRoutes
+      - name: external
         port: 80
+        protocol: HTTP
+        allowedRoutes:
+          namespaces:
+            from: All
+      # This "internal" listener is for open-webui
+      - name: internal
+        port: 8080
         protocol: HTTP
         allowedRoutes:
           namespaces:
@@ -39,35 +53,13 @@ infra:
       # still needed and how Open WebUI reaches per-model gateways is a flagged
       # follow-up to validate against the dev harness.
       type: ClusterIP
-    labels:
-      gateway-role: llm-inference
-
-bbr:
-  bbr:
-    # Makes it possible to watch for configmaps across namespaces
-    multiNamespace: true
-    plugins:
-      - type: body-field-to-header
-        name: model-extractor
-        json: {"field_name":"model","header_name":"X-Gateway-Base-Model-Name"}
-  provider:
-    name: istio
-    istio:
-      # Apply EnvoyFilter only to the inference gateway (must match gateway pod labels)
-      workloadSelector:
-        gateway-role: llm-inference
-  inferenceGateway:
-    name: llm-d-inference-gateway
 
 ow:
   # nameOverride makes the Open WebUI Service "<release>-open-webui", matching
   # the "open-webui" AccessEndpoint convention in exalsius/workspaceclass.yaml.
   nameOverride: open-webui
   enableOpenaiApi: true
-  # TODO(flagged follow-up, docs/adr/0002): with per-model gateways, this shared
-  # base URL (and its hardcoded namespace) no longer reflects how Open WebUI
-  # should reach each model's gateway. Resolve against the dev harness.
-  openaiBaseApiUrl: http://llm-d-inference-gateway-istio.llm-d.svc.cluster.local:80/v1
+  openaiBaseApiUrl: http://llm-d-inference-gateway.llm-d.svc.cluster.local:8080/v1
   image:
     pullPolicy: Always
   ollama:
@@ -78,18 +70,3 @@ ow:
     enabled: false
   websocket:
     enabled: false
-
-owgateway:
-  gatewayClassName: istio
-  listeners:
-    - name: open-webui
-      port: 80
-      protocol: HTTP
-      allowedRoutes:
-        namespaces:
-          from: All
-  labels:
-    gateway-role: open-webui
-  annotations:
-    # ClusterIP — routing is operator-owned (no NodePort).
-    networking.istio.io/service-type: ClusterIP

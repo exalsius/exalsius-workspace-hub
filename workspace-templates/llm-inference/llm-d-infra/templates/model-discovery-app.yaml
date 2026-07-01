@@ -56,6 +56,8 @@ spec:
               value: {{ .Values.modelRegistry.modelsDataKey | quote }}
             - name: POLL_INTERVAL_SEC
               value: {{ .Values.modelRegistry.pollIntervalSec | quote }}
+            - name: POLL_BACKOFF_MAX_SEC
+              value: {{ .Values.modelRegistry.pollBackoffMaxSec | quote }}
           ports:
             - name: http
               containerPort: 8000

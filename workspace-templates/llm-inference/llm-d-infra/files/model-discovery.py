@@ -1,5 +1,6 @@
 """Model registry service: FastAPI /v1/models + background thread reading ConfigMaps."""
 import os
+import random
 import threading
 import time
 from contextlib import asynccontextmanager
@@ -15,6 +16,12 @@ LABEL_KEY = os.environ.get("CONFIGMAP_LABEL_KEY", "inference.networking.k8s.io/b
 LABEL_VALUE = os.environ.get("CONFIGMAP_LABEL_VALUE", "true")
 MODELS_DATA_KEY = os.environ.get("MODELS_DATA_KEY", "baseModel")
 POLL_INTERVAL_SEC = int(os.environ.get("POLL_INTERVAL_SEC", "30"))
+POLL_BACKOFF_MAX_SEC = int(os.environ.get("POLL_BACKOFF_MAX_SEC", "300"))
+
+
+def _log(msg: str) -> None:
+    # Keep logging dependency-free for minimal images.
+    print(f"[model-discovery] {msg}", flush=True)
 
 
 def extract_model_from_configmap(cm: client.V1ConfigMap) -> tuple[str, int] | None:
@@ -32,7 +39,7 @@ def extract_model_from_configmap(cm: client.V1ConfigMap) -> tuple[str, int] | No
     return (model_id, created)
 
 
-def refresh_models():
+def refresh_models() -> bool:
     """List ConfigMaps with label across all namespaces and aggregate model names."""
     global models
     try:
@@ -41,7 +48,8 @@ def refresh_models():
         try:
             config.load_kube_config()
         except config.ConfigException:
-            return
+            _log("Kubernetes config not available; skipping model refresh.")
+            return False
     v1 = client.CoreV1Api()
     new_models: Dict[str, int] = {}
     try:
@@ -56,17 +64,37 @@ def refresh_models():
                     # Keep earliest creation date if model appears in multiple ConfigMaps
                     if model_id not in new_models or created < new_models[model_id]:
                         new_models[model_id] = created
-    except client.exceptions.ApiException:
-        pass
+    except Exception as e:
+        # Includes kubernetes ApiException, urllib3 SSL errors, and transient network issues.
+        _log(f"Model refresh failed ({type(e).__name__}): {e}")
+        return False
     with models_lock:
         models = new_models
+    return True
 
 
 def poll_loop():
     """Background thread: periodically refresh models from ConfigMaps."""
+    failures = 0
     while True:
-        refresh_models()
-        time.sleep(POLL_INTERVAL_SEC)
+        ok = False
+        try:
+            ok = refresh_models()
+        except Exception as e:
+            # Defensive: never let the background thread die.
+            _log(f"Unexpected poll loop error ({type(e).__name__}): {e}")
+            ok = False
+
+        if ok:
+            failures = 0
+            time.sleep(POLL_INTERVAL_SEC)
+            continue
+
+        failures = min(failures + 1, 30)
+        backoff = min(POLL_BACKOFF_MAX_SEC, max(1, POLL_INTERVAL_SEC) * (2**min(failures, 6)))
+        # Small jitter to avoid synchronized thundering herds.
+        sleep_for = backoff + random.uniform(0, min(1.0, backoff * 0.1))
+        time.sleep(sleep_for)
 
 
 @asynccontextmanager
