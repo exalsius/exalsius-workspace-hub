@@ -23,9 +23,11 @@ with the chart.
 > choose one path — deploy infra as a class *or* let models auto-install it —
 > to avoid two infra copies.
 
-## Flagged follow-up
+## Shared gateway
 
-With the per-model gateway design (docs/adr/0002), how Open WebUI reaches each
-model's gateway — and whether the shared `llm-d-inference-gateway` is still
-needed — is unresolved and must be validated against the operator dev harness.
+Infra installs the single shared agentgateway `llm-d-inference-gateway` (in
+`default`, where prerequisites land) that every `llm-d-model` attaches to. Open
+WebUI reaches it via the internal listener (:8080); models attach their
+`HTTPRoute`s to the external listener (:80). See docs/adr/0002.
+
 Templates substitute `${VERSION}` / `${VERSION_DASHED}` from `../Chart.yaml`.

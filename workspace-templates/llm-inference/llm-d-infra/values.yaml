@@ -48,10 +48,10 @@ infra:
           namespaces:
             from: All
     service:
-      # ClusterIP — routing is operator-owned (no NodePort). NOTE: with the
-      # per-model gateway design (docs/adr/0002), whether this shared gateway is
-      # still needed and how Open WebUI reaches per-model gateways is a flagged
-      # follow-up to validate against the dev harness.
+      # ClusterIP — routing is operator-owned (no NodePort). This is the single
+      # shared gateway every llm-d-model attaches to; Open WebUI reaches it via
+      # the internal listener (:8080) and models via the external listener (:80).
+      # See docs/adr/0002.
       type: ClusterIP
 
 ow:

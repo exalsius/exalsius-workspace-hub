@@ -69,27 +69,33 @@ _Avoid_: vscode-devcontainer (the former name), dev-pod, devcontainer.
 ### llm inference
 
 **llm-d-infra**:
-Shared inference infrastructure (body-based routing, model discovery, Open
-WebUI). Ships **both** a ServiceTemplate — the auto-installed, cluster-shared
-prerequisite of `llm-d-model` — **and** a WorkspaceClass whose `accessEndpoint`
-routes Open WebUI (a bare prerequisite has no class, so it can't own a routed
-endpoint).
+Shared inference infrastructure (a shared agentgateway, body-based routing, model
+discovery, Open WebUI). Ships **both** a ServiceTemplate — the auto-installed,
+cluster-shared prerequisite of `llm-d-model` — **and** a WorkspaceClass whose
+`accessEndpoint` routes Open WebUI (a bare prerequisite has no class, so it can't
+own a routed endpoint).
 
 **llm-d-model**:
-A served model. Runs its **own** GAIE gateway + InferencePool +
-llm-d-modelservice/vLLM in its own namespace and exposes **one** `accessEndpoint`
-— that model's OpenAI-compatible API, backed by its in-namespace gateway Service.
-Its `WorkspaceClass` lists `llm-d-infra` as a prerequisite.
+A served model. Runs a GAIE InferencePool + llm-d-modelservice/vLLM in its own
+namespace and attaches `HTTPRoute`s to the **shared** inference gateway (it does
+not run its own). Exposes **one** `accessEndpoint` — that model's
+OpenAI-compatible API, backed by an in-namespace `<release>-http` Service that
+redirects to the shared gateway. Its `WorkspaceClass` lists `llm-d-infra` as a
+prerequisite.
 
 **Inference gateway**:
-The istio Gateway fronting a model's InferencePool. One **per model workspace**
-(in the model's own namespace) so the model's OpenAI endpoint is operator-routable
-in-namespace.
+The single shared agentgateway (`llm-d-inference-gateway`, in `default`) installed
+by `llm-d-infra`. Every model attaches to it via `HTTPRoute`s. Two listeners:
+`external` (:80) for model workspaces, `internal` (:8080) for Open WebUI and model
+discovery. Each model still backs its endpoint with an in-namespace redirect
+Service so operator routing stays in-namespace.
 
 **Body-based routing (BBR)**:
-Extracts the model name from the request body into a header so the gateway's
-`HTTPRoute` can match it. Discovers models via labeled ConfigMaps across
-namespaces.
+An agentgateway policy on the gateway's **internal** listener that extracts the
+model name from the request body into the `X-Gateway-Model-Name` header, so Open
+WebUI's model-agnostic requests match a model's `HTTPRoute`. External clients get
+the header stamped by the model chart's redirect route instead. Models are
+discovered via labeled ConfigMaps across namespaces.
 
 **InferencePool**:
 The GAIE pool of model-server pods a gateway route targets.

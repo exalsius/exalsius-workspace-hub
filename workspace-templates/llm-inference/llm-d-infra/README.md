@@ -3,21 +3,31 @@
 # llm-d-infra
 
 Shared llm-d inference infrastructure for the exalsius operator. An umbrella
-chart wrapping the upstream `llm-d-infra` stack plus body-based routing and
-Open WebUI:
+chart wrapping [agentgateway](https://agentgateway.dev/), the upstream
+`llm-d-infra` stack, and Open WebUI:
 
-- **Body-based routing (BBR)** — extracts the model name from the request body so
-  gateways can route by model.
-- **Model discovery** — exposes OpenAI-compatible `/v1/models` by aggregating
-  `bbr-managed` ConfigMaps across namespaces (so Open WebUI can list every model).
-- **Open WebUI** — the chat interface.
+- **Shared inference gateway** — a single agentgateway `llm-d-inference-gateway`
+  that every `llm-d-model` attaches to. It has two listeners: `external` (:80),
+  which model workspaces attach `HTTPRoute`s to, and `internal` (:8080), used by
+  Open WebUI and model discovery.
+- **Body-based routing (BBR)** — an agentgateway policy on the **internal**
+  listener that extracts the model name from the request body into the
+  `X-Gateway-Model-Name` header, so Open WebUI's model-agnostic requests route to
+  the right model. (External clients don't rely on BBR — each model's chart stamps
+  the trusted header on its own route.)
+- **Model discovery** — exposes OpenAI-compatible `/v1/models` (on the internal
+  listener) by aggregating `bbr-managed` ConfigMaps across namespaces, so Open
+  WebUI can list every deployed model.
+- **Open WebUI** — the chat interface, pointed at the gateway's internal listener.
 
 ## Role: a shared prerequisite (that also exposes Open WebUI)
 
 `llm-d-infra` is the **prerequisite** of [`llm-d-model`](../llm-d-model): the
-operator auto-installs it **once per cluster** when the first model is deployed
-and reuses it across all models, via its `ServiceTemplate`
-(`exalsius/servicetemplate.yaml`).
+operator auto-installs it **once per ClusterDeployment** (into the `default`
+namespace) when the first model is deployed and reuses it across all models, via
+its `ServiceTemplate` (`exalsius/servicetemplate.yaml`). Because the shared
+gateway lives in `default`, each model attaches its routes there from its own
+namespace (with a `ReferenceGrant`).
 
 It also ships a `WorkspaceClass` (`exalsius/workspaceclass.yaml`) so **Open WebUI**
 gets an operator-routed endpoint — a bare prerequisite has no class and so can't
@@ -28,12 +38,6 @@ Services are **ClusterIP** — routing is operator-owned (the legacy NodePort an
 `workspace.exalsius.ai/access-*` annotations were removed). `appVersion` tracks
 the upstream llm-d release (`0.6.0`), kept deliberately
 ([ADR-0002](../../../docs/adr/0002-llm-inference-prerequisite-and-umbrella-mapping.md)).
-
-## ⚠ Flagged follow-up
-
-With the per-model gateway design, how Open WebUI reaches each model's gateway —
-and whether the shared `llm-d-inference-gateway` is still required — is unresolved
-and must be validated against the operator dev harness (see ADR-0002).
 
 ## Local render
 

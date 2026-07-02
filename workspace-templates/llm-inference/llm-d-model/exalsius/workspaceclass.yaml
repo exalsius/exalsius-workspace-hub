@@ -9,9 +9,10 @@
 #       prerequisite pins the exact infra ServiceTemplate version.
 #
 # Serves one model. The operator auto-installs the llm-d-infra prerequisite
-# (body-based routing + model discovery + Open WebUI) once per ClusterDeployment
-# and reuses it across all model workspaces. Each model runs its OWN inference
-# gateway and exposes a per-workspace OpenAI endpoint (see docs/adr/0002).
+# (shared agentgateway + body-based routing + model discovery + Open WebUI) once
+# per ClusterDeployment and reuses it across all model workspaces. Each model
+# attaches to that shared gateway and exposes a per-workspace OpenAI endpoint via
+# an in-namespace redirect Service (see docs/adr/0002).
 apiVersion: workspaces.exalsius.ai/v1
 kind: WorkspaceClass
 metadata:
