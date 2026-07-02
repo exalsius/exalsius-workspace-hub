@@ -16,6 +16,10 @@
 #   make dev-fake-gpu VENDOR=nvidia
 #   make dev-up GPU=1 VENDOR=nvidia
 #   make dev-unfake-gpu
+#
+# Prerequisite charts (e.g. llm-inference; see scripts/dev/README.md):
+#   make dev-publish-prereq PREREQ=llm-inference/llm-d-infra   # push + apply its ServiceTemplate
+#   make dev-up CHART=llm-inference/llm-d-model GPU=1          # operator auto-installs the prereq
 
 CHART       ?= jupyter-notebook
 MGMT        ?= kind-exalsius
@@ -28,13 +32,14 @@ GPU         ?= 0
 VENDOR      ?= nvidia
 IMAGE_REPO  ?=
 IMAGE_TAG   ?=
+PREREQ      ?=
 REGISTRY_HOST ?= localhost:5050
 
-export CHART MGMT REG_CTX CHILD_CTX CD NS WSD_NAME GPU VENDOR IMAGE_REPO IMAGE_TAG REGISTRY_HOST
+export CHART MGMT REG_CTX CHILD_CTX CD NS WSD_NAME GPU VENDOR IMAGE_REPO IMAGE_TAG PREREQ REGISTRY_HOST
 
 DEV := ./scripts/dev/workspace-dev.sh
 
-.PHONY: dev-up dev-redeploy dev-down dev-fake-gpu dev-unfake-gpu help
+.PHONY: dev-up dev-redeploy dev-down dev-publish-prereq dev-fake-gpu dev-unfake-gpu help
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -47,6 +52,9 @@ dev-redeploy: ## Re-push the chart and recreate the WSD (fast inner loop)
 
 dev-down: ## Remove WSD, WorkspaceClass, ServiceTemplate and HelmRepository
 	$(DEV) down
+
+dev-publish-prereq: ## Push PREREQ chart + apply ONLY its ServiceTemplate (for operator auto-install)
+	$(DEV) publish-prereq
 
 dev-fake-gpu: ## Label+patch a child node so the GPU gate passes (VENDOR=nvidia|amd)
 	$(DEV) fake-gpu

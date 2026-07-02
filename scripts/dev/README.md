@@ -23,6 +23,7 @@ The operator must be built from the branch you want to test (set
 make dev-up                         # package+push the chart, deploy ST/WSC/WSD (CPU)
 make dev-redeploy                   # after editing the chart: re-push + recreate WSD
 make dev-down                       # remove WSD/WSC/ServiceTemplate/HelmRepository
+make dev-publish-prereq PREREQ=...  # push a prereq chart + apply ONLY its ServiceTemplate
 ```
 
 Watch it:
@@ -81,8 +82,58 @@ It mirrors the production flow, but against the local kind registry instead of G
 
 The harness is per-chart: `make dev-up CHART=<name>` works for any chart that
 ships an `exalsius/` directory (ServiceTemplate + WorkspaceClass + example WSD).
-Charts without it are rejected with a clear message. Today only
-`jupyter-notebook` qualifies.
+Charts without it are rejected with a clear message. `CHART` may be a nested
+path (e.g. `CHART=llm-inference/llm-d-model`).
+
+## llm-inference (multi-chart + prerequisite)
+
+`llm-inference` is two charts: `llm-d-model` (one model) declares `llm-d-infra`
+(shared agentgateway + model discovery + Open WebUI) as a **prerequisite**, which
+the operator auto-installs once per `ClusterDeployment` and reuses across models
+([ADR-0002](../../docs/adr/0002-llm-inference-prerequisite-and-umbrella-mapping.md)).
+Two harness details follow:
+
+- **The model's WorkspaceClass pins the exact infra version.** `render_and_apply_crs`
+  resolves `${INFRA_VERSION[_DASHED]}` from the sibling `llm-d-infra/Chart.yaml`
+  when rendering the model's CRs (same resolution as `render-workspace-manifests.sh`).
+- **The prerequisite must exist before the model deploys.** `dev-publish-prereq`
+  pushes the infra chart and applies **only** its `ServiceTemplate` (no class, no
+  WSD) so the operator can auto-install it. Deploying infra as its own class
+  *and* letting models auto-install it on one cluster risks two infra copies
+  (ADR-0002), so the harness publishes the prereq, it does not deploy it.
+
+The inference-stack CRDs (GAIE + agentgateway) are **not** on the clusters; they
+ship in `llm-d-infra/crds/` ([ADR-0004](../../docs/adr/0004-inference-crds-vendored-in-llm-d-infra.md))
+and land when the operator installs the prerequisite.
+
+The model's example WSD ships a **CPU vLLM simulator** (`llm-d-inference-sim` +
+a `uds-tokenizer` sidecar), so it serves a real OpenAI-compatible endpoint with
+no GPU hardware — the model pod's `gpuCount` only satisfies the operator gate, so
+still fake a GPU:
+
+```sh
+make dev-fake-gpu VENDOR=nvidia
+make dev-publish-prereq PREREQ=llm-inference/llm-d-infra
+make dev-up CHART=llm-inference/llm-d-model GPU=1
+```
+
+Inspect it:
+
+```sh
+# prereq auto-installed + reused, then the per-model endpoint federated:
+kubectl --context kind-exalsius -n kcm-system get wsd dev -o yaml | yq '.status.prerequisites, .status.access'
+# routing: the model's http Service + HTTPRoutes + its InferencePool
+kubectl --context kind-child-adopted-1 -n ws-dev get svc,httproute,inferencepool,pod
+# a real completion through the model's http endpoint (port 8000):
+kubectl --context kind-child-adopted-1 -n ws-dev exec deploy/... -- \
+  curl -s localhost:8000/v1/models
+```
+
+Routing note: `llm-d-model` exposes an `http`/8000 AccessEndpoint backed by a
+`<release>-http` Service, which redirects (setting an `X-Gateway-Model-Name`
+header) to the shared `llm-d-inference-gateway` in the `default` namespace (where
+the infra prerequisite lands); that gateway routes by the header to this model's
+`InferencePool`.
 
 ## GPU paths (NVIDIA / AMD)
 
@@ -149,6 +200,7 @@ everything except real GPU *execution*, which kind can't do.
 | `WSD_NAME` | `dev` | WorkspaceDeployment name |
 | `GPU` / `VENDOR` | `0` / `nvidia` | request a GPU; vendor for fake + selector |
 | `IMAGE_REPO` / `IMAGE_TAG` | (chart default) | override the workspace image |
+| `PREREQ` | (none) | `publish-prereq` only: chart dir to publish as a prerequisite |
 
 > GPU-workspace charts pin their image by digest and select it by vendor
 > (`image.default` for NVIDIA/CPU, `image.amd` for AMD — ADR-0003). The

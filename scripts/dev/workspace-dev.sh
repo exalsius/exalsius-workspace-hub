@@ -11,14 +11,15 @@
 # Assumes local-dev-env `make up` + `make setup-kcm-regional-child` have run
 # (mgmt + regional + child clusters, source-controller).
 #
-# Commands: up | redeploy | down | fake-gpu | unfake-gpu
+# Commands: up | redeploy | down | publish-prereq | fake-gpu | unfake-gpu
 # Config via env (see Makefile for the make-target wrappers and defaults):
 #   CHART (default jupyter-notebook)  MGMT (kind-exalsius)  CHILD_CTX (kind-child-adopted-1)
 #   CD (default-child-adopted-1)  NS (kcm-system)  WSD_NAME (dev)
 #   GPU (0|1)  VENDOR (nvidia|amd)  IMAGE_REPO  IMAGE_TAG  REGISTRY_HOST (localhost:5050)
+#   PREREQ (chart dir under workspace-templates/ to publish as a prerequisite)
 set -euo pipefail
 
-CMD="${1:?usage: workspace-dev.sh <up|redeploy|down|fake-gpu|unfake-gpu>}"
+CMD="${1:?usage: workspace-dev.sh <up|redeploy|down|publish-prereq|fake-gpu|unfake-gpu>}"
 
 CHART="${CHART:-jupyter-notebook}"
 MGMT="${MGMT:-kind-exalsius}"
@@ -30,6 +31,7 @@ GPU="${GPU:-0}"
 VENDOR="${VENDOR:-nvidia}"
 IMAGE_REPO="${IMAGE_REPO:-}"
 IMAGE_TAG="${IMAGE_TAG:-}"
+PREREQ="${PREREQ:-}"
 REGISTRY_HOST="${REGISTRY_HOST:-localhost:5050}"
 HELMREPO="exalsius-workspace-hub"
 REG_CTX="${REG_CTX:-kind-regional-adopted}"
@@ -231,6 +233,38 @@ EOF
     kubectl --context "${MGMT}" -n "${NS}" delete servicetemplate "${ST_NAME}" --ignore-not-found
     kubectl --context "${MGMT}" delete -f "${REPO_ROOT}/scripts/dev/helm-repository.yaml" --ignore-not-found
     echo ">> torn down ${CHART} (${WSC_NAME})"
+    ;;
+  publish-prereq)
+    # Publish a chart as a PREREQUISITE: push it to the registry and apply ONLY
+    # its ServiceTemplate (no WorkspaceClass, no WSD). A model whose
+    # WorkspaceClass lists this chart as a prerequisite then triggers the
+    # operator to auto-install it once per ClusterDeployment. Applying the
+    # prereq's own WorkspaceClass instead would deploy it as a class AND have
+    # models auto-install it, risking two copies on one cluster (docs/adr/0002).
+    : "${PREREQ:?set PREREQ=<chart dir under workspace-templates/> e.g. llm-inference/llm-d-infra}"
+    CHART="${PREREQ}"
+    CHART_DIR="workspace-templates/${CHART}"
+    EXALSIUS_DIR="${CHART_DIR}/exalsius"
+    TMP_DIR="${REPO_ROOT}/.dev-tmp/${CHART}"
+    require_chart; load_chart_meta
+    push_chart
+    kubectl --context "${MGMT}" apply -f "${REPO_ROOT}/scripts/dev/helm-repository.yaml"
+    reconcile_source
+    # ServiceTemplate only — it needs just ${VERSION}/${VERSION_DASHED}.
+    mkdir -p "${TMP_DIR}"
+    sed -e "s|\${VERSION_DASHED}|${VERSION_DASHED}|g" -e "s|\${VERSION}|${VERSION}|g" \
+      "${EXALSIUS_DIR}/servicetemplate.yaml" > "${TMP_DIR}/servicetemplate.yaml"
+    echo ">> applying prerequisite ServiceTemplate ${ST_NAME} (no WorkspaceClass/WSD)"
+    kubectl --context "${MGMT}" apply -f "${TMP_DIR}/servicetemplate.yaml"
+    cat <<EOF
+
+Published ${NAME}:${VERSION} as a prerequisite:
+  - chart pushed to oci://${REGISTRY_HOST}/charts (pullable via HelmRepository/${HELMREPO})
+  - ServiceTemplate ${ST_NAME} applied on ${MGMT}
+
+Now deploy a chart that lists it as a prerequisite; the operator auto-installs it:
+  make dev-fake-gpu VENDOR=nvidia && make dev-up CHART=llm-inference/llm-d-model GPU=1
+EOF
     ;;
   fake-gpu)
     node="$(child_node)"; key="$(gpu_label_key)"; val="$(gpu_label_val)"; res="$(gpu_resource)"
