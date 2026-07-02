@@ -1,0 +1,136 @@
+name: Chart Pre-Release E2E
+
+# Deploys each CHANGED workspace chart — the real chart plus its exalsius/ CRs
+# (ServiceTemplate + WorkspaceClass + example WorkspaceDeployment) — through the
+# full operator path on a live local-dev-env kind environment and asserts it
+# reaches Running AND its routing carries traffic (ADR-0005). This is the gate
+# that must pass BEFORE a chart is published (immutably) to OCI.
+#
+# This repo is PUBLIC; local-dev-env and exalsius-operator are PRIVATE, so a
+# reusable-workflow (`uses:`) call is forbidden (public callers cannot reach
+# private reusable workflows). Instead we CHECK OUT both private repos with an
+# App token and run their scripts — checkout has no such visibility restriction
+# (see exalsius-operator ADR-0006).
+#
+# Deliberately the INVERSE of the operator's pre-release gate: the charts under
+# test come from this PR, and the operator is built from `main` SOURCE (so its
+# image, Helm chart, and CRDs stay coherent — the charts' CRs use newer
+# WorkspaceClass fields). The rest of the stack stays pinned to local-dev-env's
+# baseline. A broken operator `main` can therefore red a chart release PR — this
+# is intentional (ADR-0005): it catches CR <-> operator co-evolution before a
+# chart ships immutably.
+#
+# Runs on release-please PRs (required, blocking) and opt-in elsewhere via the
+# `e2e` label. The actual REQUIRED status check is `e2e-gate`, which always
+# reports — so non-release PRs (where chart-e2e is skipped by design) are not
+# blocked waiting on a status that never arrives.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled]
+
+permissions:
+  contents: read
+  packages: read   # so GITHUB_TOKEN can pull the private GHCR images (App tokens can't)
+
+jobs:
+  chart-e2e:
+    # Release PR, or any PR carrying the `e2e` label.
+    if: >-
+      startsWith(github.head_ref, 'release-please--') ||
+      contains(github.event.pull_request.labels.*.name, 'e2e')
+    runs-on: exalsius-runner-default   # ephemeral self-hosted DinD; matches local-dev-env
+    timeout-minutes: 60                # never-hang guarantee — a stuck bring-up FAILS, it does not spin forever
+    steps:
+      - name: Mint GitHub App token (contents:read + packages:read on the org)
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout workspace-templates (this PR)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: exalsius-workspace-templates
+          fetch-depth: 0   # need the base branch for the changed-chart git diff
+
+      - name: Checkout local-dev-env (provisioning + CI scripts)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/local-dev-env
+          ref: main
+          path: local-dev-env
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Checkout exalsius-operator @ main (built from source)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/exalsius-operator
+          ref: main
+          path: exalsius-operator   # resolves to ../exalsius-operator from local-dev-env root
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Write local-dev-env .env (App token for clones; GITHUB_TOKEN for GHCR pulls)
+        run: |
+          umask 077
+          cat > local-dev-env/.env <<EOF
+          GITHUB_USER=x-access-token
+          GITHUB_TOKEN=${{ steps.app-token.outputs.token }}
+          GHCR_PULL_USER=${{ github.actor }}
+          GHCR_PULL_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          EOF
+
+      - name: Install CLI prerequisites (kind/kubectl/helm/yq; skips any already present)
+        run: |
+          ./local-dev-env/scripts/ci/install-tools.sh "$RUNNER_TEMP/bin"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Render components.yaml (operator built from this run's main checkout)
+        run: ./local-dev-env/scripts/ci/render-components.sh config/components.ci.yaml exalsius-operator ../exalsius-operator
+
+      - name: Bring up the environment (mgmt + regional + two child clusters)
+        working-directory: local-dev-env
+        timeout-minutes: 40
+        run: make up setup-kcm-regional-child
+
+      - name: Run chart e2e over changed charts
+        working-directory: exalsius-workspace-templates
+        timeout-minutes: 45
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+        run: |
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}" || true
+          ./scripts/e2e/run.sh
+
+      - name: Collect diagnostics (always — ephemeral pod leaves nothing behind)
+        if: always()
+        run: ./local-dev-env/scripts/ci/collect-diagnostics.sh diagnostics
+
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chart-e2e-diagnostics-${{ github.run_id }}
+          path: diagnostics/
+          if-no-files-found: warn
+          retention-days: 14
+
+  e2e-gate:
+    # The REQUIRED check. Always runs; passes when the heavy job succeeded or was
+    # skipped-by-design, fails only when it actually ran and failed/cancelled.
+    needs: [chart-e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate chart-e2e result
+        run: |
+          r='${{ needs.chart-e2e.result }}'
+          echo "chart-e2e result: $r"
+          case "$r" in
+            failure|cancelled) echo "::error::Chart e2e failed"; exit 1 ;;
+            *)                 echo "OK (result=$r)"; exit 0 ;;   # success | skipped
+          esac
