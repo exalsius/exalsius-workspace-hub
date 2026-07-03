@@ -62,10 +62,16 @@ spec:
             - name: http
               containerPort: 8888
           volumeMounts:
+            # PVC at /workspace — the image runs Jupyter as the 'dev' user with
+            # HOME=/workspace, and the entrypoint fixes ownership there, so this
+            # is the home + working dir where notebooks must persist.
             - name: data
-              mountPath: /tf
+              mountPath: /workspace
+            # System-wide Jupyter config dir: jupyter_server reads /etc/jupyter
+            # regardless of the process user/HOME, so the password config loads
+            # even though Jupyter runs as 'dev' (HOME=/workspace), not root.
             - name: config
-              mountPath: /root/.jupyter/jupyter_server_config.py
+              mountPath: /etc/jupyter/jupyter_server_config.py
               subPath: jupyter_server_config.py
           resources:
             requests:
