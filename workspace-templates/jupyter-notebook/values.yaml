@@ -16,11 +16,11 @@ image:
   default:
     repository: ghcr.io/exalsius/jupyter-notebook
     tag: "latest"
-    digest: "sha256:3cc00486c5e0fc4daee55a4ff97d8b1cf01634380be1252cf5eea388a2935823"
+    digest: "sha256:b2672754311d303c3a8f1a36db17a8dc87825414aefbcb632b9de34883565fe8"
   amd:
     repository: ghcr.io/exalsius/jupyter-notebook
     tag: "latest-rocm"
-    digest: "sha256:ff429de9a44a7572e7b4b3e076b29cf106cf11500d12b45415204b7d82e3d70b"
+    digest: "sha256:abae0ab17e7508302cf88fd9452c3dc3dfe798c9994cd13a774721bb9b093942"
 
 # Password for the Jupyter web UI. The operator sets this from the
 # WorkspaceClass userFacingConfig (type=secret).
