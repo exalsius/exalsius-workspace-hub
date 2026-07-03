@@ -18,13 +18,11 @@ image:
   default:
     repository: ghcr.io/exalsius/devpod
     tag: "latest"
-    # TODO: replace with the real published image digest before release.
-    digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    digest: "sha256:939a8f4e51eb1d28115ea2238407e0cbe00b747dd3e195ce358070fed0ff4168"
   amd:
     repository: ghcr.io/exalsius/devpod
     tag: "latest-rocm"
-    # TODO: replace with the real published ROCm image digest before release.
-    digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    digest: "sha256:27180f6401281b824ccc953086975e14149843475fe12bfd58e76dfd0320f3b9"
 
 # SSH access. The operator sets these from the WorkspaceClass userFacingConfig.
 # A password is required (so the devpod is reachable on first deploy); a public

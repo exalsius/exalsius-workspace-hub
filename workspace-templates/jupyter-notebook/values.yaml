@@ -16,13 +16,11 @@ image:
   default:
     repository: ghcr.io/exalsius/jupyter-notebook
     tag: "latest"
-    # TODO: replace with the real published image digest before release.
-    digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    digest: "sha256:3cc00486c5e0fc4daee55a4ff97d8b1cf01634380be1252cf5eea388a2935823"
   amd:
     repository: ghcr.io/exalsius/jupyter-notebook
     tag: "latest-rocm"
-    # TODO: replace with the real published ROCm image digest before release.
-    digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    digest: "sha256:ff429de9a44a7572e7b4b3e076b29cf106cf11500d12b45415204b7d82e3d70b"
 
 # Password for the Jupyter web UI. The operator sets this from the
 # WorkspaceClass userFacingConfig (type=secret).

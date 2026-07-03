@@ -16,13 +16,11 @@ image:
   default:
     repository: ghcr.io/exalsius/marimo
     tag: "latest"
-    # TODO: replace with the real published image digest before release.
-    digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    digest: "sha256:1da494cf4fe678d4dcacd74df5c203fb493bd7f828623cc3855cddc79b8cc187"
   amd:
     repository: ghcr.io/exalsius/marimo
     tag: "latest-rocm"
-    # TODO: replace with the real published ROCm image digest before release.
-    digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    digest: "sha256:4c4a5655567a04b6bfd81f4b95d26f8fe453a963dc60f6d1ff4232a2e25fa113"
 
 # Password for the marimo web UI. The operator sets this from the WorkspaceClass
 # userFacingConfig (type=secret); marimo runs `marimo edit --token
