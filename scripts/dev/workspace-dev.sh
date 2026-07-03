@@ -31,6 +31,8 @@ GPU="${GPU:-0}"
 VENDOR="${VENDOR:-nvidia}"
 IMAGE_REPO="${IMAGE_REPO:-}"
 IMAGE_TAG="${IMAGE_TAG:-}"
+CPU="${CPU:-}"
+MEM="${MEM:-}"
 PREREQ="${PREREQ:-}"
 REGISTRY_HOST="${REGISTRY_HOST:-localhost:5050}"
 HELMREPO="exalsius-workspace-hub"
@@ -137,6 +139,17 @@ apply_wsd() {
     ' "${WSD_FILE}"
   else
     yq -i 'del(.spec.resources.perReplica.gpuCount) | del(.spec.resources.perReplica.gpuNodeSelector)' "${WSD_FILE}"
+  fi
+
+  # Optional resource override. The example WSDs carry production sizing
+  # (cpu 8, memory 16Gi); CI smoke tests set CPU/MEM to tiny values so the
+  # workspace pod schedules on small kind nodes. These WSD resources are what the
+  # operator injects into the chart via the _exalsius contract.
+  if [ -n "${CPU}" ]; then
+    C="${CPU}" yq -i '.spec.resources.perReplica.cpu = strenv(C)' "${WSD_FILE}"
+  fi
+  if [ -n "${MEM}" ]; then
+    M="${MEM}" yq -i '.spec.resources.perReplica.memory = strenv(M)' "${WSD_FILE}"
   fi
 
   # Image override targets the vendor-keyed image map (image.<variant>.*) the

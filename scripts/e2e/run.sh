@@ -51,6 +51,12 @@ WSD_NAME="${WSD_NAME:-e2e}"
 GW_NS="${GW_NS:-istio-system}"
 GW_SVC="${GW_SVC:-istio-ingressgateway-istio}"
 
+# Smoke-test resource requests. The example WSDs carry production sizing
+# (cpu 8, memory 16Gi) that won't schedule on small CI kind nodes — the workspace
+# only needs to come up and route, not run real workloads, so request tiny amounts.
+E2E_CPU="${E2E_CPU:-500m}"
+E2E_MEM="${E2E_MEM:-1Gi}"
+
 # Timeouts (seconds).
 RUN_TIMEOUT="${RUN_TIMEOUT:-600}"  # reach Running / backend answers (image pulls are slow)
 SETTLE="${SETTLE:-180}"            # status / route objects settle
@@ -221,6 +227,20 @@ teardown_chart() { # teardown_chart <chart> <gpu> <vendor>
   fi
 }
 
+# dump_failure <chart> — on a Running failure, print the WSD status + the child
+# cluster's workspace pods/events so the CI log explains WHY (e.g. FailedScheduling
+# from a too-large resource request, or an image pull error); the ephemeral runner
+# keeps nothing behind.
+dump_failure() {
+  local wns="ws-${WSD_NAME}"
+  print_warning "${1} did not reach Running — diagnostics:"
+  kubectl --context "$MGMT" -n "$NS" get wsd "$WSD_NAME" \
+    -o jsonpath='    WSD phase={.status.phase} message={.status.message}{"\n"}' 2>&1 | sed '/^[[:space:]]*$/d'
+  kubectl --context "$CHILD_CTX" -n "$wns" get pods -o wide 2>&1 | sed 's/^/    /'
+  kubectl --context "$CHILD_CTX" -n "$wns" get events --sort-by=.lastTimestamp 2>&1 \
+    | grep -iE 'fail|insufficient|unschedul|error|backoff|pull' | tail -8 | sed 's/^/    /'
+}
+
 # ---- One chart, end to end
 
 test_chart() {
@@ -251,7 +271,7 @@ test_chart() {
 
   # 3) Deploy the chart + its CRs + WSD through the operator.
   if ! CHART="$chart" WSD_NAME="$WSD_NAME" NS="$NS" CD="$CD" MGMT="$MGMT" \
-       GPU="$D_GPU" VENDOR="$D_VENDOR" "$DEV" up >/dev/null 2>&1; then
+       GPU="$D_GPU" VENDOR="$D_VENDOR" CPU="$E2E_CPU" MEM="$E2E_MEM" "$DEV" up >/dev/null 2>&1; then
     print_error "FAIL  ${chart}: deploy (workspace-dev.sh up)"; FAILED+=("${chart}: deploy"); FAIL=$((FAIL+1))
     teardown_chart "$chart" "$D_GPU" "$D_VENDOR"; return 1
   fi
@@ -259,6 +279,7 @@ test_chart() {
   # 4) Assert: WSD reaches Running.
   if ! check "$RUN_TIMEOUT" "${chart}: WSD Running" \
      'kubectl --context $MGMT -n $NS get wsd $WSD_NAME -o json | jq -e ".status.phase==\"Running\"" >/dev/null'; then
+    dump_failure "$chart"
     teardown_chart "$chart" "$D_GPU" "$D_VENDOR"; return 1
   fi
 
