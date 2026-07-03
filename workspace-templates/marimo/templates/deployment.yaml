@@ -58,24 +58,26 @@ spec:
         - name: marimo
           image: {{ include "marimo.image" . | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          workingDir: /data
+          workingDir: /workspace
           env:
+            # Consumed by the image entrypoint, which injects it as marimo's
+            # --token-password. Do NOT re-add a `command:` override here — that
+            # bypasses the entrypoint's drop to the 'dev' user and the persistent
+            # /workspace/.venv setup (marimo would run as root with ephemeral installs).
             - name: TOKEN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Release.Name }}
                   key: TOKEN_PASSWORD
-          command: ["sh", "-c"]
-          args:
-            - >
-              marimo edit --token --token-password="${TOKEN_PASSWORD}"
-              -p 8080 --host 0.0.0.0
+          # Overrides only the image CMD (subcommand + host/port); the entrypoint
+          # appends --token/--token-password and launches marimo from the venv.
+          args: ["edit", "--host=0.0.0.0", "--port=8080"]
           ports:
             - name: http
               containerPort: 8080
           volumeMounts:
             - name: data
-              mountPath: /data
+              mountPath: /workspace
           resources:
             requests:
               cpu: {{ $cpu | quote }}
