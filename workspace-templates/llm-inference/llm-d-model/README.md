@@ -6,8 +6,9 @@ Serves one LLM for inference with the [llm-d](https://llm-d.ai/) stack — the
 [Gateway API Inference Extension](https://gateway-api-inference-extension.sigs.k8s.io/)
 InferencePool plus [llm-d-modelservice](https://llm-d.ai/docs/architecture/Components/modelservice)
 (vLLM). It attaches to the **shared** agentgateway installed by
-[`llm-d-infra`](../llm-d-infra) and exposes a **per-workspace OpenAI-compatible
-endpoint**.
+[`llm-d-infra`](../llm-d-infra) and exposes two per-workspace endpoints: a
+**per-workspace OpenAI-compatible API** (`http`) and a **front door to the shared
+Open WebUI chat interface** (`chat`).
 
 ## How it fits the operator contract
 
@@ -24,6 +25,17 @@ endpoint**.
   This keeps the endpoint's backing Service in-namespace — as operator routing
   requires — while the gateway itself is shared
   ([ADR-0002](../../../docs/adr/0002-llm-inference-prerequisite-and-umbrella-mapping.md)).
+- **Chat via the shared Open WebUI.** The `chat` `AccessEndpoint` is backed by a
+  second in-namespace `<release>-chat` ClusterIP Service plus a redirect
+  `HTTPRoute` that forwards (no header stamping) to the shared gateway's `webui`
+  listener (:8081), which in turn forwards to the single shared `llm-d-open-webui`
+  Service in `default`. It targets the gateway, not Open WebUI directly, because
+  the per-model redirect rides the ambient waypoint, which only reaches mesh-native
+  upstreams (the gateway) — a plain app Service yields "no healthy upstream". Open
+  WebUI is routed **per model** — not by infra — because infra is a bare
+  prerequisite that owns no WorkspaceClass and so cannot own a routed endpoint
+  ([ADR-0006](../../../docs/adr/0006-open-webui-routed-per-model-not-via-infra-class.md)).
+  The single Open WebUI is reachable only once ≥1 model exists.
 - **Resources → subchart.** `resourceInjection` maps the resolved `_exalsius`
   fields: `gpuCount → ms.decode.parallelism.tensor` (vLLM tensor-parallelism;
   the subchart auto-derives the GPU request), `gpuVendor → ms.accelerator.type`,

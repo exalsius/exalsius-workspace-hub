@@ -70,25 +70,48 @@ _Avoid_: vscode-devcontainer (the former name), dev-pod, devcontainer.
 
 **llm-d-infra**:
 Shared inference infrastructure (a shared agentgateway, body-based routing, model
-discovery, Open WebUI). Ships **both** a ServiceTemplate — the auto-installed,
-cluster-shared prerequisite of `llm-d-model` — **and** a WorkspaceClass whose
-`accessEndpoint` routes Open WebUI (a bare prerequisite has no class, so it can't
-own a routed endpoint).
+discovery, Open WebUI). A **pure prerequisite** — ships a ServiceTemplate **only**,
+auto-installed once per ClusterDeployment as the cluster-shared prerequisite of
+`llm-d-model`. It has **no WorkspaceClass**: infra never routes anything itself, so
+the class-vs-prerequisite double-install footgun is structurally impossible. Open
+WebUI runs under a fixed Service name (`llm-d-open-webui`) and is routed **per
+model** via each `llm-d-model`'s `chat` endpoint (a prerequisite can't own a routed
+endpoint, so the route must ride on a class that does — the model's).
 
 **llm-d-model**:
 A served model. Runs a GAIE InferencePool + llm-d-modelservice/vLLM in its own
 namespace and attaches `HTTPRoute`s to the **shared** inference gateway (it does
-not run its own). Exposes **one** `accessEndpoint` — that model's
-OpenAI-compatible API, backed by an in-namespace `<release>-http` Service that
-redirects to the shared gateway. Its `WorkspaceClass` lists `llm-d-infra` as a
-prerequisite.
+not run its own). Exposes **two** `accessEndpoint`s, each backed by an in-namespace
+redirect Service (`<release>-<endpoint>`): `http` — the model's
+OpenAI-compatible API, redirecting to the shared gateway — and `chat` — the shared
+Open WebUI, redirecting to `llm-d-open-webui` in `default`. Its `WorkspaceClass`
+lists `llm-d-infra` as a prerequisite.
+
+**Chat endpoint**:
+The `chat` `AccessEndpoint` on every `llm-d-model`, backed by an in-namespace
+`<release>-chat` Service that redirects to the shared gateway's **`webui`
+listener** (`:8081`), which in turn forwards to the single shared Open WebUI
+(`llm-d-open-webui`, in `default`). It redirects to the gateway rather than to Open
+WebUI directly because the operator's per-model redirect rides the ambient
+waypoint, which forms healthy upstreams only to mesh-native destinations (the
+gateway) — a plain app Service in the non-ambient `default` namespace yields "no
+healthy upstream". It gives each model its own operator-routed front door to the
+**one** shared chat UI — the route hangs off the model's class because the infra
+prerequisite has none. Consequences of the shared instance: Open
+WebUI is reachable only once ≥1 model exists (the first model brings up both infra
+and the first door); every door serves the full cluster-wide model list (discovery
+is cluster-wide); and each door is a distinct browser origin, so users
+re-authenticate per model host. Sound on a **single-tenant cluster** (one
+ClusterDeployment = one trust boundary); a shared cluster would leak models across
+tenants via the keyless internal listener.
 
 **Inference gateway**:
 The single shared agentgateway (`llm-d-inference-gateway`, in `default`) installed
-by `llm-d-infra`. Every model attaches to it via `HTTPRoute`s. Two listeners:
-`external` (:80) for model workspaces, `internal` (:8080) for Open WebUI and model
-discovery. Each model still backs its endpoint with an in-namespace redirect
-Service so operator routing stays in-namespace.
+by `llm-d-infra`. Every model attaches to it via `HTTPRoute`s. Three listeners:
+`external` (:80) for model workspaces, `internal` (:8080) for Open WebUI's
+model-discovery and model calls, and `webui` (:8081) fronting Open WebUI itself
+(the target of each model's `chat` redirect). Each model still backs its endpoints
+with in-namespace redirect Services so operator routing stays in-namespace.
 
 **Body-based routing (BBR)**:
 An agentgateway policy on the gateway's **internal** listener that extracts the

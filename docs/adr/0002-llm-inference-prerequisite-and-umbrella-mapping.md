@@ -46,7 +46,14 @@ can list and call every model without a key. Keys live in a dedicated
 because agentgateway treats every entry in the referenced Secret as a valid key.
 
 **llm-d-infra is an auto-installed, cluster-shared prerequisite — and also a
-WorkspaceClass for Open WebUI.** The model's `WorkspaceClass.spec.prerequisites[]`
+WorkspaceClass for Open WebUI.**
+> **Superseded by [ADR-0006](0006-open-webui-routed-per-model-not-via-infra-class.md).**
+> Infra no longer ships a WorkspaceClass — it is now a pure prerequisite, and Open
+> WebUI is routed per-model via each `llm-d-model`'s `chat` endpoint. The
+> double-install footgun described below no longer exists (there is no infra-as-class
+> path to collide). The rest of this paragraph is kept for historical context.
+
+The model's `WorkspaceClass.spec.prerequisites[]`
 references the infra **ServiceTemplate** by exact name; the operator installs it
 **once per ClusterDeployment** (into `default`) when absent and reuses it across
 all models. Infra *also* ships a WorkspaceClass whose `accessEndpoint` routes

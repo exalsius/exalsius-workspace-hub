@@ -97,10 +97,11 @@ Two harness details follow:
   resolves `${INFRA_VERSION[_DASHED]}` from the sibling `llm-d-infra/Chart.yaml`
   when rendering the model's CRs (same resolution as `render-workspace-manifests.sh`).
 - **The prerequisite must exist before the model deploys.** `dev-publish-prereq`
-  pushes the infra chart and applies **only** its `ServiceTemplate` (no class, no
-  WSD) so the operator can auto-install it. Deploying infra as its own class
-  *and* letting models auto-install it on one cluster risks two infra copies
-  (ADR-0002), so the harness publishes the prereq, it does not deploy it.
+  pushes the infra chart and applies its `ServiceTemplate` so the operator can
+  auto-install it. Infra is a **pure prerequisite** — it ships no WorkspaceClass,
+  so there is nothing else to deploy and no class-vs-prerequisite double-install to
+  guard against ([ADR-0006](../../docs/adr/0006-open-webui-routed-per-model-not-via-infra-class.md)).
+  Open WebUI is routed per model via each model's `chat` endpoint.
 
 The inference-stack CRDs (GAIE + agentgateway) are **not** on the clusters; they
 ship in `llm-d-infra/crds/` ([ADR-0004](../../docs/adr/0004-inference-crds-vendored-in-llm-d-infra.md))
@@ -129,11 +130,16 @@ kubectl --context kind-child-adopted-1 -n ws-dev exec deploy/... -- \
   curl -s localhost:8000/v1/models
 ```
 
-Routing note: `llm-d-model` exposes an `http`/8000 AccessEndpoint backed by a
-`<release>-http` Service, which redirects (setting an `X-Gateway-Model-Name`
-header) to the shared `llm-d-inference-gateway` in the `default` namespace (where
-the infra prerequisite lands); that gateway routes by the header to this model's
-`InferencePool`.
+Routing note: `llm-d-model` exposes two HTTP AccessEndpoints, each backed by an
+in-namespace redirect Service. `http`/8000 (`<release>-http`) redirects (setting
+an `X-Gateway-Model-Name` header) to the shared `llm-d-inference-gateway` in
+`default`, which routes by the header to this model's `InferencePool`. `chat`/80
+(`<release>-chat`) redirects to the shared gateway's `webui` listener (:8081),
+which forwards to the single shared `llm-d-open-webui` Service — via the gateway,
+not Open WebUI directly, because the per-model redirect rides the ambient waypoint,
+which only reaches mesh-native upstreams like the gateway. Open WebUI is routed per
+model because the infra prerequisite owns no class
+([ADR-0006](../../docs/adr/0006-open-webui-routed-per-model-not-via-infra-class.md)).
 
 ## GPU paths (NVIDIA / AMD)
 

@@ -49,7 +49,72 @@ spec:
           namespace: default
           port: 80
 ---
-# The reference grant is needed because the llm-d-inference-gateway service lives in another namespace
+# "chat" AccessEndpoint: a per-model front door to the single shared Open WebUI.
+# Same in-namespace-redirect-Service pattern as "http" above, and it MUST mirror
+# "http" in one non-obvious way: the Service port/targetPort is 8000 — the model
+# pods' real listening port — NOT 80. The operator federates "<release>-chat" as an
+# ambient global service across clusters; Istio only publishes a global service's
+# endpoints when the targetPort matches a port the backing pods actually serve. A
+# port the pods don't listen on (e.g. 80) yields an empty EDS at the regional
+# gateway ("ServiceInfo ... has mismatched ports") and a 503 that never even
+# reaches this cluster. The dummy Service exists solely to give the global service
+# healthy backing endpoints; the redirect below sends the actual traffic on.
+#
+# The backend is the shared gateway's "webui" listener (:8081), NOT the Open WebUI
+# Service directly: this redirect rides the ambient waypoint, which forms healthy
+# upstreams only to mesh-native destinations (the gateway) — a plain app Service in
+# the non-ambient default namespace yields "no healthy upstream". The gateway then
+# hops to Open WebUI (see the infra chart's open-webui-route.yaml). Open WebUI is
+# routed per-model because it lives in the llm-d-infra prerequisite, which owns no
+# WorkspaceClass and so cannot own a routed endpoint (docs/adr/0006). No header
+# stamping: the browser talks to Open WebUI, which itself calls the gateway's
+# internal listener to reach every model.
+apiVersion: v1
+kind: Service
+metadata:
+  # Named "<release>-chat" to match the workspace routing convention for the
+  # "chat" AccessEndpoint declared on the WorkspaceClass. ClusterIP only.
+  name: {{ .Release.Name }}-chat
+  labels:
+    {{- include "llm-d-model.labels" . | nindent 4 }}
+    {{- include "llm-d-model.selectorLabels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    # Port 8000 = the model pods' real port (mirrors -http). Required for the
+    # ambient global-service federation to publish endpoints — see comment above.
+    - name: http
+      port: 8000
+  selector:
+    # Must select the model pods so the mesh announces endpoint slices (as -http).
+    {{- include "llm-d-model.selectorLabels" . | nindent 4 }}
+---
+# Redirect traffic from the "<release>-chat" dummy service to the shared Open WebUI.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Release.Name }}-chat-redirect
+spec:
+  parentRefs:
+    - group: ""
+      kind: Service
+      name: {{ .Release.Name }}-chat
+      sectionName: http
+      port: 8000
+  rules:
+    - backendRefs:
+        # The shared gateway's "webui" listener (:8081), which forwards to the
+        # Open WebUI Service. Not open-webui directly — the waypoint can't reach a
+        # non-mesh Service (see the header comment above / docs/adr/0006).
+        - group: ""
+          kind: Service
+          name: llm-d-inference-gateway
+          namespace: default
+          port: 8081
+---
+# The reference grant is needed because the llm-d-inference-gateway and
+# llm-d-open-webui services live in another namespace. It is name-unrestricted
+# (to: kind Service), so it covers both redirect backends.
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:

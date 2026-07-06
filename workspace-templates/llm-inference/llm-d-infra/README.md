@@ -20,7 +20,7 @@ chart wrapping [agentgateway](https://agentgateway.dev/), the upstream
   WebUI can list every deployed model.
 - **Open WebUI** — the chat interface, pointed at the gateway's internal listener.
 
-## Role: a shared prerequisite (that also exposes Open WebUI)
+## Role: a pure shared prerequisite
 
 `llm-d-infra` is the **prerequisite** of [`llm-d-model`](../llm-d-model): the
 operator auto-installs it **once per ClusterDeployment** (into the `default`
@@ -29,10 +29,17 @@ its `ServiceTemplate` (`exalsius/servicetemplate.yaml`). Because the shared
 gateway lives in `default`, each model attaches its routes there from its own
 namespace (with a `ReferenceGrant`).
 
-It also ships a `WorkspaceClass` (`exalsius/workspaceclass.yaml`) so **Open WebUI**
-gets an operator-routed endpoint — a bare prerequisite has no class and so can't
-own a routed `AccessEndpoint`. Per cluster, deploy infra via the class **or** let
-models auto-install it as a prerequisite, not both (avoids a double install).
+It ships **no `WorkspaceClass`** — a bare prerequisite can't own a routed
+`AccessEndpoint`, so infra never routes anything itself. **Open WebUI** is exposed
+**per model** instead: each `llm-d-model` carries a `chat` `AccessEndpoint` that
+redirects to the gateway's `webui` listener (:8081), which forwards to the single
+shared `llm-d-open-webui` Service here in `default` (via the gateway, because the
+per-model redirect rides the ambient waypoint, which only reaches mesh-native
+upstreams). This removes the old class-vs-prerequisite double-install footgun
+structurally — there is no infra-as-class path to collide with the auto-installed
+prerequisite
+([ADR-0006](../../../docs/adr/0006-open-webui-routed-per-model-not-via-infra-class.md)).
+Open WebUI is therefore reachable only once at least one model exists.
 
 Services are **ClusterIP** — routing is operator-owned (the legacy NodePort and
 `workspace.exalsius.ai/access-*` annotations were removed). `appVersion` tracks

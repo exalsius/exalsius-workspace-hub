@@ -57,6 +57,19 @@ spec:
       protocol: HTTP
       port: 8000
       description: "LLM Inference OpenAI-compatible REST API"
+    # A per-model front door to the single shared Open WebUI chat interface. Backed
+    # by the in-namespace "<release>-chat" redirect Service (llm-d-model templates)
+    # forwarding to the shared "llm-d-open-webui" Service in default. Open WebUI is
+    # routed here, per model, because it lives in the llm-d-infra prerequisite,
+    # which owns no WorkspaceClass and so cannot own a routed endpoint (adr/0006).
+    # Port 8000 (not 80): the backing "<release>-chat" Service must target the model
+    # pods' real port so the ambient global-service federation publishes endpoints
+    # (see llm-d-model templates/networking.yaml). The user-facing URL is
+    # hostname-based, so the port is invisible to users.
+    - name: chat
+      protocol: HTTP
+      port: 8000
+      description: "Open WebUI chat interface (shared across all models)"
   userFacingConfig:
     - helmValuePath: huggingfaceToken
       displayName: "Hugging Face Token"
