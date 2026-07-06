@@ -83,8 +83,9 @@ spec:
   ports:
     # Port 8000 = the model pods' real port (mirrors -http). Required for the
     # ambient global-service federation to publish endpoints — see comment above.
-    - name: http
+    - name: chat
       port: 8000
+      appProtocol: http
   selector:
     # Must select the model pods so the mesh announces endpoint slices (as -http).
     {{- include "llm-d-model.selectorLabels" . | nindent 4 }}
@@ -99,7 +100,7 @@ spec:
     - group: ""
       kind: Service
       name: {{ .Release.Name }}-chat
-      sectionName: http
+      sectionName: chat
       port: 8000
   rules:
     - backendRefs:
