@@ -1,0 +1,35 @@
+# Example WorkspaceDeployment (user intent — applied by an end user).
+#
+# TEMPLATE — rendered at release time into
+#   manifests/marimo/0.3.0/example-workspacedeployment.yaml
+# Placeholders 0.3.0 / 0-3-0 are substituted from Chart.yaml.
+#
+# A WorkspaceDeployment pins an exact WorkspaceClass version. Upgrade
+# or rollback = change workspaceClassRef to a different version.
+#
+# Apply:  kubectl apply -f example-workspacedeployment.yaml
+# Watch:  kubectl get wsd -n kcm-system -w
+apiVersion: workspaces.exalsius.ai/v1
+kind: WorkspaceDeployment
+metadata:
+  name: my-marimo
+  namespace: kcm-system
+spec:
+  workspaceClassRef: marimo-0-3-0
+  clusterDeploymentRef:
+    name: default-child-adopted          # Colony "default" + cluster "child-adopted"
+    namespace: kcm-system
+  resources:
+    perReplica:
+      cpu: "8"
+      memory: "16Gi"
+      storage: "50Gi"
+      # GPU is optional. To run CPU-only, drop gpuCount + gpuNodeSelector.
+      gpuCount: 1
+      # Pick any GPU node by a raw vendor label — copy the value straight from
+      # the Colony GPU inventory's offering.selector (works for NVIDIA or AMD):
+      #   kubectl get colony <name> -o jsonpath='{.status.gpuInventory}' | jq
+      gpuNodeSelector:
+        nvidia.com/gpu.product: "NVIDIA-L40"
+  values:
+    tokenPassword: "change-me-please"
