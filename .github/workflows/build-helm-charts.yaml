@@ -23,6 +23,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      pull-requests: write
 
     steps:
       - name: Checkout git repo
@@ -53,57 +54,65 @@ jobs:
             exit 1
           fi
 
-          published_any=false
-
           while IFS= read -r dir; do
             [ -n "$dir" ] || continue
             chart_yaml="$dir/Chart.yaml"
             name=$(yq '.name' "$chart_yaml")
             version=$(yq '.version' "$chart_yaml")
 
-            # Immutability guard: never overwrite an already-published version.
+            # Immutability guard: only publish a version that is not yet in the
+            # registry. Rendering below is unconditional (idempotent), so a chart
+            # that was published on an earlier run but whose manifests never made
+            # it back to main is self-healed on the next run.
             if helm show chart "$repo/$name" --version "$version" >/dev/null 2>&1; then
-              echo "skip: $name $version already published (immutable)"
-              continue
-            fi
+              echo "skip publish: $name $version already published (immutable)"
+            else
+              echo "::group::Publishing $name $version"
 
-            echo "::group::Publishing $name $version"
-
-            # Resolve dependencies the same way as the test workflow.
-            yq '.dependencies | ( . // [] ) | filter(.repository | test("^https?://"))
-              | map("helm repo add " + .name + " " + .repository)[]' "$chart_yaml" | sh || true
-            if yq '.dependencies | ( . // [] ) | length > 0' "$chart_yaml" | grep -q '^true$'; then
-              if [ -d "$dir/charts" ] && [ -n "$(ls -A "$dir/charts" 2>/dev/null)" ]; then
-                echo "Using vendored dependencies in $dir/charts."
-              elif [ -f "$dir/Chart.lock" ]; then
-                helm dependency build "$dir"
-              else
-                helm dependency update "$dir"
+              # Resolve dependencies the same way as the test workflow.
+              yq '.dependencies | ( . // [] ) | filter(.repository | test("^https?://"))
+                | map("helm repo add " + .name + " " + .repository)[]' "$chart_yaml" | sh || true
+              if yq '.dependencies | ( . // [] ) | length > 0' "$chart_yaml" | grep -q '^true$'; then
+                if [ -d "$dir/charts" ] && [ -n "$(ls -A "$dir/charts" 2>/dev/null)" ]; then
+                  echo "Using vendored dependencies in $dir/charts."
+                elif [ -f "$dir/Chart.lock" ]; then
+                  helm dependency build "$dir"
+                else
+                  helm dependency update "$dir"
+                fi
               fi
-            fi
 
-            helm package "$dir" --version "$version" --app-version "$version"
-            helm push "$name-$version.tgz" "$repo"
-            rm -f "$name-$version.tgz"
+              helm package "$dir" --version "$version" --app-version "$version"
+              helm push "$name-$version.tgz" "$repo"
+              rm -f "$name-$version.tgz"
+              echo "::endgroup::"
+            fi
 
             # Render the version-pinned operator CRs (no-op if no exalsius/).
+            # Runs regardless of publish state; the PR step no-ops if nothing changed.
             scripts/render-workspace-manifests.sh "$dir"
-            published_any=true
-            echo "::endgroup::"
           done <<< "$charts"
 
-          echo "PUBLISHED_ANY=$published_any" >> "$GITHUB_ENV"
+      # Branch protection forbids direct pushes to main, so the rendered
+      # manifests are proposed via a PR that is left open for manual review and
+      # merge. The PAT (not the default GITHUB_TOKEN) is required so the org
+      # policy blocking Actions from creating PRs does not apply.
+      # create-pull-request commits only the manifests/ + examples/ changes onto
+      # a dedicated branch, and no-ops when there is nothing to render.
+      - name: Open PR with rendered manifests
+        id: render_pr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.PR_TOKEN }}
+          add-paths: |
+            manifests
+            examples
+          branch: chore/render-workspace-manifests
+          delete-branch: true
+          commit-message: "chore: render workspace manifests"
+          title: "chore: render workspace manifests"
+          body: |
+            Automated render of version-pinned workspace manifests following a chart publish.
 
-      - name: Commit rendered manifests back to main
-        if: env.PUBLISHED_ANY == 'true'
-        run: |
-          set -euo pipefail
-          if [ -z "$(git status --porcelain manifests examples)" ]; then
-            echo "No manifest changes to commit."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add manifests examples
-          git commit -m "chore: render workspace manifests [skip ci]"
-          git push
+            This PR is generated by the `Build and push helm charts` workflow.
+            Review and merge it to publish the rendered manifests to main.
