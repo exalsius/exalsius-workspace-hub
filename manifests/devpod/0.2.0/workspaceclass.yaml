@@ -1,0 +1,52 @@
+# Workspace catalog entry (management-cluster CR).
+#
+# TEMPLATE — rendered at release time into
+#   manifests/devpod/0.2.0/workspaceclass.yaml
+# Placeholders 0.2.0 / 0-2-0 are substituted from Chart.yaml.
+#
+# A single-user remote development container reached over SSH. gpuType /
+# gpuNodeSelector are intentionally NOT set here — they are per-deployment,
+# cluster-dependent choices (the operator rejects them on a class). The default
+# is CPU-only (gpuCount 0); a deployment opts into a GPU.
+apiVersion: workspaces.exalsius.ai/v1
+kind: WorkspaceClass
+metadata:
+  name: devpod-0-2-0
+  labels:
+    workspaces.exalsius.ai/template: devpod
+    workspaces.exalsius.ai/version: "0.2.0"
+spec:
+  displayName: "Dev Pod"
+  description: >-
+    Single-user remote development container reached over SSH (Remote-SSH from
+    VS Code, Cursor, or JetBrains). One framework-free image runs on CPU, NVIDIA,
+    or AMD ROCm nodes; install PyTorch (cuda/rocm) inside as needed.
+  serviceTemplate:
+    name: devpod-0-2-0
+    namespace: kcm-system
+  defaultResources:
+    replicas: 1
+    perReplica:
+      cpu: "4"
+      memory: "8Gi"
+      storage: "50Gi"
+      gpuCount: 0
+  accessEndpoints:
+    # SSH is raw TCP — the operator allocates a port from the gateway port pool
+    # and attaches a TCPRoute. Backed by the chart's "<release>-ssh" Service.
+    - name: ssh
+      protocol: SSH
+      port: 22
+      description: "SSH access for Remote-SSH editors"
+  userFacingConfig:
+    - helmValuePath: sshPassword
+      displayName: "SSH Password"
+      description: "Password for SSH login (user: root)"
+      type: secret
+      required: true
+    - helmValuePath: sshPublicKey
+      displayName: "SSH Public Key"
+      description: "Optional public key(s) for key-based SSH login, one per line"
+      type: string
+      required: false
+  deployTimeout: 15m
