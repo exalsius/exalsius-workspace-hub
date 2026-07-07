@@ -1,27 +1,21 @@
 apiVersion: v2
 name: llm-d-infra
 description: >-
-  Shared llm-d inference infrastructure (agentgateway, model discovery, Open WebUI).
-  Auto-installed once per cluster as the llm-d-model prerequisite,
-  and exposes Open WebUI via its own WorkspaceClass.
+  Shared llm-d inference infrastructure (agentgateway, model discovery, Open
+  WebUI). Auto-installed once per cluster as the llm-d-model prerequisite, and
+  exposes Open WebUI via its own WorkspaceClass.
 type: application
-version: 0.2.0
-# appVersion tracks the upstream llm-d stack version this chart pins
-# (kept deliberately; scoped exception to ADR-0001 — see docs/adr/0002).
+version: 0.3.0
 appVersion: 0.6.0
-
 dependencies:
-  # 2) agentgateway
   - name: agentgateway
-    version: "v1.0.0"
-    repository: "oci://cr.agentgateway.dev/charts"
-  # 2) infra
+    version: v1.0.0
+    repository: oci://cr.agentgateway.dev/charts
   - name: llm-d-infra
     alias: infra
-    version: "v1.4.0"
-    repository: "https://llm-d-incubation.github.io/llm-d-infra"
-  # 3) open-webui
+    version: v1.4.0
+    repository: https://llm-d-incubation.github.io/llm-d-infra
   - name: open-webui
     alias: ow
-    version: "13.0.1"
-    repository: "https://helm.openwebui.com/"
+    version: 13.0.1
+    repository: https://helm.openwebui.com/
