@@ -1,0 +1,16 @@
+# Simulates the operator injection for an NVIDIA GPU node.
+# Use: helm template t . -f values-nvidia.yaml
+# Expect: runtimeClassName: nvidia, limits[nvidia.com/gpu]=1, nodeSelector set.
+_exalsius:
+  resources:
+    replicas: 1
+    perReplica:
+      cpu: "16"
+      memory: "32Gi"
+      storage: "50Gi"
+      gpuCount: 1
+      gpuVendor: "NVIDIA"
+      gpuResourceName: "nvidia.com/gpu"
+  scheduling:
+    nodeSelector:
+      nvidia.com/gpu.product: "NVIDIA-L40"

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "simple",
+  "separate-pull-requests": true,
+  "include-component-in-tag": true,
+  "packages": {
+    "workspace-templates/jupyter-notebook": {
+      "component": "jupyter-notebook",
+      "extra-files": [
+        { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" }
+      ]
+    },
+    "workspace-templates/marimo": {
+      "component": "marimo",
+      "extra-files": [
+        { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" }
+      ]
+    },
+    "workspace-templates/llm-inference/llm-d-infra": {
+      "component": "llm-d-infra",
+      "extra-files": [
+        { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" }
+      ]
+    },
+    "workspace-templates/llm-inference/llm-d-model": {
+      "component": "llm-d-model",
+      "extra-files": [
+        { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" }
+      ]
+    },
+    "workspace-templates/devpod": {
+      "component": "devpod",
+      "extra-files": [
+        { "type": "yaml", "path": "Chart.yaml", "jsonpath": "$.version" }
+      ]
+    }
+  }
+}

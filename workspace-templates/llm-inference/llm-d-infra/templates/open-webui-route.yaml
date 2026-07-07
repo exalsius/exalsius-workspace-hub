@@ -1,0 +1,33 @@
+# Fronts the shared Open WebUI behind the gateway's "webui" listener (:8081).
+#
+# Each llm-d-model's "chat" AccessEndpoint redirects to this listener rather than
+# to the Open WebUI Service directly: the operator federates the per-model
+# "<release>-chat" Service and routes it through the ambient waypoint, which forms
+# healthy upstreams only to mesh-native destinations (this gateway) — not to a
+# plain app Service in the non-ambient default namespace. The gateway itself CAN
+# dial Open WebUI's endpoints, so it does the final hop here. See docs/adr/0006.
+#
+# No hostname match: every request on the webui listener goes to Open WebUI. The
+# gateway and Open WebUI share the default namespace, so no ReferenceGrant is
+# needed. Rendered only when the gateway is enabled.
+{{- if .Values.infra.gateway.enabled }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Values.infra.gateway.fullnameOverride }}-open-webui
+  labels:
+    app.kubernetes.io/name: open-webui
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.infra.gateway.fullnameOverride }}
+      sectionName: webui
+  rules:
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: {{ .Values.ow.fullnameOverride }}
+          port: {{ .Values.ow.service.port | default 80 }}
+{{- end }}

@@ -84,6 +84,23 @@ jobs:
           echo "Validating chart with values: ${{ matrix.chart-path }}"
           helm template test-release ${{ matrix.chart-path }} --values ${{ matrix.chart-path }}/values.yaml --dry-run
 
+      - name: Validate accelerator override values (if any)
+        run: |
+          # Charts may ship values-*.yaml override files (e.g. values-nvidia.yaml,
+          # values-amd.yaml, values-cpu.yaml) that simulate the operator's
+          # _exalsius injection. Render each so the per-accelerator matrix is
+          # exercised under `helm template`.
+          shopt -s nullglob
+          overrides=("${{ matrix.chart-path }}"/values-*.yaml)
+          if [ ${#overrides[@]} -eq 0 ]; then
+            echo "No values-*.yaml override files; skipping."
+            exit 0
+          fi
+          for f in "${overrides[@]}"; do
+            echo "Templating with override: $f"
+            helm template test-release "${{ matrix.chart-path }}" --values "$f" --dry-run
+          done
+
       - name: Check for required files
         run: |
           echo "Checking required files for: ${{ matrix.chart-path }}"

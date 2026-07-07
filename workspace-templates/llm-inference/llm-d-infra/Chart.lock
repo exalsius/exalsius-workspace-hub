@@ -1,12 +1,12 @@
 dependencies:
+- name: agentgateway
+  repository: oci://cr.agentgateway.dev/charts
+  version: v1.0.0
 - name: llm-d-infra
   repository: https://llm-d-incubation.github.io/llm-d-infra
-  version: v1.4.0
-- name: body-based-routing
-  repository: oci://registry.k8s.io/gateway-api-inference-extension/charts
   version: v1.4.0
 - name: open-webui
   repository: https://helm.openwebui.com/
   version: 13.0.1
-digest: sha256:54344483e7c2b27dc524bdf6201f0c91754540dc88c37151d11d829cbc1a8eee
-generated: "2026-04-08T12:23:20.847222265+02:00"
+digest: sha256:75c6508925df4e51f44a9c281505ebd39b63da02f25a5758256f1ea50b3526c8
+generated: "2026-06-30T11:12:07.441722443+02:00"

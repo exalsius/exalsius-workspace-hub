@@ -1,9 +1,14 @@
 apiVersion: v2
 name: llm-d-model
-description: A Helm chart that installs the llm-d-model stack
+description: >-
+  Serves one LLM for inference with the llm-d stack (GAIE InferencePool +
+  llm-d-modelservice/vLLM). Attaches to the shared agentgateway from llm-d-infra
+  and exposes a per-workspace OpenAI-compatible endpoint. Requires the
+  llm-d-infra prerequisite (auto-installed by the operator).
 type: application
-version: 0.1.1
-# With appVersion we refer to the llm-d version
+version: 0.2.0
+# appVersion tracks the upstream llm-d stack version this chart pins
+# (kept deliberately; scoped exception to ADR-0001 — see docs/adr/0002).
 appVersion: 0.6.0
 
 dependencies:

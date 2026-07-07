@@ -17,20 +17,7 @@ ip:
         auth:
           enabled: false
   provider:
-    name: istio
-    istio:
-      destinationRule:
-        trafficPolicy:
-          connectionPool:
-            http:
-              http1MaxPendingRequests: 256000
-              maxRequestsPerConnection: 256000
-              http2MaxRequests: 256000
-              idleTimeout: "900s"
-            tcp:
-              maxConnections: 256000
-              maxConnectionDuration: "1800s"
-              connectTimeout: "900s"
+    name: none
   inferencePool:
     targetPorts:
       - number: 8000
@@ -43,7 +30,11 @@ ip:
 
 ### CHANGES REQUIRED ###
 huggingfaceToken: "my-hugging-face-token"
+# Bearer token required for EXTERNAL access (the per-workspace OpenAI endpoint).
+# Enforced at the inference gateway's "external" listener via an
+# AgentgatewayPolicy, not inside vLLM. Leave empty to disable auth.
 inferenceApiKey: ""
+httpRequestTimeout: 300s
 ### CHANGES REQUIRED ###
 
 # The chart automatically calculates accelerator resources (e.g., nvidia.com/gpu) based on parallelism settings.
@@ -96,12 +87,6 @@ ms:
           value: "0"
         - name: LIBRARY_PATH
           value: /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/lib64:/usr/lib64:/usr/lib/x86_64-linux-gnu
-        - name: VLLM_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: llm-d-model-auth-details
-              key: VLLM_API_KEY
-              optional: true # in case the lookup fails or the api-key is an empty string, we do not want the deployment to fail
       ports:
         - containerPort: 8000
           name: vllm
@@ -115,12 +100,9 @@ ms:
         - name: torch-compile-cache
           mountPath: /.cache
       startupProbe:
-        exec:
-          command:
-            - sh
-            - -c
-            - |
-              curl -sf -H "Authorization: Bearer $VLLM_API_KEY" http://localhost:8000/v1/models
+        httpGet:
+          path: /v1/models
+          port: vllm
         initialDelaySeconds: 15
         periodSeconds: 30
         timeoutSeconds: 5
@@ -133,12 +115,9 @@ ms:
         timeoutSeconds: 5
         failureThreshold: 3
       readinessProbe:
-        exec:
-          command:
-            - sh
-            - -c
-            - |
-              curl -sf -H "Authorization: Bearer $VLLM_API_KEY" http://localhost:8000/v1/models
+        httpGet:
+          path: /v1/models
+          port: vllm
         periodSeconds: 5
         timeoutSeconds: 2
         failureThreshold: 3

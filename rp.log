@@ -1,0 +1,451 @@
+❯ Fetching release-please-config.json from branch refactor/workspace-classes
+❯ Fetching .release-please-manifest.json from branch refactor/workspace-classes
+✔ Building pull requests
+✔ Building strategies by path
+❯ workspace-templates/jupyter-notebook: simple
+❯ workspace-templates/marimo: simple
+❯ workspace-templates/vscode-devcontainer: simple
+❯ workspace-templates/test-workspace: simple
+❯ workspace-templates/diloco-training: simple
+❯ workspace-templates/performance-profiling: simple
+✔ Collecting release commit SHAs
+❯ release search depth: 400
+❯ Fetching releases with cursor undefined
+❯ looking for tagName: jupyter-notebook-v1.0.0
+❯ looking for tagName: marimo-v0.1.0
+❯ looking for tagName: vscode-devcontainer-v0.1.0
+❯ looking for tagName: test-workspace-v0.1.0
+❯ looking for tagName: diloco-training-v0.1.0
+❯ looking for tagName: performance-profiling-v0.1.0
+✔ Collecting commits since all latest releases
+❯ commit search depth: 500
+❯ Set(0) {}
+❯ Fetching merge commits on branch refactor/workspace-classes with cursor: undefined
+❯ Backfilling file list for commit: 26933a957a12a34c389afa2f0cf823d2c4986257
+❯ Found 6 files
+❯ Backfilling file list for commit: a0c0aa3dc23dc1b6f167a7dbc19a20c157aedb71
+❯ Found 11 files
+❯ Backfilling file list for commit: 2f034d8d2e7a8ce32aae4be5dbb8bae00375b998
+❯ Found 16 files
+❯ Backfilling file list for commit: b711d5cc0cc929c5591ec86fe216fce583dc5a0b
+❯ Found 1 files
+❯ Backfilling file list for commit: 6eadb6c808ada3618f7ad7a1d7aebf396592823a
+❯ Found 2 files
+❯ Backfilling file list for commit: d62dec7678ba9cedf90d8a3086b6b79c1ef9609d
+❯ Found 1 files
+❯ Backfilling file list for commit: 85d16dfa0db9bf9317f1f99d258b4e499945f32c
+❯ Found 1 files
+❯ Fetching merge commits on branch refactor/workspace-classes with cursor: 26933a957a12a34c389afa2f0cf823d2c4986257 24
+❯ Backfilling file list for commit: c7cf127b6c851e18fa40c49b44f0b25a580d39ff
+❯ Found 1 files
+❯ Backfilling file list for commit: 19958f42ccd3666c48dfbb350e796537e3303006
+❯ Found 3 files
+❯ Fetching merge commits on branch refactor/workspace-classes with cursor: 26933a957a12a34c389afa2f0cf823d2c4986257 49
+❯ Backfilling file list for commit: 8a166fb8fefee61aef9f0374f45e0ea11a4865ac
+❯ Found 3 files
+❯ Backfilling file list for commit: 67354b7226f24a541bfbb7519c168ae461e6f07d
+❯ Found 1 files
+❯ Backfilling file list for commit: 3055d25858275e2b7309dcf02c2f279a7f501294
+❯ Found 1 files
+❯ Backfilling file list for commit: d58d4a31fb50725f08613d2b793daa240e76fac6
+❯ Found 3 files
+❯ Backfilling file list for commit: 05627c0ef45b5b1f99133df6e33b0c2a671fa1c2
+❯ Found 3 files
+❯ Fetching merge commits on branch refactor/workspace-classes with cursor: 26933a957a12a34c389afa2f0cf823d2c4986257 74
+❯ Backfilling file list for commit: 77f02df23cdbfa418ec7f07abb40da57d5e2ea39
+❯ Found 3 files
+❯ Backfilling file list for commit: c6595afb769d3d88e67cde6ae23f3e232778e16e
+❯ Found 3 files
+❯ Backfilling file list for commit: dee4f1c7f80db7e12f2c0c8a100930b9dc429962
+❯ Found 7 files
+❯ Backfilling file list for commit: 23dc1441a2e7b366b6031eb4428675e77c45d4fd
+❯ Found 2 files
+❯ Backfilling file list for commit: 40fa9e474eabd5f66a965e73f4ddf21aeccdfab1
+❯ Found 6 files
+❯ Backfilling file list for commit: 123284a4b71794585e317c6cca018c34bfe25eb0
+❯ Found 1 files
+❯ Backfilling file list for commit: b5d7387e4d42632570c07c38ae2c31a9c8f49307
+❯ Found 2 files
+❯ Backfilling file list for commit: b43b3c92c494c814063ed2491d83cfcf024e8ee7
+❯ Found 2 files
+❯ Backfilling file list for commit: e6f8027114a050a15d04374952445cac453f0a55
+❯ Found 2 files
+❯ Fetching merge commits on branch refactor/workspace-classes with cursor: 26933a957a12a34c389afa2f0cf823d2c4986257 99
+❯ Backfilling file list for commit: fd5335a3b89eed4e770296f6520073407223f49b
+❯ Found 1 files
+❯ Backfilling file list for commit: b6aebc9ffa3c5b0d23532dc17b69c587c4d003f2
+❯ Found 1 files
+❯ Backfilling file list for commit: 21399151b508e0ba20086aaa3fafe66b7de19f4f
+❯ Found 2 files
+❯ Backfilling file list for commit: 0155b9b59dd455b192442da3d1735dde7bb818d9
+❯ Found 5 files
+❯ Backfilling file list for commit: 70736453006ec6ff5b34008af7a907930f3b267a
+❯ Found 5 files
+❯ Backfilling file list for commit: 96be714cd05c934df751b9006c851be9919ae1ce
+❯ Found 2 files
+❯ Backfilling file list for commit: 3754b8bf655ac5b035cb58586600f1cbcd1cab42
+❯ Found 8 files
+❯ Backfilling file list for commit: 9a921dada6ea3be26f84492bfc9f36bd21f343dc
+❯ Found 4 files
+❯ Backfilling file list for commit: 1b46428a0e360c75bfaac65c8665429211290d79
+❯ Found 1 files
+❯ Backfilling file list for commit: 55243a8b6e718ad057bdd5113ac5ffc48d014c27
+❯ Found 2 files
+❯ Backfilling file list for commit: 18e7021262d597593cdd6afdef614cc8a8584b6d
+❯ Found 2 files
+❯ Backfilling file list for commit: 747246f5f9e32f55465657565f7351fcff056d4b
+❯ Found 7 files
+❯ Backfilling file list for commit: 859896d65b175b558e4fb9f1a5c3c7e3d80444d8
+❯ Found 1 files
+❯ Backfilling file list for commit: 69cfa1fe6e8af0f9fc4b013f829e973c53bcfc02
+❯ Found 1 files
+❯ Backfilling file list for commit: 0bf080016b9251fbaf687bebd825557c1eade5a6
+❯ Found 1 files
+❯ Backfilling file list for commit: 4e89508ed211b7dffa60736339bcceb379da14d0
+❯ Found 2 files
+❯ Backfilling file list for commit: e802f3cd070fda387eb84848ceef4459b9662446
+❯ Found 1 files
+❯ Backfilling file list for commit: fe15b9fce856e3ef46f8411e44bb56d04b39221c
+❯ Found 1 files
+❯ Backfilling file list for commit: 59b60764c67aa03b3121769477196d40cc58b244
+❯ Found 2 files
+❯ Backfilling file list for commit: 6fc62bccf1616f5634370211d4a36632d27be315
+❯ Found 4 files
+✔ Splitting 120 commits by path
+✔ No latest release found for path: workspace-templates/jupyter-notebook, component: jupyter-notebook, but a previous version (1.0.0) was specified in the manifest.
+✔ No latest release found for path: workspace-templates/marimo, component: marimo, but a previous version (0.1.0) was specified in the manifest.
+✔ No latest release found for path: workspace-templates/vscode-devcontainer, component: vscode-devcontainer, but a previous version (0.1.0) was specified in the manifest.
+✔ No latest release found for path: workspace-templates/test-workspace, component: test-workspace, but a previous version (0.1.0) was specified in the manifest.
+✔ No latest release found for path: workspace-templates/diloco-training, component: diloco-training, but a previous version (0.1.0) was specified in the manifest.
+✔ No latest release found for path: workspace-templates/performance-profiling, component: performance-profiling, but a previous version (0.1.0) was specified in the manifest.
+✔ Building candidate release pull request for path: workspace-templates/jupyter-notebook
+❯ type: simple
+❯ targetBranch: refactor/workspace-classes
+❯ commits: 22
+✔ Considering: 22 commits
+❯ component: jupyter-notebook
+❯ pull request title pattern: undefined
+❯ componentNoSpace: undefined
+✔ Building candidate release pull request for path: workspace-templates/marimo
+❯ type: simple
+❯ targetBranch: refactor/workspace-classes
+❯ commit could not be parsed: 77f02df23cdbfa418ec7f07abb40da57d5e2ea39 Merge pull request #7 from exalsius/fix/marimo-password
+❯ error message: Error: unexpected token ' ' at 1:6, valid tokens [(, !, :]
+❯ commit could not be parsed: dee4f1c7f80db7e12f2c0c8a100930b9dc429962 Merge pull request #6 from exalsius/feat/marimo-workspace
+❯ error message: Error: unexpected token ' ' at 1:6, valid tokens [(, !, :]
+❯ commits: 24
+✔ Considering: 24 commits
+❯ component: marimo
+❯ pull request title pattern: undefined
+❯ componentNoSpace: undefined
+✔ Building candidate release pull request for path: workspace-templates/vscode-devcontainer
+❯ type: simple
+❯ targetBranch: refactor/workspace-classes
+❯ commit could not be parsed: 859896d65b175b558e4fb9f1a5c3c7e3d80444d8 Update values.yaml
+❯ error message: Error: unexpected token ' ' at 1:7, valid tokens [(, !, :]
+❯ commit could not be parsed: 69cfa1fe6e8af0f9fc4b013f829e973c53bcfc02 Update pvc.yaml
+❯ error message: Error: unexpected token ' ' at 1:7, valid tokens [(, !, :]
+❯ commit could not be parsed: 0bf080016b9251fbaf687bebd825557c1eade5a6 Update deployment.yaml
+❯ error message: Error: unexpected token ' ' at 1:7, valid tokens [(, !, :]
+❯ commit could not be parsed: e802f3cd070fda387eb84848ceef4459b9662446 Create README.md
+❯ error message: Error: unexpected token ' ' at 1:7, valid tokens [(, !, :]
+❯ commit could not be parsed: 6fc62bccf1616f5634370211d4a36632d27be315 init
+❯ error message: Error: unexpected token EOF at 1:5, valid tokens [(, !, :]
+❯ commits: 18
+✔ Considering: 18 commits
+❯ component: vscode-devcontainer
+❯ pull request title pattern: undefined
+❯ componentNoSpace: undefined
+✔ Building candidate release pull request for path: workspace-templates/test-workspace
+❯ type: simple
+❯ targetBranch: refactor/workspace-classes
+❯ commits: 11
+✔ Considering: 11 commits
+❯ component: test-workspace
+❯ pull request title pattern: undefined
+❯ componentNoSpace: undefined
+✔ Building candidate release pull request for path: workspace-templates/diloco-training
+❯ type: simple
+❯ targetBranch: refactor/workspace-classes
+❯ commits: 29
+✔ Considering: 29 commits
+❯ component: diloco-training
+❯ pull request title pattern: undefined
+❯ componentNoSpace: undefined
+✔ Building candidate release pull request for path: workspace-templates/performance-profiling
+❯ type: simple
+❯ targetBranch: refactor/workspace-classes
+❯ commits: 8
+✔ Considering: 8 commits
+❯ component: performance-profiling
+❯ pull request title pattern: undefined
+❯ componentNoSpace: undefined
+Would open 6 pull requests
+fork: false
+title: chore(refactor/workspace-classes): release jupyter-notebook 1.1.0
+branch: release-please--branches--refactor/workspace-classes--components--jupyter-notebook
+draft: false
+body: :robot: I have created a release *beep* *boop*
+---
+
+
+## [1.1.0](https://github.com/exalsius/exalsius-workspace-hub/compare/jupyter-notebook-v1.0.0...jupyter-notebook-v1.1.0) (2026-06-22)
+
+
+### Features
+
+* add juypter-notebook workspace helm chart ([747246f](https://github.com/exalsius/exalsius-workspace-hub/commit/747246f5f9e32f55465657565f7351fcff056d4b))
+* add log-streaming labels to main components of workspaces offered to users ([#49](https://github.com/exalsius/exalsius-workspace-hub/issues/49)) ([3e0bb87](https://github.com/exalsius/exalsius-workspace-hub/commit/3e0bb871c77a107f95f5555d87f11baaa220562f))
+* **jupyter-notebook:** adopt the _exalsius contract and ClusterIP routing ([2f034d8](https://github.com/exalsius/exalsius-workspace-hub/commit/2f034d8d2e7a8ce32aae4be5dbb8bae00375b998))
+* remove ephemeral storage from all templates except diloco ([#55](https://github.com/exalsius/exalsius-workspace-hub/issues/55)) ([971162a](https://github.com/exalsius/exalsius-workspace-hub/commit/971162a2b7e6ddbc8f3f87bc84f83239eb4b63de))
+* restructure helm values and add validation ([#52](https://github.com/exalsius/exalsius-workspace-hub/issues/52)) ([fed09c3](https://github.com/exalsius/exalsius-workspace-hub/commit/fed09c323b16e4c0fc172e7ce757da7b3561fc92))
+
+
+### Bug Fixes
+
+* adapt diloco-chart etcd-dependency; refactor all workspace values ([#46](https://github.com/exalsius/exalsius-workspace-hub/issues/46)) ([af996c7](https://github.com/exalsius/exalsius-workspace-hub/commit/af996c76957f55c4e0b374762274f3c665f82c91))
+* add helper functions to truncate resource names to 63 chars ([628135b](https://github.com/exalsius/exalsius-workspace-hub/commit/628135b7400c88de8fcc70248d2fd19d9189a442))
+* also remove enablePVCDeletion from schema ([2ef3841](https://github.com/exalsius/exalsius-workspace-hub/commit/2ef3841384731637c378c72e71f9d996604d9220))
+* change imagepullpolicy of main workspaces ([#61](https://github.com/exalsius/exalsius-workspace-hub/issues/61)) ([202ce97](https://github.com/exalsius/exalsius-workspace-hub/commit/202ce9731870834990a701f838e93ac7bbc01ec5))
+* helm chart validations ([#56](https://github.com/exalsius/exalsius-workspace-hub/issues/56)) ([db7712b](https://github.com/exalsius/exalsius-workspace-hub/commit/db7712beb9167f44f2704d66b79608daa5652383))
+* **jupyter:** convert gpuCount string value to int ([1b46428](https://github.com/exalsius/exalsius-workspace-hub/commit/1b46428a0e360c75bfaac65c8665429211290d79))
+* **jupyter:** do not request nvidia runtime when requested gpus=0 ([#83](https://github.com/exalsius/exalsius-workspace-hub/issues/83)) ([f4740be](https://github.com/exalsius/exalsius-workspace-hub/commit/f4740be5679931e37badd6a832d981b5c316310e))
+* **juypter:** change juypter notebook docker image ([a94197f](https://github.com/exalsius/exalsius-workspace-hub/commit/a94197feb72fc6caa9571b81778d25550adb6972))
+* **marimo:** remove enablePVCDeletion from required values ([788a28a](https://github.com/exalsius/exalsius-workspace-hub/commit/788a28a99a611ddc40df4827d23db938fcafa72a))
+* remove deprecated pvcDeletion value ([f23cc73](https://github.com/exalsius/exalsius-workspace-hub/commit/f23cc73668c43805c12858b62a3ec7de0fb890f4))
+* remove nodeSelector for jupyter and only use nvidia as runtime class when a gpu is used ([55243a8](https://github.com/exalsius/exalsius-workspace-hub/commit/55243a8b6e718ad057bdd5113ac5ffc48d014c27))
+* renamings to fix camelcase / snakecase conversion ([9a921da](https://github.com/exalsius/exalsius-workspace-hub/commit/9a921dada6ea3be26f84492bfc9f36bd21f343dc))
+* streamlined value naming across all workspaces and set sane defaults ([#3](https://github.com/exalsius/exalsius-workspace-hub/issues/3)) ([856a91d](https://github.com/exalsius/exalsius-workspace-hub/commit/856a91dc33b247d42403b66f22ff287aee89e3f8))
+* use string values for helm chart ([18e7021](https://github.com/exalsius/exalsius-workspace-hub/commit/18e7021262d597593cdd6afdef614cc8a8584b6d))
+
+---
+This PR was generated with [Release Please](https://github.com/googleapis/release-please). See [documentation](https://github.com/googleapis/release-please#release-please).
+updates: 4
+❯ Fetching workspace-templates/jupyter-notebook/CHANGELOG.md from branch refactor/workspace-classes
+❯ Fetching workspace-templates/jupyter-notebook/version.txt from branch refactor/workspace-classes
+❯ Fetching workspace-templates/jupyter-notebook/Chart.yaml from branch refactor/workspace-classes
+❯ Fetching .release-please-manifest.json from branch refactor/workspace-classes
+  workspace-templates/jupyter-notebook/CHANGELOG.md:  [class Changelog extends DefaultUpdater]
+  workspace-templates/jupyter-notebook/version.txt:  [class DefaultUpdater]
+  workspace-templates/jupyter-notebook/Chart.yaml:  [class CompositeUpdater]
+  .release-please-manifest.json:  [class ReleasePleaseManifest extends DefaultUpdater]
+title: chore(refactor/workspace-classes): release marimo 0.2.0
+branch: release-please--branches--refactor/workspace-classes--components--marimo
+draft: false
+body: :robot: I have created a release *beep* *boop*
+---
+
+
+## [0.2.0](https://github.com/exalsius/exalsius-workspace-hub/compare/marimo-v0.1.0...marimo-v0.2.0) (2026-06-22)
+
+
+### Features
+
+* add log-streaming labels to main components of workspaces offered to users ([#49](https://github.com/exalsius/exalsius-workspace-hub/issues/49)) ([3e0bb87](https://github.com/exalsius/exalsius-workspace-hub/commit/3e0bb871c77a107f95f5555d87f11baaa220562f))
+* add marimo workspace template ([dee4f1c](https://github.com/exalsius/exalsius-workspace-hub/commit/dee4f1c7f80db7e12f2c0c8a100930b9dc429962))
+* add marimo workspace template ([40fa9e4](https://github.com/exalsius/exalsius-workspace-hub/commit/40fa9e474eabd5f66a965e73f4ddf21aeccdfab1))
+* remove ephemeral storage from all templates except diloco ([#55](https://github.com/exalsius/exalsius-workspace-hub/issues/55)) ([971162a](https://github.com/exalsius/exalsius-workspace-hub/commit/971162a2b7e6ddbc8f3f87bc84f83239eb4b63de))
+* restructure helm values and add validation ([#52](https://github.com/exalsius/exalsius-workspace-hub/issues/52)) ([fed09c3](https://github.com/exalsius/exalsius-workspace-hub/commit/fed09c323b16e4c0fc172e7ce757da7b3561fc92))
+* use exalsius devpod marimo image ([#51](https://github.com/exalsius/exalsius-workspace-hub/issues/51)) ([fe5c3ae](https://github.com/exalsius/exalsius-workspace-hub/commit/fe5c3aeecf8b354e9b17eb5d2c15d9c9de3d55b7))
+
+
+### Bug Fixes
+
+* adapt diloco-chart etcd-dependency; refactor all workspace values ([#46](https://github.com/exalsius/exalsius-workspace-hub/issues/46)) ([af996c7](https://github.com/exalsius/exalsius-workspace-hub/commit/af996c76957f55c4e0b374762274f3c665f82c91))
+* add helper functions to truncate resource names to 63 chars ([628135b](https://github.com/exalsius/exalsius-workspace-hub/commit/628135b7400c88de8fcc70248d2fd19d9189a442))
+* add support for AMD GPUs in marimo workspace ([#22](https://github.com/exalsius/exalsius-workspace-hub/issues/22)) ([bfc74cd](https://github.com/exalsius/exalsius-workspace-hub/commit/bfc74cdfff8351ed625ee29ec26e4b08757eded3))
+* add tokenPassword as a value for the marimo workspace ([77f02df](https://github.com/exalsius/exalsius-workspace-hub/commit/77f02df23cdbfa418ec7f07abb40da57d5e2ea39))
+* add tokenPassword as a value for the marimo workspace ([c6595af](https://github.com/exalsius/exalsius-workspace-hub/commit/c6595afb769d3d88e67cde6ae23f3e232778e16e))
+* also remove enablePVCDeletion from schema ([2ef3841](https://github.com/exalsius/exalsius-workspace-hub/commit/2ef3841384731637c378c72e71f9d996604d9220))
+* change imagepullpolicy of main workspaces ([#61](https://github.com/exalsius/exalsius-workspace-hub/issues/61)) ([202ce97](https://github.com/exalsius/exalsius-workspace-hub/commit/202ce9731870834990a701f838e93ac7bbc01ec5))
+* change workingDir of marimo workspace ([#21](https://github.com/exalsius/exalsius-workspace-hub/issues/21)) ([ed5ea3e](https://github.com/exalsius/exalsius-workspace-hub/commit/ed5ea3e83cc2df6ed12587fc9e11a373b8f1d237))
+* helm chart validations ([#56](https://github.com/exalsius/exalsius-workspace-hub/issues/56)) ([db7712b](https://github.com/exalsius/exalsius-workspace-hub/commit/db7712beb9167f44f2704d66b79608daa5652383))
+* **marimo:** add missing password secret ([604234d](https://github.com/exalsius/exalsius-workspace-hub/commit/604234df6ce875c56fd8ab8f7201e4fb9ce88afc))
+* **marimo:** fix typo in template deployment ([9d1d9e9](https://github.com/exalsius/exalsius-workspace-hub/commit/9d1d9e95bdbc1c05b25735f64b46a9a2cc511ce4))
+* **marimo:** re-use gpuVendor resources ([#24](https://github.com/exalsius/exalsius-workspace-hub/issues/24)) ([660dd46](https://github.com/exalsius/exalsius-workspace-hub/commit/660dd4618b0ddc3b14a5a829c3bdfe2f3dc7904f))
+* **marimo:** remove enablePVCDeletion from required values ([788a28a](https://github.com/exalsius/exalsius-workspace-hub/commit/788a28a99a611ddc40df4827d23db938fcafa72a))
+* **marimo:** support upper- and lowercase GPU vendors ([#25](https://github.com/exalsius/exalsius-workspace-hub/issues/25)) ([e1dc090](https://github.com/exalsius/exalsius-workspace-hub/commit/e1dc090a3e903f58b0f680f463372c974a5e7016))
+* remove deprecated pvcDeletion value ([f23cc73](https://github.com/exalsius/exalsius-workspace-hub/commit/f23cc73668c43805c12858b62a3ec7de0fb890f4))
+* rename gpuType to gpuVendor ([#23](https://github.com/exalsius/exalsius-workspace-hub/issues/23)) ([f2d1e62](https://github.com/exalsius/exalsius-workspace-hub/commit/f2d1e623b33676705468b2114b80b259547a0d29))
+
+---
+This PR was generated with [Release Please](https://github.com/googleapis/release-please). See [documentation](https://github.com/googleapis/release-please#release-please).
+updates: 4
+❯ Fetching workspace-templates/marimo/CHANGELOG.md from branch refactor/workspace-classes
+❯ Fetching workspace-templates/marimo/version.txt from branch refactor/workspace-classes
+❯ Fetching workspace-templates/marimo/Chart.yaml from branch refactor/workspace-classes
+❯ Fetching .release-please-manifest.json from branch refactor/workspace-classes
+  workspace-templates/marimo/CHANGELOG.md:  [class Changelog extends DefaultUpdater]
+  workspace-templates/marimo/version.txt:  [class DefaultUpdater]
+  workspace-templates/marimo/Chart.yaml:  [class GenericYaml]
+  .release-please-manifest.json:  [class ReleasePleaseManifest extends DefaultUpdater]
+title: chore(refactor/workspace-classes): release vscode-devcontainer 0.2.0
+branch: release-please--branches--refactor/workspace-classes--components--vscode-devcontainer
+draft: false
+body: :robot: I have created a release *beep* *boop*
+---
+
+
+## [0.2.0](https://github.com/exalsius/exalsius-workspace-hub/compare/vscode-devcontainer-v0.1.0...vscode-devcontainer-v0.2.0) (2026-06-22)
+
+
+### Features
+
+* adapt vs-code template ([59b6076](https://github.com/exalsius/exalsius-workspace-hub/commit/59b60764c67aa03b3121769477196d40cc58b244))
+* add log-streaming labels to main components of workspaces offered to users ([#49](https://github.com/exalsius/exalsius-workspace-hub/issues/49)) ([3e0bb87](https://github.com/exalsius/exalsius-workspace-hub/commit/3e0bb871c77a107f95f5555d87f11baaa220562f))
+* no nested values ([4e89508](https://github.com/exalsius/exalsius-workspace-hub/commit/4e89508ed211b7dffa60736339bcceb379da14d0))
+* remove ephemeral storage from all templates except diloco ([#55](https://github.com/exalsius/exalsius-workspace-hub/issues/55)) ([971162a](https://github.com/exalsius/exalsius-workspace-hub/commit/971162a2b7e6ddbc8f3f87bc84f83239eb4b63de))
+* rename file ([fe15b9f](https://github.com/exalsius/exalsius-workspace-hub/commit/fe15b9fce856e3ef46f8411e44bb56d04b39221c))
+* restructure helm values and add validation ([#52](https://github.com/exalsius/exalsius-workspace-hub/issues/52)) ([fed09c3](https://github.com/exalsius/exalsius-workspace-hub/commit/fed09c323b16e4c0fc172e7ce757da7b3561fc92))
+
+
+### Bug Fixes
+
+* adapt diloco-chart etcd-dependency; refactor all workspace values ([#46](https://github.com/exalsius/exalsius-workspace-hub/issues/46)) ([af996c7](https://github.com/exalsius/exalsius-workspace-hub/commit/af996c76957f55c4e0b374762274f3c665f82c91))
+* add helper functions to truncate resource names to 63 chars ([628135b](https://github.com/exalsius/exalsius-workspace-hub/commit/628135b7400c88de8fcc70248d2fd19d9189a442))
+* change imagepullpolicy of main workspaces ([#61](https://github.com/exalsius/exalsius-workspace-hub/issues/61)) ([202ce97](https://github.com/exalsius/exalsius-workspace-hub/commit/202ce9731870834990a701f838e93ac7bbc01ec5))
+* correctly pass public ssh-keys to pod ([#58](https://github.com/exalsius/exalsius-workspace-hub/issues/58)) ([61c28f8](https://github.com/exalsius/exalsius-workspace-hub/commit/61c28f82ffdc67c897acb8cfdc9bca33c6eeb610))
+* **devpod:** add exalsius devpod images ([eb8ba1f](https://github.com/exalsius/exalsius-workspace-hub/commit/eb8ba1f50bcd7c3a271d90a34577118f8b34818c))
+* **devpod:** increase ephemeral storage limit to 50Gi ([#66](https://github.com/exalsius/exalsius-workspace-hub/issues/66)) ([a36c9d2](https://github.com/exalsius/exalsius-workspace-hub/commit/a36c9d2de0ec59814407c1c60338542e70dbe61f))
+* handling of ssh information (password vs publickey) ([#57](https://github.com/exalsius/exalsius-workspace-hub/issues/57)) ([2baa989](https://github.com/exalsius/exalsius-workspace-hub/commit/2baa989e6ad46f03f92badbda0ab98650d7fe1d0))
+* helm chart validations ([#56](https://github.com/exalsius/exalsius-workspace-hub/issues/56)) ([db7712b](https://github.com/exalsius/exalsius-workspace-hub/commit/db7712beb9167f44f2704d66b79608daa5652383))
+* renamings to fix camelcase / snakecase conversion ([9a921da](https://github.com/exalsius/exalsius-workspace-hub/commit/9a921dada6ea3be26f84492bfc9f36bd21f343dc))
+* streamlined value naming across all workspaces and set sane defaults ([#3](https://github.com/exalsius/exalsius-workspace-hub/issues/3)) ([856a91d](https://github.com/exalsius/exalsius-workspace-hub/commit/856a91dc33b247d42403b66f22ff287aee89e3f8))
+
+---
+This PR was generated with [Release Please](https://github.com/googleapis/release-please). See [documentation](https://github.com/googleapis/release-please#release-please).
+updates: 4
+❯ Fetching workspace-templates/vscode-devcontainer/CHANGELOG.md from branch refactor/workspace-classes
+❯ Fetching workspace-templates/vscode-devcontainer/version.txt from branch refactor/workspace-classes
+❯ Fetching workspace-templates/vscode-devcontainer/Chart.yaml from branch refactor/workspace-classes
+❯ Fetching .release-please-manifest.json from branch refactor/workspace-classes
+  workspace-templates/vscode-devcontainer/CHANGELOG.md:  [class Changelog extends DefaultUpdater]
+  workspace-templates/vscode-devcontainer/version.txt:  [class DefaultUpdater]
+  workspace-templates/vscode-devcontainer/Chart.yaml:  [class GenericYaml]
+  .release-please-manifest.json:  [class ReleasePleaseManifest extends DefaultUpdater]
+title: chore(refactor/workspace-classes): release test-workspace 0.2.0
+branch: release-please--branches--refactor/workspace-classes--components--test-workspace
+draft: false
+body: :robot: I have created a release *beep* *boop*
+---
+
+
+## [0.2.0](https://github.com/exalsius/exalsius-workspace-hub/compare/test-workspace-v0.1.0...test-workspace-v0.2.0) (2026-06-22)
+
+
+### Features
+
+* add a test workspace for end-to-end testing ([7073645](https://github.com/exalsius/exalsius-workspace-hub/commit/70736453006ec6ff5b34008af7a907930f3b267a))
+* add log-streaming labels to main components of workspaces offered to users ([#49](https://github.com/exalsius/exalsius-workspace-hub/issues/49)) ([3e0bb87](https://github.com/exalsius/exalsius-workspace-hub/commit/3e0bb871c77a107f95f5555d87f11baaa220562f))
+* remove ephemeral storage from all templates except diloco ([#55](https://github.com/exalsius/exalsius-workspace-hub/issues/55)) ([971162a](https://github.com/exalsius/exalsius-workspace-hub/commit/971162a2b7e6ddbc8f3f87bc84f83239eb4b63de))
+* restructure helm values and add validation ([#52](https://github.com/exalsius/exalsius-workspace-hub/issues/52)) ([fed09c3](https://github.com/exalsius/exalsius-workspace-hub/commit/fed09c323b16e4c0fc172e7ce757da7b3561fc92))
+
+
+### Bug Fixes
+
+* adapt diloco-chart etcd-dependency; refactor all workspace values ([#46](https://github.com/exalsius/exalsius-workspace-hub/issues/46)) ([af996c7](https://github.com/exalsius/exalsius-workspace-hub/commit/af996c76957f55c4e0b374762274f3c665f82c91))
+* add helper functions to truncate resource names to 63 chars ([628135b](https://github.com/exalsius/exalsius-workspace-hub/commit/628135b7400c88de8fcc70248d2fd19d9189a442))
+* change imagepullpolicy of main workspaces ([#61](https://github.com/exalsius/exalsius-workspace-hub/issues/61)) ([202ce97](https://github.com/exalsius/exalsius-workspace-hub/commit/202ce9731870834990a701f838e93ac7bbc01ec5))
+* helm chart validations ([#56](https://github.com/exalsius/exalsius-workspace-hub/issues/56)) ([db7712b](https://github.com/exalsius/exalsius-workspace-hub/commit/db7712beb9167f44f2704d66b79608daa5652383))
+* streamlined value naming across all workspaces and set sane defaults ([#3](https://github.com/exalsius/exalsius-workspace-hub/issues/3)) ([856a91d](https://github.com/exalsius/exalsius-workspace-hub/commit/856a91dc33b247d42403b66f22ff287aee89e3f8))
+
+---
+This PR was generated with [Release Please](https://github.com/googleapis/release-please). See [documentation](https://github.com/googleapis/release-please#release-please).
+updates: 4
+❯ Fetching workspace-templates/test-workspace/CHANGELOG.md from branch refactor/workspace-classes
+❯ Fetching workspace-templates/test-workspace/version.txt from branch refactor/workspace-classes
+❯ Fetching workspace-templates/test-workspace/Chart.yaml from branch refactor/workspace-classes
+❯ Fetching .release-please-manifest.json from branch refactor/workspace-classes
+  workspace-templates/test-workspace/CHANGELOG.md:  [class Changelog extends DefaultUpdater]
+  workspace-templates/test-workspace/version.txt:  [class DefaultUpdater]
+  workspace-templates/test-workspace/Chart.yaml:  [class GenericYaml]
+  .release-please-manifest.json:  [class ReleasePleaseManifest extends DefaultUpdater]
+title: chore(refactor/workspace-classes): release diloco-training 0.2.0
+branch: release-please--branches--refactor/workspace-classes--components--diloco-training
+draft: false
+body: :robot: I have created a release *beep* *boop*
+---
+
+
+## [0.2.0](https://github.com/exalsius/exalsius-workspace-hub/compare/diloco-training-v0.1.0...diloco-training-v0.2.0) (2026-06-22)
+
+
+### Features
+
+* add diloco training job template ([0155b9b](https://github.com/exalsius/exalsius-workspace-hub/commit/0155b9b59dd455b192442da3d1735dde7bb818d9))
+* add log-streaming labels to main components of workspaces offered to users ([#49](https://github.com/exalsius/exalsius-workspace-hub/issues/49)) ([3e0bb87](https://github.com/exalsius/exalsius-workspace-hub/commit/3e0bb871c77a107f95f5555d87f11baaa220562f))
+* diloco model compile params ([#11](https://github.com/exalsius/exalsius-workspace-hub/issues/11)) ([b2e91af](https://github.com/exalsius/exalsius-workspace-hub/commit/b2e91affd3ae5dbfb35df13cbb829b5f587a150f))
+* **diloco-training:** enable heterogeneous (nvidia/amd) diloco training ([#50](https://github.com/exalsius/exalsius-workspace-hub/issues/50)) ([9d92d3f](https://github.com/exalsius/exalsius-workspace-hub/commit/9d92d3f14f199e69a7b8dff69bf75e7f068804cc))
+* **diloco:** enable elastic fault-tolerant diloco jobs ([#42](https://github.com/exalsius/exalsius-workspace-hub/issues/42)) ([3ac2d6f](https://github.com/exalsius/exalsius-workspace-hub/commit/3ac2d6f40e66c64cdd79e5c0ea9e561f3a3b316b))
+* remove ephemeral storage from all templates except diloco ([#55](https://github.com/exalsius/exalsius-workspace-hub/issues/55)) ([971162a](https://github.com/exalsius/exalsius-workspace-hub/commit/971162a2b7e6ddbc8f3f87bc84f83239eb4b63de))
+* restructure helm values and add validation ([#52](https://github.com/exalsius/exalsius-workspace-hub/issues/52)) ([fed09c3](https://github.com/exalsius/exalsius-workspace-hub/commit/fed09c323b16e4c0fc172e7ce757da7b3561fc92))
+
+
+### Bug Fixes
+
+* adapt diloco-chart etcd-dependency; refactor all workspace values ([#46](https://github.com/exalsius/exalsius-workspace-hub/issues/46)) ([af996c7](https://github.com/exalsius/exalsius-workspace-hub/commit/af996c76957f55c4e0b374762274f3c665f82c91))
+* add helper functions to truncate resource names to 63 chars ([628135b](https://github.com/exalsius/exalsius-workspace-hub/commit/628135b7400c88de8fcc70248d2fd19d9189a442))
+* add shm volume to diloco volcano workers ([#60](https://github.com/exalsius/exalsius-workspace-hub/issues/60)) ([2389ad6](https://github.com/exalsius/exalsius-workspace-hub/commit/2389ad6d4811700afc0987d78b84286863aed2e4))
+* **diloco:** add chart lock and etcd dependency ([19958f4](https://github.com/exalsius/exalsius-workspace-hub/commit/19958f42ccd3666c48dfbb350e796537e3303006))
+* **diloco:** add volcano dashboard and service ([e6f8027](https://github.com/exalsius/exalsius-workspace-hub/commit/e6f8027114a050a15d04374952445cac453f0a55))
+* **diloco:** adjust diloco training workspace with new parameters ([b1d7a93](https://github.com/exalsius/exalsius-workspace-hub/commit/b1d7a93f85c5b79bcea5aa21d865be0447da8f9c))
+* **diloco:** change experiment tags default string list ([fd5335a](https://github.com/exalsius/exalsius-workspace-hub/commit/fd5335a3b89eed4e770296f6520073407223f49b))
+* **diloco:** fix volcano dashboard deployment ([b43b3c9](https://github.com/exalsius/exalsius-workspace-hub/commit/b43b3c92c494c814063ed2491d83cfcf024e8ee7))
+* **diloco:** remove duplicated configuration setting ([8a166fb](https://github.com/exalsius/exalsius-workspace-hub/commit/8a166fb8fefee61aef9f0374f45e0ea11a4865ac))
+* **diloco:** remove unused labels and add namespace ([b6aebc9](https://github.com/exalsius/exalsius-workspace-hub/commit/b6aebc9ffa3c5b0d23532dc17b69c587c4d003f2))
+* **diloco:** remove volcano dashboard ([b5d7387](https://github.com/exalsius/exalsius-workspace-hub/commit/b5d7387e4d42632570c07c38ae2c31a9c8f49307))
+* **diloco:** use deploymentName variable for configmap name ([2139915](https://github.com/exalsius/exalsius-workspace-hub/commit/21399151b508e0ba20086aaa3fafe66b7de19f4f))
+* helm chart validations ([#56](https://github.com/exalsius/exalsius-workspace-hub/issues/56)) ([db7712b](https://github.com/exalsius/exalsius-workspace-hub/commit/db7712beb9167f44f2704d66b79608daa5652383))
+* increase huggingface timeouts and logging ([#65](https://github.com/exalsius/exalsius-workspace-hub/issues/65)) ([6be4d29](https://github.com/exalsius/exalsius-workspace-hub/commit/6be4d29573d2286e634a2daabd47135277d9b331))
+* remove legacy helm value fields ([#54](https://github.com/exalsius/exalsius-workspace-hub/issues/54)) ([e41525e](https://github.com/exalsius/exalsius-workspace-hub/commit/e41525e088ad5c04b68acdccd19f45b46d948635))
+* set diloco defaults ([#59](https://github.com/exalsius/exalsius-workspace-hub/issues/59)) ([0534d45](https://github.com/exalsius/exalsius-workspace-hub/commit/0534d45aed770636c87b6440df9bc2e8658455ee))
+* streamlined value naming across all workspaces and set sane defaults ([#3](https://github.com/exalsius/exalsius-workspace-hub/issues/3)) ([856a91d](https://github.com/exalsius/exalsius-workspace-hub/commit/856a91dc33b247d42403b66f22ff287aee89e3f8))
+* update diloco default value types and corresponding validation scheme ([#53](https://github.com/exalsius/exalsius-workspace-hub/issues/53)) ([406c856](https://github.com/exalsius/exalsius-workspace-hub/commit/406c856a59390852e4d5be8b544b3aa961eb7f19))
+
+---
+This PR was generated with [Release Please](https://github.com/googleapis/release-please). See [documentation](https://github.com/googleapis/release-please#release-please).
+updates: 4
+❯ Fetching workspace-templates/diloco-training/CHANGELOG.md from branch refactor/workspace-classes
+❯ Fetching workspace-templates/diloco-training/version.txt from branch refactor/workspace-classes
+❯ Fetching workspace-templates/diloco-training/Chart.yaml from branch refactor/workspace-classes
+❯ Fetching .release-please-manifest.json from branch refactor/workspace-classes
+  workspace-templates/diloco-training/CHANGELOG.md:  [class Changelog extends DefaultUpdater]
+  workspace-templates/diloco-training/version.txt:  [class DefaultUpdater]
+  workspace-templates/diloco-training/Chart.yaml:  [class GenericYaml]
+  .release-please-manifest.json:  [class ReleasePleaseManifest extends DefaultUpdater]
+title: chore(refactor/workspace-classes): release performance-profiling 0.2.0
+branch: release-please--branches--refactor/workspace-classes--components--performance-profiling
+draft: false
+body: :robot: I have created a release *beep* *boop*
+---
+
+
+## [0.2.0](https://github.com/exalsius/exalsius-workspace-hub/compare/performance-profiling-v0.1.0...performance-profiling-v0.2.0) (2026-06-22)
+
+
+### Features
+
+* add log-streaming labels to main components of workspaces offered to users ([#49](https://github.com/exalsius/exalsius-workspace-hub/issues/49)) ([3e0bb87](https://github.com/exalsius/exalsius-workspace-hub/commit/3e0bb871c77a107f95f5555d87f11baaa220562f))
+* add profiling workspace helm-chart ([#10](https://github.com/exalsius/exalsius-workspace-hub/issues/10)) ([4a60bab](https://github.com/exalsius/exalsius-workspace-hub/commit/4a60bab6b50c58383e796f8feea2cf2c790d0224))
+* remove ephemeral storage from all templates except diloco ([#55](https://github.com/exalsius/exalsius-workspace-hub/issues/55)) ([971162a](https://github.com/exalsius/exalsius-workspace-hub/commit/971162a2b7e6ddbc8f3f87bc84f83239eb4b63de))
+* restructure helm values and add validation ([#52](https://github.com/exalsius/exalsius-workspace-hub/issues/52)) ([fed09c3](https://github.com/exalsius/exalsius-workspace-hub/commit/fed09c323b16e4c0fc172e7ce757da7b3561fc92))
+* update profiling workspace: default config and template ([#12](https://github.com/exalsius/exalsius-workspace-hub/issues/12)) ([5e3dfc3](https://github.com/exalsius/exalsius-workspace-hub/commit/5e3dfc3091281682033f0273a54ad8d5c2ba4aca))
+
+
+### Bug Fixes
+
+* adapt diloco-chart etcd-dependency; refactor all workspace values ([#46](https://github.com/exalsius/exalsius-workspace-hub/issues/46)) ([af996c7](https://github.com/exalsius/exalsius-workspace-hub/commit/af996c76957f55c4e0b374762274f3c665f82c91))
+* add helper functions to truncate resource names to 63 chars ([628135b](https://github.com/exalsius/exalsius-workspace-hub/commit/628135b7400c88de8fcc70248d2fd19d9189a442))
+* helm chart validations ([#56](https://github.com/exalsius/exalsius-workspace-hub/issues/56)) ([db7712b](https://github.com/exalsius/exalsius-workspace-hub/commit/db7712beb9167f44f2704d66b79608daa5652383))
+
+---
+This PR was generated with [Release Please](https://github.com/googleapis/release-please). See [documentation](https://github.com/googleapis/release-please#release-please).
+updates: 4
+❯ Fetching workspace-templates/performance-profiling/CHANGELOG.md from branch refactor/workspace-classes
+❯ Fetching workspace-templates/performance-profiling/version.txt from branch refactor/workspace-classes
+❯ Fetching workspace-templates/performance-profiling/Chart.yaml from branch refactor/workspace-classes
+❯ Fetching .release-please-manifest.json from branch refactor/workspace-classes
+  workspace-templates/performance-profiling/CHANGELOG.md:  [class Changelog extends DefaultUpdater]
+  workspace-templates/performance-profiling/version.txt:  [class DefaultUpdater]
+  workspace-templates/performance-profiling/Chart.yaml:  [class GenericYaml]
+  .release-please-manifest.json:  [class ReleasePleaseManifest extends DefaultUpdater]

@@ -4,104 +4,81 @@
   "description": "Schema for validating jupyter-notebook Helm chart values",
   "type": "object",
   "$defs": {
-    "global": {
+    "imageVariant": {
       "type": "object",
-      "description": "Global settings shared across subcharts",
       "properties": {
-        "deploymentName": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string" },
+        "digest": {
           "type": "string",
-          "description": "Name of the deployment",
-          "minLength": 1
-        },
-        "deploymentNamespace": {
-          "type": "string",
-          "description": "Kubernetes namespace for the deployment",
-          "default": "default",
-          "minLength": 1
+          "description": "Immutable image digest pin (decoupled from chart version). Empty to pin by tag only.",
+          "pattern": "^(sha256:[a-f0-9]{64})?$"
         }
       },
-      "required": ["deploymentName", "deploymentNamespace"],
+      "required": ["repository"],
       "additionalProperties": false
     },
-    "deploymentNumReplicas": {
-      "type": "integer",
-      "description": "Number of deployment replicas.",
-      "const": 1,
-      "default": 1
-    },
-    "resources": {
+    "image": {
       "type": "object",
-      "description": "Resource configuration",
+      "description": "Image is selected by injected GPU vendor (ADR-0003): amd -> ROCm-baked, else default (framework-free).",
       "properties": {
-        "gpuCount": {
-          "type": "integer",
-          "description": "Number of GPUs to allocate",
-          "minimum": 0
-        },
-        "gpuVendor": {
-          "type": "string",
-          "description": "GPU vendor configuration",
-          "enum": ["NVIDIA", "AMD"]
-        },
-        "gpuType": {
-          "type": "string",
-          "description": "GPU type/model",
-          "minLength": 1
-        },
-        "gpuMemory": {
-          "type": "integer",
-          "description": "GPU memory in gigabytes",
-          "minimum": 0
-        },
-        "cpuCores": {
-          "type": "integer",
-          "description": "Number of CPU cores to allocate",
-          "minimum": 1
-        },
-        "memoryGb": {
-          "type": "integer",
-          "description": "Memory allocation in gigabytes",
-          "minimum": 1
-        },
-        "storageGb": {
-          "type": "integer",
-          "description": "Persistent storage size in gigabytes",
-          "minimum": 1
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
+        "default": { "$ref": "#/$defs/imageVariant" },
+        "amd": { "$ref": "#/$defs/imageVariant" }
+      },
+      "required": ["default"],
+      "additionalProperties": false
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      },
+      "required": ["port"],
+      "additionalProperties": false
+    },
+    "gpu": {
+      "type": "object",
+      "properties": {
+        "nvidia": {
+          "type": "object",
+          "properties": {
+            "runtimeClassName": { "type": "string" }
+          },
+          "additionalProperties": false
         }
       },
-      "required": ["gpuCount", "cpuCores", "memoryGb", "storageGb"],
       "additionalProperties": false
+    },
+    "fallback": {
+      "type": "object",
+      "description": "Resources used only for a plain helm install; overridden by _exalsius injection.",
+      "properties": {
+        "cpu": { "type": "string", "minLength": 1 },
+        "memory": { "type": "string", "minLength": 1 },
+        "storage": { "type": "string", "minLength": 1 }
+      },
+      "required": ["cpu", "memory", "storage"],
+      "additionalProperties": false
+    },
+    "exalsius": {
+      "type": "object",
+      "description": "Operator-injected resource/scheduling contract. Shape is owned by the operator, so it is intentionally not constrained here.",
+      "additionalProperties": true
     }
   },
   "properties": {
-    "global": {
-      "$ref": "#/$defs/global"
-    },
-    "deploymentNumReplicas": {
-      "$ref": "#/$defs/deploymentNumReplicas"
-    },
-    "deploymentImage": {
-      "type": "string",
-      "description": "Container image for the jupyter notebook deployment",
-      "default": "ghcr.io/exalsius/jupyter-notebook:latest-nvidia",
-      "minLength": 1
-    },
+    "image": { "$ref": "#/$defs/image" },
     "notebookPassword": {
       "type": "string",
       "description": "Password for jupyter notebook authentication",
-      "default": "mysecurepassword",
       "minLength": 1
     },
-    "resources": {
-      "$ref": "#/$defs/resources"
-    }
+    "service": { "$ref": "#/$defs/service" },
+    "gpu": { "$ref": "#/$defs/gpu" },
+    "fallback": { "$ref": "#/$defs/fallback" },
+    "_exalsius": { "$ref": "#/$defs/exalsius" }
   },
-  "required": [
-    "global",
-    "deploymentNumReplicas",
-    "deploymentImage",
-    "notebookPassword",
-    "resources"
-  ],
+  "required": ["image", "notebookPassword", "service", "fallback"],
   "additionalProperties": false
 }

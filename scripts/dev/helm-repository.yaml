@@ -1,0 +1,19 @@
+# Local OCI HelmRepository for chart iteration against the local-dev-env kind
+# clusters. Named `exalsius-workspace-hub` — the SAME name the committed
+# ServiceTemplates reference — so they work unchanged locally and in prod; only
+# the URL differs (here: the in-cluster kind registry, insecure/plain-HTTP).
+#
+# Applied to the management cluster by `make dev-up`. Reconciled by the
+# source-controller that local-dev-env's `make up` already installed (no flux CLI).
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: exalsius-workspace-hub
+  namespace: kcm-system
+  labels:
+    k0rdent.mirantis.com/managed: "true"
+spec:
+  type: oci
+  insecure: true
+  interval: 1m
+  url: oci://kind-registry:5000/charts

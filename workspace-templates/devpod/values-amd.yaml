@@ -1,0 +1,16 @@
+# Simulates the operator injection for an AMD ROCm GPU node.
+# Use: helm template t . -f values-amd.yaml
+# Expect: NO runtimeClassName, limits[amd.com/gpu]=1, nodeSelector set.
+_exalsius:
+  resources:
+    replicas: 1
+    perReplica:
+      cpu: "16"
+      memory: "32Gi"
+      storage: "100Gi"
+      gpuCount: 1
+      gpuVendor: "AMD"
+      gpuResourceName: "amd.com/gpu"
+  scheduling:
+    nodeSelector:
+      amd.com/gpu.device-id: "74a1"

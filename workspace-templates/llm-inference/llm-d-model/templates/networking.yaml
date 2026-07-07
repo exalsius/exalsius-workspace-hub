@@ -1,0 +1,167 @@
+apiVersion: v1
+kind: Service
+metadata:
+  # Named "<release>-http" to match the workspace routing convention
+  # (<release-name>-<endpoint-name>) for the "http" AccessEndpoint declared on
+  # the WorkspaceClass. The routing provider's mirror Service on the regional
+  # cluster looks for exactly this name. ClusterIP only — no NodePort.
+  name: {{ .Release.Name }}-http
+  labels:
+    {{- include "llm-d-model.labels" . | nindent 4 }}
+    {{- include "llm-d-model.selectorLabels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8000
+  selector:
+    # IMPORTANT: This selector must actually select "something" in the target cluster, in order for the service mesh to announce endpoint slices
+    {{- include "llm-d-model.selectorLabels" . | nindent 4 }}
+---
+# With this HTTPRoute, we redirect traffic from the "dummy" service above to the llm-d-inference-gateway.
+# The latter will route traffic to the correct inference pool based on the X-Gateway-Model-Name header.
+# Here, we set the X-Gateway-Model-Name header to the model name from the workspace deployment values.
+# This is in order to mitigate tampering of the header by the client, which could otherwise allow a client to access a different model than intended.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Release.Name }}-httproute-redirect
+spec:
+  parentRefs:
+    - group: ""
+      kind: Service
+      name: {{ .Release.Name }}-http
+      sectionName: http
+      port: 8000
+  rules:
+    - timeouts:
+        request: {{ .Values.httpRequestTimeout }}
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            set:
+              - name: X-Gateway-Model-Name
+                value: {{ .Values.ms.modelArtifacts.name }}
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: llm-d-inference-gateway
+          namespace: default
+          port: 80
+---
+# "chat" AccessEndpoint: a per-model front door to the single shared Open WebUI.
+# Same in-namespace-redirect-Service pattern as "http" above, and it MUST mirror
+# "http" in one non-obvious way: the Service port/targetPort is 8000 — the model
+# pods' real listening port — NOT 80. The operator federates "<release>-chat" as an
+# ambient global service across clusters; Istio only publishes a global service's
+# endpoints when the targetPort matches a port the backing pods actually serve. A
+# port the pods don't listen on (e.g. 80) yields an empty EDS at the regional
+# gateway ("ServiceInfo ... has mismatched ports") and a 503 that never even
+# reaches this cluster. The dummy Service exists solely to give the global service
+# healthy backing endpoints; the redirect below sends the actual traffic on.
+#
+# The backend is the shared gateway's "webui" listener (:8081), NOT the Open WebUI
+# Service directly: this redirect rides the ambient waypoint, which forms healthy
+# upstreams only to mesh-native destinations (the gateway) — a plain app Service in
+# the non-ambient default namespace yields "no healthy upstream". The gateway then
+# hops to Open WebUI (see the infra chart's open-webui-route.yaml). Open WebUI is
+# routed per-model because it lives in the llm-d-infra prerequisite, which owns no
+# WorkspaceClass and so cannot own a routed endpoint (docs/adr/0006). No header
+# stamping: the browser talks to Open WebUI, which itself calls the gateway's
+# internal listener to reach every model.
+apiVersion: v1
+kind: Service
+metadata:
+  # Named "<release>-chat" to match the workspace routing convention for the
+  # "chat" AccessEndpoint declared on the WorkspaceClass. ClusterIP only.
+  name: {{ .Release.Name }}-chat
+  labels:
+    {{- include "llm-d-model.labels" . | nindent 4 }}
+    {{- include "llm-d-model.selectorLabels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    # Port 8000 = the model pods' real port (mirrors -http). Required for the
+    # ambient global-service federation to publish endpoints — see comment above.
+    - name: chat
+      port: 8000
+      appProtocol: http
+  selector:
+    # Must select the model pods so the mesh announces endpoint slices (as -http).
+    {{- include "llm-d-model.selectorLabels" . | nindent 4 }}
+---
+# Redirect traffic from the "<release>-chat" dummy service to the shared Open WebUI.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Release.Name }}-chat-redirect
+spec:
+  parentRefs:
+    - group: ""
+      kind: Service
+      name: {{ .Release.Name }}-chat
+      sectionName: chat
+      port: 8000
+  rules:
+    - backendRefs:
+        # The shared gateway's "webui" listener (:8081), which forwards to the
+        # Open WebUI Service. Not open-webui directly — the waypoint can't reach a
+        # non-mesh Service (see the header comment above / docs/adr/0006).
+        - group: ""
+          kind: Service
+          name: llm-d-inference-gateway
+          namespace: default
+          port: 8081
+---
+# The reference grant is needed because the llm-d-inference-gateway and
+# llm-d-open-webui services live in another namespace. It is name-unrestricted
+# (to: kind Service), so it covers both redirect backends.
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: {{ .Release.Name }}-httproute-referencegrant
+  namespace: default
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: {{ .Release.Namespace }}
+  to:
+    - group: ""
+      kind: Service
+---
+# Finally, we route traffic to the inference pool for this model, based on the
+# X-Gateway-Model-Name header (set by the redirect HTTPRoute above for external
+# clients, or upstream on the gateway's internal listener).
+#
+# The route is split per gateway listener so that authentication can differ:
+#   - "external" carries the optional API-key policy (per-workspace public endpoint)
+#   - "internal" is intentionally left open so cluster-internal consumers can
+#     list and call every model without a key.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Release.Name }}-httproute-external
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: llm-d-inference-gateway
+      namespace: default
+      sectionName: external
+  rules:
+    {{- include "llm-d-model.modelRouteRules" . | nindent 4 }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ .Release.Name }}-httproute-internal
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: llm-d-inference-gateway
+      namespace: default
+      sectionName: internal
+  rules:
+    {{- include "llm-d-model.modelRouteRules" . | nindent 4 }}

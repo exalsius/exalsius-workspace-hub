@@ -1,0 +1,20 @@
+# Body-Based-Routing, cluster-internal
+# For requests from open-webui, we need to dynamically figure out to which inference model to route the request. 
+# The model name is in the request body, so we use a BBR policy to extract it and set it as a header for routing.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: bbr
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: llm-d-inference-gateway
+      sectionName: internal
+  traffic:
+    phase: PreRouting
+    transformation:
+      request:
+        set:
+        - name: X-Gateway-Model-Name
+          value: 'json(request.body).model'

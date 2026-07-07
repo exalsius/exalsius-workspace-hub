@@ -1,5 +1,9 @@
 apiVersion: v2
 name: marimo
-description: A Helm chart for a Marimo workspace
-version: 0.1.0
+description: >-
+  Marimo notebook workspace for the exalsius operator. One framework-free image
+  runs on CPU, NVIDIA, and AMD ROCm nodes; resources, GPU placement, and routing
+  are driven by the operator's _exalsius contract. The image is pinned by digest,
+  independently of this chart version (see docs/adr/0001).
 type: application
+version: 0.2.0

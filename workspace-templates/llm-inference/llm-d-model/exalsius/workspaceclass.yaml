@@ -1,0 +1,96 @@
+# Workspace catalog entry (management-cluster CR).
+#
+# TEMPLATE — rendered at release time into
+#   manifests/llm-d-model/${VERSION}/workspaceclass.yaml
+# Placeholders substituted from Chart.yaml:
+#   ${VERSION} / ${VERSION_DASHED}        this chart's version
+#   ${INFRA_VERSION} / ${INFRA_VERSION_DASHED}  the sibling llm-d-infra chart's
+#       version (resolved by scripts/render-workspace-manifests.sh) — the
+#       prerequisite pins the exact infra ServiceTemplate version.
+#
+# Serves one model. The operator auto-installs the llm-d-infra prerequisite
+# (shared agentgateway + body-based routing + model discovery + Open WebUI) once
+# per ClusterDeployment and reuses it across all model workspaces. Each model
+# attaches to that shared gateway and exposes a per-workspace OpenAI endpoint via
+# an in-namespace redirect Service (see docs/adr/0002).
+apiVersion: workspaces.exalsius.ai/v1
+kind: WorkspaceClass
+metadata:
+  name: llm-d-model-${VERSION_DASHED}
+  labels:
+    workspaces.exalsius.ai/template: llm-d-model
+    workspaces.exalsius.ai/version: "${VERSION}"
+spec:
+  displayName: "LLM Inference (model)"
+  description: >-
+    Serve one LLM for inference with the llm-d stack (GAIE + vLLM). Exposes a
+    per-workspace OpenAI-compatible endpoint; auto-installs the shared llm-d-infra
+    prerequisite.
+  serviceTemplate:
+    name: llm-d-model-${VERSION_DASHED}
+    namespace: kcm-system
+  prerequisites:
+    - serviceTemplate:
+        name: llm-d-infra-${INFRA_VERSION_DASHED}
+  defaultResources:
+    replicas: 1
+    perReplica:
+      cpu: "8"
+      memory: "16Gi"
+      storage: "50Gi"
+      # A model needs at least one accelerator; a deployment can raise this.
+      gpuCount: 1
+  # Umbrella mapping: route resolved _exalsius fields into the modelservice
+  # subchart. gpuCount drives vLLM tensor-parallelism (the subchart auto-derives
+  # the GPU resource request from it); gpuVendor selects the accelerator family.
+  # cpu/memory are not injected — the modelservice container resources live in a
+  # list path with no clean scalar target (see docs/adr/0002).
+  resourceInjection:
+    gpuCount:
+      - "ms.decode.parallelism.tensor"
+    gpuVendor:
+      - "ms.accelerator.type"
+    replicas:
+      - "ms.decode.replicas"
+  accessEndpoints:
+    - name: http
+      protocol: HTTP
+      port: 8000
+      description: "LLM Inference OpenAI-compatible REST API"
+    # A per-model front door to the single shared Open WebUI chat interface. Backed
+    # by the in-namespace "<release>-chat" redirect Service (llm-d-model templates)
+    # forwarding to the shared "llm-d-open-webui" Service in default. Open WebUI is
+    # routed here, per model, because it lives in the llm-d-infra prerequisite,
+    # which owns no WorkspaceClass and so cannot own a routed endpoint (adr/0006).
+    # Port 8000 (not 80): the backing "<release>-chat" Service must target the model
+    # pods' real port so the ambient global-service federation publishes endpoints
+    # (see llm-d-model templates/networking.yaml). The user-facing URL is
+    # hostname-based, so the port is invisible to users.
+    - name: chat
+      protocol: HTTP
+      port: 8000
+      description: "Open WebUI chat interface (shared across all models)"
+  userFacingConfig:
+    - helmValuePath: huggingfaceToken
+      displayName: "Hugging Face Token"
+      description: "Token for pulling the model from Hugging Face (stored in a Secret)"
+      type: secret
+      required: true
+    - helmValuePath: inferenceApiKey
+      displayName: "Inference API Key"
+      description: "Optional bearer token clients must present to call the model"
+      type: secret
+      required: false
+    - helmValuePath: ms.modelArtifacts.uri
+      displayName: "Model URI"
+      description: "Hugging Face model URI, e.g. hf://Qwen/Qwen3-1.7B"
+      type: string
+      required: true
+    - helmValuePath: ms.modelArtifacts.name
+      displayName: "Model Name"
+      description: "Served model name, e.g. Qwen/Qwen3-1.7B"
+      type: string
+      required: true
+  # vLLM/cuda images are large and the prerequisite installs a full stack.
+  deployTimeout: 30m
+  prerequisiteDeployTimeout: 20m

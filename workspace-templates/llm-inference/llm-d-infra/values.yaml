@@ -10,6 +10,7 @@ modelRegistry:
     value: "true"
   modelsDataKey: baseModel
   pollIntervalSec: "30"
+  pollBackoffMaxSec: "300"
   service:
     type: ClusterIP
     port: 8000
@@ -21,50 +22,60 @@ modelRegistry:
       cpu: 200m
       memory: 256Mi
 
+agentgateway:
+  inferenceExtension:
+    enabled: true
+
 infra:
   gateway:
     enabled: true
-    gatewayClassName: istio
+    provider: agentgateway
+    gatewayClassName: agentgateway
     fullnameOverride: llm-d-inference-gateway
     listeners:
-      - name: llm-inference
+      # This "external" listener is for workspaces and their services, attached via HTTPRoutes
+      - name: external
         port: 80
         protocol: HTTP
         allowedRoutes:
           namespaces:
             from: All
+      # This "internal" listener is for open-webui
+      - name: internal
+        port: 8080
+        protocol: HTTP
+        allowedRoutes:
+          namespaces:
+            from: All
+      # This "webui" listener fronts Open WebUI. Each llm-d-model's "chat" endpoint
+      # redirects here (not straight to the Open WebUI Service): the operator's
+      # per-model redirect rides the ambient waypoint, which can only reach
+      # mesh-native upstreams like this gateway — not a plain app Service in the
+      # non-ambient default namespace. The gateway then hops to Open WebUI. Kept
+      # separate from external/internal so UI traffic never touches BBR or the
+      # model routes. See docs/adr/0006.
+      - name: webui
+        port: 8081
+        protocol: HTTP
+        allowedRoutes:
+          namespaces:
+            from: All
     service:
-      type: NodePort
-    labels:
-      gateway-role: llm-inference
-    annotations:
-      workspace.exalsius.ai/access-info: "true"
-      workspace.exalsius.ai/access-type: "nodeport"
-      workspace.exalsius.ai/access-description: "Endpoint for LLM inference"
-      workspace.exalsius.ai/protocol: "tcp"
-      workspace.exalsius.ai/port-name: "llm-inference"
-      workspace.exalsius.ai/associated-templates: "llm-d-model-template"
-
-bbr:
-  bbr:
-    # Makes it possible to watch for configmaps across namespaces
-    multiNamespace: true
-    plugins:
-      - type: body-field-to-header
-        name: model-extractor
-        json: {"field_name":"model","header_name":"X-Gateway-Base-Model-Name"}
-  provider:
-    name: istio
-    istio:
-      # Apply EnvoyFilter only to the inference gateway (must match gateway pod labels)
-      workloadSelector:
-        gateway-role: llm-inference
-  inferenceGateway:
-    name: llm-d-inference-gateway
+      # ClusterIP — routing is operator-owned (no NodePort). This is the single
+      # shared gateway every llm-d-model attaches to; Open WebUI reaches it via
+      # the internal listener (:8080) and models via the external listener (:80).
+      # See docs/adr/0002.
+      type: ClusterIP
 
 ow:
+  # fullnameOverride pins the Open WebUI Service to a fixed, release-independent
+  # name (mirroring the gateway's llm-d-inference-gateway) so each llm-d-model can
+  # target it cross-namespace as the backend of its "chat" redirect route. infra is
+  # a pure prerequisite and no longer owns a WorkspaceClass/AccessEndpoint, so the
+  # old release-relative "<release>-open-webui" naming is gone (see docs/adr/0006).
+  fullnameOverride: llm-d-open-webui
   enableOpenaiApi: true
-  openaiBaseApiUrl: http://llm-d-inference-gateway-istio.llm-d.svc.cluster.local:80/v1
+  openaiBaseApiUrl: http://llm-d-inference-gateway:8080/v1
   image:
     pullPolicy: Always
   ollama:
@@ -75,23 +86,3 @@ ow:
     enabled: false
   websocket:
     enabled: false
-
-owgateway:
-  gatewayClassName: istio
-  listeners:
-    - name: open-webui
-      port: 80
-      protocol: HTTP
-      allowedRoutes:
-        namespaces:
-          from: All
-  labels:
-    gateway-role: open-webui
-  annotations:
-    networking.istio.io/service-type: NodePort
-    workspace.exalsius.ai/access-info: "true"
-    workspace.exalsius.ai/access-type: "nodeport"
-    workspace.exalsius.ai/access-description: "Endpoint for Open WebUI"
-    workspace.exalsius.ai/protocol: "tcp"
-    workspace.exalsius.ai/port-name: "open-webui"
-    workspace.exalsius.ai/associated-templates: "llm-d-model-template"

@@ -1,24 +1,65 @@
-# Marimo Helm Chart Values
-deploymentImage: "ghcr.io/exalsius/marimo:latest-nvidia"
+# marimo workspace chart values
+#
+# The image is selected by the operator-injected GPU vendor (docs/adr/0003):
+# `default` is framework-free for CPU + NVIDIA (install CUDA PyTorch via pip);
+# `amd` is ROCm-baked because the ROCm userspace can't be injected at runtime.
+# When deployed via the exalsius operator, resources, GPU placement, the GPU
+# resource name, and the GPU vendor are injected under `_exalsius.*` and override
+# the `fallback.*` values below. The fallbacks exist only so a plain
+# `helm install` works for chart authoring.
 
-# Marimo configuration
-tokenPassword: "mysecurepassword"
+image:
+  pullPolicy: IfNotPresent
+  # Each variant is pinned by DIGEST, decoupled from the chart version
+  # (docs/adr/0001) — `tag` is a label only. A WorkspaceDeployment may override
+  # either variant.
+  default:
+    repository: ghcr.io/exalsius/marimo
+    tag: "latest"
+    digest: "sha256:1da494cf4fe678d4dcacd74df5c203fb493bd7f828623cc3855cddc79b8cc187"
+  amd:
+    repository: ghcr.io/exalsius/marimo
+    tag: "latest-rocm"
+    digest: "sha256:4c4a5655567a04b6bfd81f4b95d26f8fe453a963dc60f6d1ff4232a2e25fa113"
 
-##################################################################
-########## ONLY HERE FOR REFERENCE OR LOCAL TESTING ##############
-########## Values are set automatically by exalsius ##############
-##################################################################
-global:
-  deploymentName: "my-marimo"
-  deploymentNamespace: "default"
+# Password for the marimo web UI. The operator sets this from the WorkspaceClass
+# userFacingConfig (type=secret); marimo runs `marimo edit --token
+# --token-password=$TOKEN_PASSWORD` from a Secret-backed env var.
+tokenPassword: "changeme"
 
-resources:
-  gpuCount: 1
-  gpuVendor: "NVIDIA"
-  gpuType: "L40"
-  gpuMemory: 24
-  cpuCores: 16
-  memoryGb: 32
-  storageGb: 50  
+service:
+  # Service port exposed as the "http" AccessEndpoint; targetPort is the marimo
+  # container port (8080). ClusterIP only — routing is operator-owned.
+  port: 80
 
-deploymentNumReplicas: 1
+gpu:
+  nvidia:
+    # Applied as the pod runtimeClassName ONLY when the operator-injected GPU
+    # vendor is NVIDIA. Set to "" when the NVIDIA runtime is already the node's
+    # default runtime (GPU Operator default) — pinning a non-existent
+    # RuntimeClass makes the pod fail admission. Never applied for AMD/CPU.
+    runtimeClassName: "nvidia"
+
+# Fallback resources used ONLY for a plain `helm install`. The operator injects
+# `_exalsius.resources.perReplica.*`, which override these.
+fallback:
+  cpu: "2"
+  memory: "4Gi"
+  storage: "10Gi"
+
+# Operator-injected contract — DO NOT set by hand. Shown (commented) for
+# reference and local testing; see values-{nvidia,amd,cpu}.yaml for examples.
+# _exalsius:
+#   resources:
+#     replicas: 1
+#     perReplica:
+#       cpu: "16"
+#       memory: "32Gi"
+#       storage: "50Gi"
+#       gpuCount: 1
+#       gpuVendor: "NVIDIA"          # or "AMD"
+#       gpuResourceName: "nvidia.com/gpu"
+#   scheduling:
+#     nodeSelector:
+#       nvidia.com/gpu.product: "NVIDIA-L40"
+_exalsius: {}

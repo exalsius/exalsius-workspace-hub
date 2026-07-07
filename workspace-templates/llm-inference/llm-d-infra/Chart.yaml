@@ -1,22 +1,25 @@
 apiVersion: v2
 name: llm-d-infra
-description: A Helm chart that installs the llm-d-infra stack
+description: >-
+  Shared llm-d inference infrastructure (agentgateway, model discovery, Open WebUI).
+  Auto-installed once per cluster as the llm-d-model prerequisite,
+  and exposes Open WebUI via its own WorkspaceClass.
 type: application
-version: 0.1.1
-# With appVersion we refer to the llm-d version
+version: 0.2.0
+# appVersion tracks the upstream llm-d stack version this chart pins
+# (kept deliberately; scoped exception to ADR-0001 — see docs/adr/0002).
 appVersion: 0.6.0
 
 dependencies:
-  # 1) infra
+  # 2) agentgateway
+  - name: agentgateway
+    version: "v1.0.0"
+    repository: "oci://cr.agentgateway.dev/charts"
+  # 2) infra
   - name: llm-d-infra
     alias: infra
     version: "v1.4.0"
     repository: "https://llm-d-incubation.github.io/llm-d-infra"
-  # 2) body-based router
-  - name: body-based-routing
-    alias: bbr
-    version: "v1.4.0"
-    repository: "oci://registry.k8s.io/gateway-api-inference-extension/charts"
   # 3) open-webui
   - name: open-webui
     alias: ow

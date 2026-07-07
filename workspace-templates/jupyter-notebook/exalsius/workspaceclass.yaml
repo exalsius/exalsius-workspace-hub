@@ -1,0 +1,45 @@
+# Workspace catalog entry (management-cluster CR).
+#
+# TEMPLATE — rendered at release time into
+#   manifests/jupyter-notebook/${VERSION}/workspaceclass.yaml
+# Placeholders ${VERSION} / ${VERSION_DASHED} are substituted from Chart.yaml.
+#
+# The class is version-named and immutable; a WorkspaceDeployment pins it
+# exactly, so a running workspace's definition never changes underneath it.
+# gpuType / gpuNodeSelector are intentionally NOT set here — they are
+# per-deployment, cluster-dependent choices (the operator rejects them on a
+# class). The default is CPU-only (gpuCount 0); a deployment opts into a GPU.
+apiVersion: workspaces.exalsius.ai/v1
+kind: WorkspaceClass
+metadata:
+  name: jupyter-notebook-${VERSION_DASHED}
+  labels:
+    workspaces.exalsius.ai/template: jupyter-notebook
+    workspaces.exalsius.ai/version: "${VERSION}"
+spec:
+  displayName: "Jupyter Notebook"
+  description: >-
+    Single-user Jupyter Notebook. One framework-free image runs on CPU, NVIDIA,
+    or AMD ROCm nodes; install PyTorch (cuda/rocm) inside the notebook as needed.
+  serviceTemplate:
+    name: jupyter-notebook-${VERSION_DASHED}
+    namespace: kcm-system
+  defaultResources:
+    replicas: 1
+    perReplica:
+      cpu: "4"
+      memory: "8Gi"
+      storage: "20Gi"
+      gpuCount: 0
+  accessEndpoints:
+    - name: http
+      protocol: HTTP
+      port: 80
+      description: "Jupyter Notebook web UI"
+  userFacingConfig:
+    - helmValuePath: notebookPassword
+      displayName: "Notebook Password"
+      description: "Password to access the Jupyter web UI"
+      type: secret
+      required: true
+  deployTimeout: 15m

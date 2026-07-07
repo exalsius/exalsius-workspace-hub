@@ -1,0 +1,70 @@
+# devpod workspace chart values
+#
+# One framework-free image runs on CPU, NVIDIA, and AMD ROCm nodes — install
+# PyTorch (cuda/rocm wheels) inside the devpod as needed. When deployed via the
+# exalsius operator, resources, GPU placement, the GPU resource name, and the
+# GPU vendor are injected under `_exalsius.*` and override the `fallback.*`
+# values below. The fallbacks exist only so a plain `helm install` works for
+# chart authoring.
+
+image:
+  pullPolicy: IfNotPresent
+  # The image is selected by the operator-injected GPU vendor (see docs/adr/0003):
+  # NVIDIA injects its driver userspace at runtime, so `default` is framework-free
+  # and serves CPU + NVIDIA; AMD has no such injection, so `amd` must bake in the
+  # ROCm userspace. Each variant is pinned by DIGEST, decoupled from the chart
+  # version (docs/adr/0001) — `tag` is a label only. A WorkspaceDeployment may
+  # override either variant.
+  default:
+    repository: ghcr.io/exalsius/devpod
+    tag: "latest"
+    digest: "sha256:939a8f4e51eb1d28115ea2238407e0cbe00b747dd3e195ce358070fed0ff4168"
+  amd:
+    repository: ghcr.io/exalsius/devpod
+    tag: "latest-rocm"
+    digest: "sha256:27180f6401281b824ccc953086975e14149843475fe12bfd58e76dfd0320f3b9"
+
+# SSH access. The operator sets these from the WorkspaceClass userFacingConfig.
+# A password is required (so the devpod is reachable on first deploy); a public
+# key is optional for key-based login. Both are stored in a Secret.
+sshPassword: "changeme"
+sshPublicKey: ""
+
+# Shared memory (/dev/shm) — PyTorch dataloaders need more than the 64Mi default.
+shmSizeGb: 8
+
+service:
+  # Service port exposed as the "ssh" AccessEndpoint; targetPort is the sshd
+  # container port (22). ClusterIP only — routing is operator-owned.
+  port: 22
+
+gpu:
+  nvidia:
+    # Applied as the pod runtimeClassName ONLY when the operator-injected GPU
+    # vendor is NVIDIA. Set to "" when the NVIDIA runtime is already the node's
+    # default runtime (GPU Operator default). Never applied for AMD/CPU.
+    runtimeClassName: "nvidia"
+
+# Fallback resources used ONLY for a plain `helm install`. The operator injects
+# `_exalsius.resources.perReplica.*`, which override these.
+fallback:
+  cpu: "2"
+  memory: "4Gi"
+  storage: "50Gi"
+
+# Operator-injected contract — DO NOT set by hand. Shown (commented) for
+# reference and local testing; see values-{nvidia,amd,cpu}.yaml for examples.
+# _exalsius:
+#   resources:
+#     replicas: 1
+#     perReplica:
+#       cpu: "16"
+#       memory: "32Gi"
+#       storage: "100Gi"
+#       gpuCount: 1
+#       gpuVendor: "NVIDIA"          # or "AMD"
+#       gpuResourceName: "nvidia.com/gpu"
+#   scheduling:
+#     nodeSelector:
+#       nvidia.com/gpu.product: "NVIDIA-L40"
+_exalsius: {}
