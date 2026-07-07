@@ -5,6 +5,4 @@ description: >-
   runs on CPU, NVIDIA, and AMD ROCm nodes; resources, GPU placement, and routing
   are driven by the operator's _exalsius contract.
 type: application
-version: 0.2.0
-# No appVersion: the image is pinned by digest in values.yaml, decoupled from
-# this chart's version (see docs/adr/0001).
+version: 0.3.0
