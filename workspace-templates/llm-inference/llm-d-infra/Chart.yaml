@@ -1,8 +1,9 @@
 apiVersion: v2
 name: llm-d-infra
 description: >-
-  Shared llm-d inference infrastructure (agentgateway, Open WebUI).
-  Auto-installed once per cluster as the llm-d-model prerequisite.
+  Shared llm-d inference infrastructure (agentgateway, Open WebUI, the
+  LeaderWorkerSet controller). Auto-installed once per cluster as the
+  llm-d-model prerequisite.
 type: application
 version: 0.3.0
 # Tracks the aligned llm-d release (docs/adr/0007).
@@ -20,3 +21,11 @@ dependencies:
     alias: ow
     version: 16.1.0
     repository: https://helm.openwebui.com/
+  # LeaderWorkerSet controller. Every llm-d-model is an LWS, so this is required
+  # for any model, not just sharded ones — hence the shared prerequisite rather
+  # than a separate one (docs/adr/0010). Ships its own CRDs, needs no
+  # cert-manager.
+  - name: lws
+    version: v0.10.0
+    repository: oci://registry.k8s.io/lws/charts
+    condition: lws.enabled

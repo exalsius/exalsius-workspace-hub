@@ -3,8 +3,8 @@
 # llm-d-infra
 
 Shared llm-d inference infrastructure for the exalsius operator. An umbrella
-chart wrapping [agentgateway](https://agentgateway.dev/) and Open WebUI, plus
-the `Gateway` and model table this chart owns:
+chart wrapping [agentgateway](https://agentgateway.dev/) and Open WebUI, plus the
+`Gateway` and discovery service this chart owns:
 
 - **Shared inference gateway** — a single agentgateway `llm-d-inference-gateway`
   that every `llm-d-model` attaches to. Three listeners: `external` (:80), which
@@ -26,6 +26,12 @@ the `Gateway` and model table this chart owns:
   `X-Gateway-Model-Name` on its own `external` route, because a per-workspace
   public endpoint must serve exactly the model that workspace deployed.
 - **Open WebUI** — the chat interface, pointed at the gateway's internal listener.
+- **LeaderWorkerSet controller** — every `llm-d-model` is a `LeaderWorkerSet`
+  (`size: 1` for a single-node model, `size: N` when one model is sharded across
+  N nodes), so the controller is required for any model at all and ships here
+  rather than as a separate prerequisite
+  ([ADR-0010](../../../docs/adr/0010-always-leaderworkerset-and-the-nodesperreplica-toggle.md)).
+  Disable with `lws.enabled=false` where a platform team already manages it.
 
 ## Role: a pure shared prerequisite
 

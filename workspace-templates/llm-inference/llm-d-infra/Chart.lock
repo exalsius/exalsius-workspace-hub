@@ -5,5 +5,8 @@ dependencies:
 - name: open-webui
   repository: https://helm.openwebui.com/
   version: 16.1.0
-digest: sha256:cdf8b3e2981cfa8175b092c794ab823a0aaa43eaf7ca0d54e9eec1f3ffddaca8
-generated: "2026-08-27T14:10:48.730388372+02:00"
+- name: lws
+  repository: oci://registry.k8s.io/lws/charts
+  version: v0.10.0
+digest: sha256:e5f26ba39c4c8295d20c12a3f19f6cf5f1364c50a30d9b6bbe7b4e0d157676f1
+generated: "2026-08-27T14:12:37.647365636+02:00"
