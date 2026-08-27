@@ -21,11 +21,16 @@ Open WebUI chat interface** (`chat`).
   `http` `AccessEndpoint` is backed by, via the `<release>-<endpoint>` naming
   convention) plus a redirect `HTTPRoute` that stamps the trusted
   `X-Gateway-Model-Name` header and forwards to the shared `llm-d-inference-gateway`
-  in `default`. Two more `HTTPRoute`s, bound to the gateway's `external` and
-  `internal` listeners, match that header and route to this model's InferencePool. This keeps the
+  in `default`. A second `HTTPRoute`, bound to the gateway's `external` listener,
+  matches that header and routes to this model's InferencePool. This keeps the
   endpoint's backing Service in-namespace — as operator routing requires — while
   the gateway itself is shared
   ([ADR-0002](../../../docs/adr/0002-llm-inference-prerequisite-and-umbrella-mapping.md)).
+- **Discovery and chat routing via the gateway's model table.** An
+  `AgentgatewayModel` attaches this model to the gateway's `internal` listener,
+  where agentgateway matches the request body's model name and lists the model on
+  `/v1/models` — no `HTTPRoute`, no discovery ConfigMap
+  ([ADR-0008](../../../docs/adr/0008-agentgateway-model-api-replaces-model-registry.md)).
 - **Chat via the shared Open WebUI.** The `chat` `AccessEndpoint` is backed by a
   second in-namespace `<release>-chat` ClusterIP Service plus a redirect
   `HTTPRoute` that forwards (no header stamping) to the shared gateway's `webui`
