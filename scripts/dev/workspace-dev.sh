@@ -77,6 +77,36 @@ require_registry() {
     echo "error: kind registry at ${REGISTRY_HOST} unreachable; is local-dev-env up?"; exit 1; }
 }
 
+# kubectl_apply <args...> — apply against MGMT, retrying transient admission
+# failures. k0rdent's webhook (kcm-webhook-service) is briefly unreachable while
+# its controller restarts, and a bare apply aborts the whole run under `set -e`
+# even though the same apply succeeds seconds later.
+APPLY_RETRIES="${APPLY_RETRIES:-12}"
+APPLY_RETRY_DELAY="${APPLY_RETRY_DELAY:-5}"
+kubectl_apply() {
+  local attempt=1 out rc
+  while :; do
+    # The assignment MUST sit in an `if` condition. Under `set -e` a bare
+    # `out="$(cmd)"` whose command fails is itself a failing simple command, so
+    # the shell would exit here — before the retry check and before anything is
+    # printed, swallowing the very error we captured.
+    if out="$(kubectl --context "${MGMT}" apply "$@" 2>&1)"; then
+      printf '%s\n' "${out}"
+      return 0
+    else
+      rc=$?
+    fi
+    if [ "${attempt}" -ge "${APPLY_RETRIES}" ] \
+       || ! grep -qiE 'failed calling webhook|connection refused|InternalError|no endpoints available|i/o timeout|EOF' <<<"${out}"; then
+      printf '%s\n' "${out}" >&2
+      return "${rc}"
+    fi
+    echo ">> apply hit a transient admission error (attempt ${attempt}/${APPLY_RETRIES}), retrying in ${APPLY_RETRY_DELAY}s"
+    sleep "${APPLY_RETRY_DELAY}"
+    attempt=$(( attempt + 1 ))
+  done
+}
+
 push_chart() {
   require_registry
   mkdir -p "${TMP_DIR}"
@@ -112,8 +142,8 @@ render_and_apply_crs() {
       "${EXALSIUS_DIR}/${f}.yaml" > "${TMP_DIR}/${f}.yaml"
   done
   echo ">> applying ServiceTemplate + WorkspaceClass (${WSC_NAME})"
-  kubectl --context "${MGMT}" apply -f "${TMP_DIR}/servicetemplate.yaml"
-  kubectl --context "${MGMT}" apply -f "${TMP_DIR}/workspaceclass.yaml"
+  kubectl_apply -f "${TMP_DIR}/servicetemplate.yaml"
+  kubectl_apply -f "${TMP_DIR}/workspaceclass.yaml"
 }
 
 # Builds the WSD by patching the chart's example WSD: reuse its chart-specific
@@ -171,7 +201,7 @@ apply_wsd() {
   fi
 
   echo ">> applying WorkspaceDeployment ${WSD_NAME} (cluster ${CD}, gpu=${GPU})"
-  kubectl --context "${MGMT}" apply -f "${WSD_FILE}"
+  kubectl_apply -f "${WSD_FILE}"
 }
 
 child_node() { kubectl --context "${CHILD_CTX}" get nodes -o jsonpath='{.items[0].metadata.name}'; }
@@ -180,7 +210,7 @@ case "${CMD}" in
   up)
     require_chart; load_chart_meta
     push_chart
-    kubectl --context "${MGMT}" apply -f "${REPO_ROOT}/scripts/dev/helm-repository.yaml"
+    kubectl_apply -f "${REPO_ROOT}/scripts/dev/helm-repository.yaml"
     reconcile_source
     render_and_apply_crs
     apply_wsd
@@ -261,14 +291,14 @@ EOF
     TMP_DIR="${REPO_ROOT}/.dev-tmp/${CHART}"
     require_chart; load_chart_meta
     push_chart
-    kubectl --context "${MGMT}" apply -f "${REPO_ROOT}/scripts/dev/helm-repository.yaml"
+    kubectl_apply -f "${REPO_ROOT}/scripts/dev/helm-repository.yaml"
     reconcile_source
     # ServiceTemplate only — it needs just ${VERSION}/${VERSION_DASHED}.
     mkdir -p "${TMP_DIR}"
     sed -e "s|\${VERSION_DASHED}|${VERSION_DASHED}|g" -e "s|\${VERSION}|${VERSION}|g" \
       "${EXALSIUS_DIR}/servicetemplate.yaml" > "${TMP_DIR}/servicetemplate.yaml"
     echo ">> applying prerequisite ServiceTemplate ${ST_NAME} (no WorkspaceClass/WSD)"
-    kubectl --context "${MGMT}" apply -f "${TMP_DIR}/servicetemplate.yaml"
+    kubectl_apply -f "${TMP_DIR}/servicetemplate.yaml"
     cat <<EOF
 
 Published ${NAME}:${VERSION} as a prerequisite:
