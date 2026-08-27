@@ -1,0 +1,92 @@
+# Workspace catalog entry (management-cluster CR).
+#
+# TEMPLATE — rendered at release time into
+#   manifests/llm-d-model/1.0.0/workspaceclass.yaml
+# Placeholders substituted from Chart.yaml:
+#   1.0.0 / 1-0-0        this chart's version
+#   1.0.0 / 1-0-0  the sibling llm-d-infra chart's
+#       version (resolved by scripts/render-workspace-manifests.sh) — the
+#       prerequisite pins the exact infra ServiceTemplate version.
+#
+# Serves one model. The operator auto-installs the llm-d-infra prerequisite once
+# per ClusterDeployment and reuses it across all models; each model attaches to
+# that shared gateway (docs/adr/0002).
+apiVersion: workspaces.exalsius.ai/v1
+kind: WorkspaceClass
+metadata:
+  name: llm-d-model-1-0-0
+  labels:
+    workspaces.exalsius.ai/template: llm-d-model
+    workspaces.exalsius.ai/version: "1.0.0"
+spec:
+  displayName: "LLM Inference (model)"
+  description: >-
+    Serve one LLM for inference with the llm-d stack (llm-d router + vLLM).
+    Exposes a per-workspace OpenAI-compatible endpoint; auto-installs the shared
+    llm-d-infra prerequisite.
+  serviceTemplate:
+    name: llm-d-model-1-0-0
+    namespace: kcm-system
+  prerequisites:
+    - serviceTemplate:
+        name: llm-d-infra-1-0-0
+  defaultResources:
+    replicas: 1
+    perReplica:
+      cpu: "8"
+      memory: "16Gi"
+      # Sizes the model cache volume (HF_HOME) — must fit the model weights.
+      storage: "50Gi"
+      # A model needs at least one accelerator; a deployment can raise this.
+      gpuCount: 1
+  # No resourceInjection: the chart owns the workload and reads
+  # `_exalsius.resources` directly. gpuCount is the per-pod accelerator request;
+  # tensor parallelism is gpuCount × modelServer.nodesPerReplica
+  # (docs/adr/0007, docs/adr/0010).
+  accessEndpoints:
+    - name: http
+      protocol: HTTP
+      port: 8000
+      description: "LLM Inference OpenAI-compatible REST API"
+    # A per-model front door to the single shared Open WebUI chat interface. Backed
+    # by the in-namespace "<release>-chat" redirect Service (llm-d-model templates)
+    # forwarding to the shared "llm-d-open-webui" Service in default. Open WebUI is
+    # routed here, per model, because it lives in the llm-d-infra prerequisite,
+    # which owns no WorkspaceClass and so cannot own a routed endpoint (adr/0006).
+    # Port 8000 (not 80): the backing "<release>-chat" Service must target the model
+    # pods' real port so the ambient global-service federation publishes endpoints
+    # (see llm-d-model templates/networking.yaml). The user-facing URL is
+    # hostname-based, so the port is invisible to users.
+    - name: chat
+      protocol: HTTP
+      port: 8000
+      description: "Open WebUI chat interface (shared across all models)"
+  userFacingConfig:
+    - helmValuePath: huggingfaceToken
+      displayName: "Hugging Face Token"
+      description: "Token for pulling the model from Hugging Face (stored in a Secret)"
+      type: secret
+      required: true
+    - helmValuePath: inferenceApiKey
+      displayName: "Inference API Key"
+      description: "Optional bearer token clients must present to call the model"
+      type: secret
+      required: false
+    - helmValuePath: model.name
+      displayName: "Model Name"
+      description: "Hugging Face model to serve, e.g. Qwen/Qwen3-1.7B. This is also the name clients pass in the OpenAI request body."
+      type: string
+      required: true
+    # The single-node / multi-node toggle. A Helm value rather than a second
+    # WorkspaceClass because the resource contract cannot express topology
+    # (docs/adr/0010). It divides the pod budget rather than adding to it, so
+    # replicas × perReplica stays the operator's total demand.
+    - helmValuePath: modelServer.nodesPerReplica
+      displayName: "Nodes per Model Replica"
+      description: "How many pods together serve one copy of the model. 1 (default) means each pod is a whole model. Above 1 the model is sharded across that many nodes with tensor parallelism — for models too large for a single node. `replicas` must be a whole multiple of this."
+      type: int
+      required: false
+      default: 1
+  # vLLM/cuda images are large and the prerequisite installs a full stack.
+  deployTimeout: 30m
+  prerequisiteDeployTimeout: 20m

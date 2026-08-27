@@ -1,0 +1,84 @@
+# Example WorkspaceDeployment (user intent — applied by an end user).
+#
+# TEMPLATE — rendered at release time into
+#   examples/llm-d-model/1.0.0/example-workspacedeployment.yaml
+# Placeholders 1.0.0 / 1-0-0 are substituted from Chart.yaml.
+#
+# The operator auto-installs the llm-d-infra prerequisite on first use.
+#
+# Ships llm-d's inference simulator rather than vLLM: it serves a real
+# OpenAI-compatible endpoint with no accelerator, so this example — and the
+# chart e2e that deploys it — exercises routing, discovery and the chat endpoint
+# on a cluster with no GPU hardware. `gpuCount` below still satisfies the
+# operator's GPU gate. Swap in real vLLM with the first variant at the bottom.
+#
+# Apply:  kubectl apply -f example-workspacedeployment.yaml
+# Watch:  kubectl get wsd -n kcm-system -w
+apiVersion: workspaces.exalsius.ai/v1
+kind: WorkspaceDeployment
+metadata:
+  name: my-llm-model
+  namespace: kcm-system
+spec:
+  workspaceClassRef: llm-d-model-1-0-0
+  clusterDeploymentRef:
+    name: default-child-adopted          # Colony "default" + cluster "child-adopted"
+    namespace: kcm-system
+  resources:
+    perReplica:
+      cpu: "8"
+      memory: "16Gi"
+      # Sizes the model cache volume (HF_HOME) — must fit the model weights.
+      storage: "50Gi"
+      # Accelerators per pod; also drives --tensor-parallel-size.
+      gpuCount: 1
+      # Pick a GPU node by a raw vendor label from the Colony GPU inventory:
+      #   kubectl get colony <name> -o jsonpath='{.status.gpuInventory}' | jq
+      gpuNodeSelector:
+        nvidia.com/gpu.product: "NVIDIA-L40"
+  values:
+    huggingfaceToken: "hf_replace_me"
+    inferenceApiKey: "api_key"
+    model:
+      # The advertised model name, and what clients send. Resources come from
+      # `resources` above and need no restating here.
+      name: "Qwen/Qwen3-1.7B"
+    modelServer:
+      image: ghcr.io/llm-d/llm-d-inference-sim:v0.10.2
+      # The simulator has its own entrypoint and CLI, so bypass both.
+      command: []
+      argsOverride:
+        - "--model=Qwen/Qwen3-1.7B"
+        - "--port=8000"
+
+# ---------------------------------------------------------------------------
+# Variant: real vLLM on a GPU node. Drop the `modelServer` block above and the
+# chart's defaults apply — llm-d's vLLM build, with the model pulled from
+# Hugging Face. Needs NVIDIA driver >= 580 on the node.
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Variant: one large model sharded across two nodes.
+#
+# `replicas: 2` requests two pods; `nodesPerReplica: 2` makes them ONE model
+# rather than two. At 4 GPUs each that is --tensor-parallel-size 8.
+#
+#   resources:
+#     replicas: 2
+#     perReplica:
+#       cpu: "32"
+#       memory: "256Gi"
+#       storage: "500Gi"
+#       gpuCount: 4
+#       gpuNodeSelector:
+#         nvidia.com/gpu.product: "NVIDIA-H100-80GB-HBM3"
+#   values:
+#     model:
+#       name: "zai-org/GLM-5.2-FP8"
+#     modelServer:
+#       nodesPerReplica: 2
+#
+# Feasibility is checked cluster-wide, not per node, so a cluster of 8
+# single-GPU nodes passes the gate and then cannot place a 2×4 request. And
+# cross-node tensor parallelism puts every forward pass on the network.
+# ---------------------------------------------------------------------------
