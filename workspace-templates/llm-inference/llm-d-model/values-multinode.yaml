@@ -1,0 +1,19 @@
+# Operator injection for ONE model sharded across two nodes.
+# Expect: groups=1, size=2, a separate leaderTemplate, --tensor-parallel-size=8,
+#         --nnodes=2, --api-server-count 1 on the leader / 0 on the worker.
+modelServer:
+  nodesPerReplica: 2
+_exalsius:
+  resources:
+    # Two pods, which nodesPerReplica: 2 spends as a single model replica.
+    replicas: 2
+    perReplica:
+      cpu: "32"
+      memory: "256Gi"
+      storage: "500Gi"
+      gpuCount: 4
+      gpuVendor: "NVIDIA"
+      gpuResourceName: "nvidia.com/gpu"
+  scheduling:
+    nodeSelector:
+      nvidia.com/gpu.product: "NVIDIA-H100-80GB-HBM3"

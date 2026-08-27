@@ -1,0 +1,19 @@
+# Operator injection for TWO independent replicas, one per node.
+# Expect: groups=2, size=1, no leaderTemplate, no --tensor-parallel-size, both
+#         pods serving.
+#
+# nodesPerReplica stays 1, so the two pods are two models. Contrast
+# values-multinode.yaml, which spends the same two pods on one model.
+_exalsius:
+  resources:
+    replicas: 2
+    perReplica:
+      cpu: "8"
+      memory: "32Gi"
+      storage: "100Gi"
+      gpuCount: 1
+      gpuVendor: "NVIDIA"
+      gpuResourceName: "nvidia.com/gpu"
+  scheduling:
+    nodeSelector:
+      nvidia.com/gpu.product: "NVIDIA-L40"
