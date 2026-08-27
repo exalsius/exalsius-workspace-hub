@@ -1,0 +1,15 @@
+# Operator injection for a multi-GPU NVIDIA node.
+# Expect: limits[nvidia.com/gpu]=2, --tensor-parallel-size=2, nodeSelector set.
+_exalsius:
+  resources:
+    replicas: 1
+    perReplica:
+      cpu: "16"
+      memory: "64Gi"
+      storage: "100Gi"
+      gpuCount: 2
+      gpuVendor: "NVIDIA"
+      gpuResourceName: "nvidia.com/gpu"
+  scheduling:
+    nodeSelector:
+      nvidia.com/gpu.product: "NVIDIA-L40"
