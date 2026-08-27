@@ -4,7 +4,7 @@
 #   manifests/llm-d-model/0.3.0/workspaceclass.yaml
 # Placeholders substituted from Chart.yaml:
 #   0.3.0 / 0-3-0        this chart's version
-#   0.3.0 / 0-3-0  the sibling llm-d-infra chart's
+#   1.0.0 / 1-0-0  the sibling llm-d-infra chart's
 #       version (resolved by scripts/render-workspace-manifests.sh) — the
 #       prerequisite pins the exact infra ServiceTemplate version.
 #
@@ -29,7 +29,7 @@ spec:
     namespace: kcm-system
   prerequisites:
     - serviceTemplate:
-        name: llm-d-infra-0-3-0
+        name: llm-d-infra-1-0-0
   defaultResources:
     replicas: 1
     perReplica:
