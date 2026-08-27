@@ -98,6 +98,16 @@ modelServer:
   # Replaces the derived args entirely, for servers whose CLI is not vLLM's.
   argsOverride: []
 
+  # OpenAI tool/function calling. Needed for the `chat` endpoint: Open WebUI
+  # sends `tool_choice: "auto"`, which vLLM rejects with 400 unless this is on.
+  # `parser` is required and model-specific — a wrong one mis-parses tool calls,
+  # so there is no safe default. Pick from the image's
+  # `vllm/tool_parsers/*_tool_parser.py` (e.g. hermes for Qwen, llama, mistral).
+  # For reasoning models also consider `--reasoning-parser=` in `args`.
+  toolCalling:
+    enabled: false
+    parser: ""
+
   env:
     - name: VLLM_USE_FLASHINFER_SAMPLER
       value: "0"
@@ -145,7 +155,6 @@ modelServer:
   # 0. Without this a provisioned `cache.mode: pvc` volume is not writable.
   podSecurityContext:
     fsGroup: 0
-
 
   startupProbe:
     initialDelaySeconds: 15
