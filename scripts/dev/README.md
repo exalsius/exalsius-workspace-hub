@@ -30,7 +30,7 @@ Watch it:
 
 ```sh
 kubectl --context kind-exalsius -n kcm-system get wsd dev -w
-kubectl --context kind-child-adopted-1 -n ws-dev get deploy,pod,svc,pvc
+kubectl --context kind-child-adopted-1 -n ws-dev get lws,deploy,pod,svc,pvc
 ```
 
 ## How it works
@@ -88,7 +88,7 @@ path (e.g. `CHART=llm-inference/llm-d-model`).
 ## llm-inference (multi-chart + prerequisite)
 
 `llm-inference` is two charts: `llm-d-model` (one model) declares `llm-d-infra`
-(shared agentgateway + model discovery + Open WebUI) as a **prerequisite**, which
+(shared agentgateway + Open WebUI) as a **prerequisite**, which
 the operator auto-installs once per `ClusterDeployment` and reuses across models
 ([ADR-0002](../../docs/adr/0002-llm-inference-prerequisite-and-umbrella-mapping.md)).
 Two harness details follow:
@@ -107,10 +107,11 @@ The inference-stack CRDs (GAIE + agentgateway) are **not** on the clusters; they
 ship in `llm-d-infra/crds/` ([ADR-0004](../../docs/adr/0004-inference-crds-vendored-in-llm-d-infra.md))
 and land when the operator installs the prerequisite.
 
-The model's example WSD ships a **CPU vLLM simulator** (`llm-d-inference-sim` +
-a `uds-tokenizer` sidecar), so it serves a real OpenAI-compatible endpoint with
-no GPU hardware — the model pod's `gpuCount` only satisfies the operator gate, so
-still fake a GPU:
+The model's example WSD ships llm-d's **inference simulator**
+(`llm-d-inference-sim` via `modelServer.image` + `command: []` +
+`argsOverride`), so it serves a real OpenAI-compatible endpoint with no GPU
+hardware — the model pod's `gpuCount` only satisfies the operator gate, so still
+fake a GPU:
 
 ```sh
 make dev-fake-gpu VENDOR=nvidia
@@ -123,8 +124,11 @@ Inspect it:
 ```sh
 # prereq auto-installed + reused, then the per-model endpoint federated:
 kubectl --context kind-exalsius -n kcm-system get wsd dev -o yaml | yq '.status.prerequisites, .status.access'
-# routing: the model's http Service + HTTPRoutes + its InferencePool
-kubectl --context kind-child-adopted-1 -n ws-dev get svc,httproute,inferencepool,pod
+# routing: the model's http Service + HTTPRoutes + its pool and model-table entry
+kubectl --context kind-child-adopted-1 -n ws-dev get svc,httproute,inferencepool,agentgatewaymodel,pod
+# the gateway's own model list, as Open WebUI sees it:
+kubectl --context kind-child-adopted-1 -n default run q --rm -i --restart=Never --image=curlimages/curl -- \
+  curl -s http://llm-d-inference-gateway:8080/v1/models
 # a real completion through the model's http endpoint (port 8000):
 kubectl --context kind-child-adopted-1 -n ws-dev exec deploy/... -- \
   curl -s localhost:8000/v1/models

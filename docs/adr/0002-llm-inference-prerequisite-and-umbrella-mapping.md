@@ -1,5 +1,18 @@
 # llm-inference: shared inference gateway, infra as a prerequisite that also exposes Open WebUI
 
+> **Partially superseded by
+> [ADR-0007](0007-llm-d-0.9-router-charts-and-owned-modelserver.md).** The
+> shared-gateway and prerequisite reasoning below still holds. The
+> umbrella/`resourceInjection` mapping does not: `llm-d-model` now owns its vLLM
+> Deployment and reads the `_exalsius` contract directly, so the injection paths
+> described here no longer exist.
+>
+> The routing description is also dated. Per
+> [ADR-0008](0008-agentgateway-model-api-replaces-model-registry.md), the
+> `internal` listener no longer carries a body-based-routing policy or a
+> per-model `HTTPRoute` — it serves `AgentgatewayModel`s instead. The `external`
+> listener works exactly as described below.
+
 The `llm-inference` workspace ships as two umbrella charts mapped onto the
 operator contract deliberately, because a shared inference stack does not fit the
 plain one-chart-one-class shape — and because the operator's routing federates
