@@ -63,6 +63,20 @@ gateway:
         cpu: 100m
         memory: 128Mi
 
+# LeaderWorkerSet controller (upstream subchart). Required for any model; the
+# toggle is for clusters where a platform team already manages LWS.
+lws:
+  enabled: true
+  # Below the upstream 1 CPU / 1Gi, which is disproportionate on small child
+  # clusters. Raise it on a cluster running many LeaderWorkerSets.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  # For P/D-disaggregated serving, which this stack does not deploy. The CRD is
+  # installed either way.
+  enableDisaggregatedSet: false
+
 ow:
   # Fixed name so each model can target it cross-namespace as the backend of its
   # "chat" redirect (docs/adr/0006).
