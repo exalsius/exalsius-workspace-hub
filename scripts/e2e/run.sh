@@ -164,16 +164,27 @@ discover_lb() {
 
 preflight() {
   print_status "Preflight"
-  local ok=1 c
+  local ok=1 c ctx_missing=0
+  local have; have="$(kubectl config get-contexts -o name 2>/dev/null)"
   for c in "$MGMT" "$REG_CTX" "$CHILD_CTX"; do
-    kubectl config get-contexts -o name | grep -qx "$c" \
-      || { print_error "kube-context '$c' missing — run local-dev-env make up + setup-kcm-regional-child"; ok=0; }
+    grep -qx "$c" <<<"$have" \
+      || { print_error "kube-context '$c' missing — run local-dev-env make up + setup-kcm-regional-child"; ok=0; ctx_missing=1; }
   done
   command -v jq   >/dev/null 2>&1 || { print_error "jq not found on PATH"; ok=0; }
   command -v curl >/dev/null 2>&1 || { print_error "curl not found on PATH"; ok=0; }
   command -v yq   >/dev/null 2>&1 || { print_error "yq not found on PATH"; ok=0; }
   command -v helm >/dev/null 2>&1 || { print_error "helm not found on PATH"; ok=0; }
   discover_lb || { print_error "gateway Service ${GW_SVC} (${GW_NS}) has no LoadBalancer IP"; ok=0; }
+  if [ "$ctx_missing" -eq 1 ]; then
+    # Which kubeconfig was consulted, and what it actually holds — a cluster can
+    # exist and still be absent here (wrong KUBECONFIG, context never merged),
+    # and the name alone does not distinguish that from a failed bring-up.
+    print_warning "  KUBECONFIG=${KUBECONFIG:-<unset, using ~/.kube/config>}"
+    print_warning "  contexts available:"
+    printf '%s\n' "${have:-<none>}" | sed 's/^/        /'
+    print_warning "  kind clusters:"
+    { kind get clusters 2>&1 || echo "<kind not on PATH>"; } | sed 's/^/        /'
+  fi
   [ "$ok" -eq 1 ] || { print_error "Preflight failed."; exit 1; }
   print_success "Preflight OK (gateway LB ${LB_IP})"
 }
