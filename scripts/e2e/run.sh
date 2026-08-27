@@ -58,9 +58,18 @@ E2E_CPU="${E2E_CPU:-500m}"
 E2E_MEM="${E2E_MEM:-1Gi}"
 
 # Timeouts (seconds).
-RUN_TIMEOUT="${RUN_TIMEOUT:-600}"  # reach Running / backend answers (image pulls are slow)
+RUN_TIMEOUT="${RUN_TIMEOUT:-600}"  # floor for reaching Running / backend answers
+# Ceiling for a class-derived Running wait. A WorkspaceClass declares how long
+# its stack needs (deployTimeout + prerequisiteDeployTimeout); honouring that is
+# the point, but it must still fit inside the job's step timeout.
+RUN_TIMEOUT_MAX="${RUN_TIMEOUT_MAX:-1200}"
 SETTLE="${SETTLE:-180}"            # status / route objects settle
 SHORT="${SHORT:-60}"               # quick socket checks
+# Endpoint reachability once the WSD is already Running and routed — a live
+# backend answers in seconds, so this needs far less headroom than the deploy
+# itself, and keeping it small is what lets the derived Running wait grow
+# without the job outrunning its step timeout.
+ENDPOINT_TIMEOUT="${ENDPOINT_TIMEOUT:-300}"
 
 # Minimal coloured output.
 print_status()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
@@ -88,6 +97,17 @@ dump_dev_out() { # dump_dev_out [lines]
   fi
   print_warning "  workspace-dev.sh output (last ${n} lines):"
   tail -n "$n" "$DEV_OUT" | sed 's/^/        /'
+}
+
+# duration_to_seconds <30m|600s|1h|600> — Kubernetes-style duration to seconds.
+duration_to_seconds() {
+  local d="${1:-}"
+  [[ "$d" =~ ^([0-9]+)([smh]?)$ ]] || { printf '0'; return 0; }
+  case "${BASH_REMATCH[2]}" in
+    h) printf '%s' $(( BASH_REMATCH[1] * 3600 )) ;;
+    m) printf '%s' $(( BASH_REMATCH[1] * 60 )) ;;
+    *) printf '%s' "${BASH_REMATCH[1]}" ;;
+  esac
 }
 
 # check <timeout> <desc> <snippet> — poll the snippet (eval'd, so it sees the
@@ -193,13 +213,24 @@ preflight() {
 
 # Populated by derive_chart.
 D_SKIP=""; D_GPU=""; D_VENDOR=""; declare -a D_PREREQS=(); declare -a D_HTTP=(); declare -a D_TCP=()
+D_RUN_TIMEOUT=""; D_PREREQ_NS=""
 derive_chart() {
   local chart="$1" cdir="workspace-templates/${1}" class ov
   class="${cdir}/exalsius/workspaceclass.yaml"
   ov="${cdir}/e2e.yaml"
   D_SKIP="false"; D_GPU=""; D_VENDOR="nvidia"; D_PREREQS=(); D_HTTP=(); D_TCP=()
+  D_RUN_TIMEOUT="$RUN_TIMEOUT"; D_PREREQ_NS="default"
 
   [ -f "$class" ] || { D_SKIP="true"; return; }
+
+  # Honour the timeouts the class declares for itself. A stack that says it may
+  # take 20m of prerequisites plus 30m of deploy cannot be judged on a 10m wait.
+  local want
+  want=$(( $(duration_to_seconds "$(yq '.spec.prerequisiteDeployTimeout // ""' "$class")") \
+         + $(duration_to_seconds "$(yq '.spec.deployTimeout // ""' "$class")") ))
+  [ "$want" -gt "$D_RUN_TIMEOUT" ] && D_RUN_TIMEOUT="$want"
+  [ "$D_RUN_TIMEOUT" -gt "$RUN_TIMEOUT_MAX" ] && D_RUN_TIMEOUT="$RUN_TIMEOUT_MAX"
+  D_PREREQ_NS="$(yq '.spec.prerequisites[0].namespace // "default"' "$class")"
 
   # GPU: class defaultResources mandates a GPU when gpuCount > 0.
   local gc; gc="$(yq '.spec.defaultResources.perReplica.gpuCount // 0' "$class")"
@@ -260,10 +291,26 @@ teardown_chart() { # teardown_chart <chart> <gpu> <vendor>
 # from a too-large resource request, or an image pull error); the ephemeral runner
 # keeps nothing behind.
 dump_failure() {
-  local wns="ws-${WSD_NAME}"
+  local wns="ws-${WSD_NAME}" phase
   print_warning "${1} did not reach Running — diagnostics:"
+  phase="$(kubectl --context "$MGMT" -n "$NS" get wsd "$WSD_NAME" -o jsonpath='{.status.phase}' 2>/dev/null)"
   kubectl --context "$MGMT" -n "$NS" get wsd "$WSD_NAME" \
     -o jsonpath='    WSD phase={.status.phase} message={.status.message}{"\n"}' 2>&1 | sed '/^[[:space:]]*$/d'
+
+  # While prerequisites install, the workspace namespace is empty by definition,
+  # so dumping only that says nothing. Show the prerequisite install instead.
+  if [ "$phase" = "InstallingPrerequisites" ]; then
+    print_warning "  prerequisite ServiceSets (mgmt):"
+    kubectl --context "$MGMT" -n "$NS" get serviceset 2>&1 \
+      | grep -E 'NAME|wsprereq-' | sed 's/^/    /'
+    print_warning "  prerequisite pods (${CHILD_CTX}, ns ${D_PREREQ_NS}):"
+    kubectl --context "$CHILD_CTX" -n "$D_PREREQ_NS" get pods -o wide 2>&1 | sed 's/^/    /'
+    print_warning "  recent trouble in ns ${D_PREREQ_NS}:"
+    kubectl --context "$CHILD_CTX" -n "$D_PREREQ_NS" get events --sort-by=.lastTimestamp 2>&1 \
+      | grep -iE 'fail|insufficient|unschedul|error|backoff|pull|provision' | tail -10 | sed 's/^/    /'
+    return 0
+  fi
+
   kubectl --context "$CHILD_CTX" -n "$wns" get pods -o wide 2>&1 | sed 's/^/    /'
   kubectl --context "$CHILD_CTX" -n "$wns" get events --sort-by=.lastTimestamp 2>&1 \
     | grep -iE 'fail|insufficient|unschedul|error|backoff|pull' | tail -8 | sed 's/^/    /'
@@ -276,7 +323,7 @@ test_chart() {
   print_status "==== chart: ${chart} ===="
   derive_chart "$chart"
   if [ "$D_SKIP" = "true" ]; then print_warning "  skip (no WorkspaceClass or e2e.yaml skip:true)"; return 0; fi
-  print_status "  derived: gpu=${D_GPU} vendor=${D_VENDOR} prereqs=[${D_PREREQS[*]:-}] http=[${D_HTTP[*]:-}] tcp=[${D_TCP[*]:-}]"
+  print_status "  derived: gpu=${D_GPU} vendor=${D_VENDOR} prereqs=[${D_PREREQS[*]:-}] http=[${D_HTTP[*]:-}] tcp=[${D_TCP[*]:-}] runTimeout=${D_RUN_TIMEOUT}s"
 
   # Clean slate for this chart's WSD name.
   CHART="$chart" WSD_NAME="$WSD_NAME" NS="$NS" MGMT="$MGMT" "$DEV" down >/dev/null 2>&1 || true
@@ -309,7 +356,7 @@ test_chart() {
   fi
 
   # 4) Assert: WSD reaches Running.
-  if ! check "$RUN_TIMEOUT" "${chart}: WSD Running" \
+  if ! check "$D_RUN_TIMEOUT" "${chart}: WSD Running" \
      'kubectl --context $MGMT -n $NS get wsd $WSD_NAME -o json | jq -e ".status.phase==\"Running\"" >/dev/null'; then
     dump_failure "$chart"
     teardown_chart "$chart" "$D_GPU" "$D_VENDOR"; return 1
@@ -333,7 +380,7 @@ test_chart() {
     fi
     # A 2xx/3xx/4xx proves the mesh routed to a LIVE backend that answered;
     # 000 (no route/connection) and 5xx (502/503/504 no-healthy-upstream) fail.
-    check "$RUN_TIMEOUT" "${chart}: curl ${ep} (${host}) reaches a live backend over the mesh" \
+    check "$ENDPOINT_TIMEOUT" "${chart}: curl ${ep} (${host}) reaches a live backend over the mesh" \
       'code=$(curl -s -m 5 -o /dev/null -w "%{http_code}" -H "Host: '"$host"'" "http://'"$LB_IP"'/"); case "$code" in 2*|3*|4*) true;; *) echo "http $code"; false;; esac'
   done
 
