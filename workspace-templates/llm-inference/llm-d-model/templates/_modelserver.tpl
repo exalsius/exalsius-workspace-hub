@@ -85,6 +85,13 @@ containers:
       - "--master-addr=$(LWS_LEADER_ADDRESS)"
       - {{ printf "--api-server-count=%d" (ternary 1 0 $isLeader) | quote }}
       {{- end }}
+      {{- if $ms.toolCalling.enabled }}
+      {{- if not $ms.toolCalling.parser }}
+      {{- fail "modelServer.toolCalling.enabled requires modelServer.toolCalling.parser: the parser is model-specific and vLLM rejects --enable-auto-tool-choice without one" }}
+      {{- end }}
+      - "--enable-auto-tool-choice"
+      - {{ printf "--tool-call-parser=%s" $ms.toolCalling.parser | quote }}
+      {{- end }}
       {{- range $ms.args }}
       - {{ toString . | quote }}
       {{- end }}

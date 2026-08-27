@@ -111,7 +111,7 @@ difference is entirely whether those two pods are two models or one.
 | `igw.router.modelServers.matchLabels` | The InferencePool's pod selector. The chart stamps these same labels onto the vLLM pods, so pool and pods are wired from **one** place. Only needs changing if two models share a namespace. |
 | `modelServer.spread` | Preference for placing the model's pods on different nodes (`ScheduleAnyway` by default, so it never blocks scheduling). Applies to independent replicas and to the pods of one sharded replica alike. |
 | `modelServer.nodesPerReplica` | Pods per model replica. `1` (default) = each pod is a whole model. Above 1 the model is sharded across that many nodes with tensor parallelism; `replicas` must be a whole multiple of it. See the caveats below. |
-
+| `modelServer.toolCalling` | Enables OpenAI tool/function calling. **Needed for the `chat` endpoint** — Open WebUI sends `tool_choice: "auto"` and vLLM 400s without it. `parser` is required and model-specific (`hermes` for Qwen3, verified). |
 | `modelServer.image` | The model server. Defaults to `ghcr.io/llm-d/llm-d-cuda:v0.9.0` rather than upstream vLLM — it patches NVSHMEM for RoCE and bundles the llm-d KV-cache connectors ([ADR-0009](../../../docs/adr/0009-llm-d-model-server-image.md)). `values-amd.yaml` uses the ROCm sibling. |
 
 > **Node requirement.** vLLM CUDA images from llm-d 0.7.0 onward are built on
