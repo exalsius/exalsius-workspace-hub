@@ -73,6 +73,23 @@ FAIL=0
 declare -a FAILED=()
 LB_IP=""
 
+# Captured output of the deploy engine. Its output is hidden on success to keep
+# the log readable, but it must not be discarded: workspace-dev.sh runs under
+# `set -e`, so a failure aborts on the first bad command and CI would otherwise
+# record only that publish-prereq or up failed, never why.
+DEV_OUT="$(mktemp)"
+trap 'rm -f "$DEV_OUT"' EXIT
+
+dump_dev_out() { # dump_dev_out [lines]
+  local n="${1:-30}"
+  if [ ! -s "$DEV_OUT" ]; then
+    print_warning "        workspace-dev.sh produced no output"
+    return 0
+  fi
+  print_warning "  workspace-dev.sh output (last ${n} lines):"
+  tail -n "$n" "$DEV_OUT" | sed 's/^/        /'
+}
+
 # check <timeout> <desc> <snippet> — poll the snippet (eval'd, so it sees the
 # globals above) until it exits 0 or the timeout elapses.
 check() {
@@ -258,8 +275,10 @@ test_chart() {
   for p in "${D_PREREQS[@]:-}"; do
     [ -n "$p" ] || continue
     print_status "  publishing prerequisite: ${p}"
-    if ! PREREQ="$p" "$DEV" publish-prereq >/dev/null 2>&1; then
-      print_error "FAIL  ${chart}: publish prerequisite ${p}"; FAILED+=("${chart}: publish prereq ${p}"); FAIL=$((FAIL+1)); return 1
+    if ! PREREQ="$p" "$DEV" publish-prereq >"$DEV_OUT" 2>&1; then
+      print_error "FAIL  ${chart}: publish prerequisite ${p}"
+      dump_dev_out
+      FAILED+=("${chart}: publish prereq ${p}"); FAIL=$((FAIL+1)); return 1
     fi
   done
 
@@ -271,8 +290,10 @@ test_chart() {
 
   # 3) Deploy the chart + its CRs + WSD through the operator.
   if ! CHART="$chart" WSD_NAME="$WSD_NAME" NS="$NS" CD="$CD" MGMT="$MGMT" \
-       GPU="$D_GPU" VENDOR="$D_VENDOR" CPU="$E2E_CPU" MEM="$E2E_MEM" "$DEV" up >/dev/null 2>&1; then
-    print_error "FAIL  ${chart}: deploy (workspace-dev.sh up)"; FAILED+=("${chart}: deploy"); FAIL=$((FAIL+1))
+       GPU="$D_GPU" VENDOR="$D_VENDOR" CPU="$E2E_CPU" MEM="$E2E_MEM" "$DEV" up >"$DEV_OUT" 2>&1; then
+    print_error "FAIL  ${chart}: deploy (workspace-dev.sh up)"
+    dump_dev_out
+    FAILED+=("${chart}: deploy"); FAIL=$((FAIL+1))
     teardown_chart "$chart" "$D_GPU" "$D_VENDOR"; return 1
   fi
 
