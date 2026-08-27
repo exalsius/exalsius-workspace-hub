@@ -112,6 +112,8 @@ difference is entirely whether those two pods are two models or one.
 | `modelServer.spread` | Preference for placing the model's pods on different nodes (`ScheduleAnyway` by default, so it never blocks scheduling). Applies to independent replicas and to the pods of one sharded replica alike. |
 | `modelServer.nodesPerReplica` | Pods per model replica. `1` (default) = each pod is a whole model. Above 1 the model is sharded across that many nodes with tensor parallelism; `replicas` must be a whole multiple of it. See the caveats below. |
 
+| `modelServer.image` | The model server. Defaults to `ghcr.io/llm-d/llm-d-cuda:v0.9.0` rather than upstream vLLM — it patches NVSHMEM for RoCE and bundles the llm-d KV-cache connectors ([ADR-0009](../../../docs/adr/0009-llm-d-model-server-image.md)). `values-amd.yaml` uses the ROCm sibling. |
+
 > **Node requirement.** vLLM CUDA images from llm-d 0.7.0 onward are built on
 > CUDA 13.0.2 and require **NVIDIA driver 580 or newer**.
 

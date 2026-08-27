@@ -29,6 +29,10 @@ so the rank wiring needs no shell wrapper.
 {{- range $ms.args -}}
 {{- if hasPrefix "--tensor-parallel-size" (toString .) -}}{{- $hasTP = true -}}{{- end -}}
 {{- end -}}
+{{- with $ms.podSecurityContext }}
+securityContext:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
 {{- if $r.runtimeClassName }}
 runtimeClassName: {{ $r.runtimeClassName }}
 {{- end }}

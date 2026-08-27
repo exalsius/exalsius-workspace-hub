@@ -13,7 +13,8 @@ model:
   source:
     claimName: ""
     subPath: ""
-    mountPath: /models
+    # Not /models — the llm-d images use that path themselves.
+    mountPath: /model-source
   # API surfaces advertised to the gateway's model table. Without a `path`,
   # agentgateway calls `/v1` + the format's standard suffix, matching vLLM.
   # Completions covers chat; add Embeddings or Responses as the model supports
@@ -44,9 +45,11 @@ sharedGateway:
     webui: 8081
 
 modelServer:
-  # Upstream vLLM, which llm-d 0.8.0 made the default for its own guides.
+  # llm-d's vLLM build, matching the pinned llm-d release. Differs from upstream
+  # vLLM in user and HOME, which `scratchDirs` and `podSecurityContext` below
+  # account for; swapping back works (docs/adr/0009).
   # Requires NVIDIA driver >= 580 (CUDA 13).
-  image: docker.io/vllm/vllm-openai:v0.26.0
+  image: ghcr.io/llm-d/llm-d-cuda:v0.9.0
   imagePullPolicy: IfNotPresent
   # Keep in sync with igw.router.modelServers.targetPorts and the redirect
   # Services in templates/networking.yaml.
@@ -102,6 +105,12 @@ modelServer:
     # (vllm-project/vllm#44548). Needed on every vLLM image, not just this one.
     - name: USER
       value: llm-d
+    # Where Triton links libcuda.so.1 when it JIT-builds its CUDA shim at engine
+    # startup. Must match where the node's container runtime injects the driver,
+    # or the engine dies before serving. Ubuntu amd64 below; use /usr/lib64 on
+    # RHEL/OpenShift, /usr/lib/aarch64-linux-gnu on Ubuntu arm64.
+    - name: TRITON_LIBCUDA_PATH
+      value: /usr/lib/x86_64-linux-gnu
 
   # Escape hatches for model-specific setup, rendered verbatim.
   initContainers: []
@@ -122,7 +131,8 @@ modelServer:
     sizeLimit: 20Gi
 
   # Writable HOME-relative cache paths, needed by images that run as root with
-  # HOME=/. Set to [] to drop them.
+  # HOME=/. Inert on llm-d images, which redirect their caches to /tmp. Set to
+  # [] to drop them.
   scratchDirs:
     - name: vllm-config
       mountPath: /.config
@@ -130,6 +140,12 @@ modelServer:
       mountPath: /.cache
     - name: triton-cache
       mountPath: /.triton
+
+  # The llm-d images run non-root and reach their writable paths through group
+  # 0. Without this a provisioned `cache.mode: pvc` volume is not writable.
+  podSecurityContext:
+    fsGroup: 0
+
 
   startupProbe:
     initialDelaySeconds: 15
