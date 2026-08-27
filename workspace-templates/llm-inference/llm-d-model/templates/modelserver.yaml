@@ -1,0 +1,59 @@
+{{- /*
+The model server, always a LeaderWorkerSet — `size: 1` is the single-node case,
+so one shape covers both topologies (docs/adr/0010). Needs the LWS controller
+from the llm-d-infra prerequisite.
+
+    spec.replicas                  = replicas / nodesPerReplica
+    spec.leaderWorkerTemplate.size = nodesPerReplica
+*/ -}}
+{{- $r := include "llm-d-model.resources" . | fromYaml -}}
+{{- $size := int $r.size -}}
+{{- $cachePVC := eq .Values.modelServer.cache.mode "pvc" -}}
+apiVersion: leaderworkerset.x-k8s.io/v1
+kind: LeaderWorkerSet
+metadata:
+  name: {{ .Release.Name }}-ms
+  labels:
+    {{- include "llm-d-model.labels" . | nindent 4 }}
+    {{- include "llm-d-model.selectorLabels" . | nindent 4 }}
+spec:
+  replicas: {{ $r.groups }}
+  leaderWorkerTemplate:
+    size: {{ $size }}
+    {{- /* See modelServer.lwsRestartPolicy. */}}
+    restartPolicy: {{ .Values.modelServer.lwsRestartPolicy | default (ternary "RecreateGroupOnPodRestart" "None" (gt $size 1)) }}
+    {{- if gt $size 1 }}
+    {{- /* Split only when there are real workers. */}}
+    leaderTemplate:
+      metadata:
+        labels:
+          {{- include "llm-d-model.selectorLabels" . | nindent 10 }}
+          {{- include "llm-d-model.poolSelectorLabels" . | nindent 10 }}
+      spec:
+        {{- include "llm-d-model.modelPodSpec" (dict "ctx" . "isLeader" true) | nindent 8 }}
+    {{- end }}
+    workerTemplate:
+      metadata:
+        labels:
+          {{- include "llm-d-model.selectorLabels" . | nindent 10 }}
+          {{- include "llm-d-model.poolSelectorLabels" . | nindent 10 }}
+      spec:
+        {{- include "llm-d-model.modelPodSpec" (dict "ctx" . "isLeader" (eq $size 1)) | nindent 8 }}
+{{- if $cachePVC }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-model-cache
+  labels:
+    {{- include "llm-d-model.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.modelServer.cache.accessMode }}
+  {{- if .Values.modelServer.cache.storageClassName }}
+  storageClassName: {{ .Values.modelServer.cache.storageClassName | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $r.storage | quote }}
+{{- end }}

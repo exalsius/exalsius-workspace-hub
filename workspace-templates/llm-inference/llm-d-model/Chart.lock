@@ -1,9 +1,6 @@
 dependencies:
-- name: inferencepool
-  repository: oci://registry.k8s.io/gateway-api-inference-extension/charts
-  version: v1.4.0
-- name: llm-d-modelservice
-  repository: https://llm-d-incubation.github.io/llm-d-modelservice
-  version: v0.4.9
-digest: sha256:db5a601ba8e4a58cbb2378106bdd6b781f7d821c00ef30a6c810cb97c653c1c2
-generated: "2026-04-07T18:19:15.90206587+02:00"
+- name: llm-d-router-gateway
+  repository: oci://ghcr.io/llm-d/charts
+  version: v0.10.0
+digest: sha256:722919c8aaa626b1470895579e93ba6b94eac56d9881f9f34794ecba82fdb067
+generated: "2026-08-26T07:23:02.180589024+02:00"

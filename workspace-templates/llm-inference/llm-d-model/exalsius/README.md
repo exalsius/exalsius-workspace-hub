@@ -6,7 +6,7 @@ versioned together with the chart.
 | File | Kind | Deployed to | Purpose |
 |------|------|-------------|---------|
 | `servicetemplate.yaml` | k0rdent `ServiceTemplate` | management cluster | Wraps one immutable chart version, sourced from the OCI HelmRepository. |
-| `workspaceclass.yaml` | `WorkspaceClass` | management cluster | Version-named catalog entry; declares the `llm-d-infra` prerequisite, the `http` (OpenAI API) and `chat` (shared Open WebUI) endpoints, and the resource→subchart injection. |
+| `workspaceclass.yaml` | `WorkspaceClass` | management cluster | Version-named catalog entry; declares the `llm-d-infra` prerequisite and the `http` (OpenAI API) and `chat` (shared Open WebUI) endpoints. |
 | `example-workspacedeployment.yaml` | `WorkspaceDeployment` | (example) | Deploys one model; the operator auto-installs the infra prerequisite. |
 
 ## Templates & placeholders
@@ -36,6 +36,13 @@ Substituted at release time by `scripts/render-workspace-manifests.sh`:
   ambient waypoint, which only reaches mesh-native upstreams. Open WebUI is routed
   per model because the infra prerequisite owns no WorkspaceClass (see
   docs/adr/0006); it is reachable only once ≥1 model exists.
-- **Label matching (sharp edge).** `ms.modelArtifacts.labels."llm-d.ai/model"`
-  must equal `ip.inferencePool.modelServers.matchLabels."llm-d.ai/model"`, or the
-  gateway won't route to the pool. The example sets both.
+- **No `resourceInjection`.** The chart owns the vLLM workload and reads the
+  standard `_exalsius.resources` path directly — including `cpu`/`memory`, which
+  the old modelservice umbrella could not accept. `gpuCount` becomes the per-pod
+  accelerator request; `--tensor-parallel-size` is `gpuCount ×
+  modelServer.nodesPerReplica` (see docs/adr/0007 and docs/adr/0010).
+- **Label matching is no longer a sharp edge.** The InferencePool selector and
+  the labels stamped on the vLLM pods both come from
+  `igw.router.modelServers.matchLabels`, so there is one place to get right
+  instead of two that had to agree. It only needs changing if two models share a
+  namespace.
