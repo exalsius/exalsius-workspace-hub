@@ -8,11 +8,9 @@
 #       version (resolved by scripts/render-workspace-manifests.sh) — the
 #       prerequisite pins the exact infra ServiceTemplate version.
 #
-# Serves one model. The operator auto-installs the llm-d-infra prerequisite
-# (shared agentgateway + body-based routing + model discovery + Open WebUI) once
-# per ClusterDeployment and reuses it across all model workspaces. Each model
-# attaches to that shared gateway and exposes a per-workspace OpenAI endpoint via
-# an in-namespace redirect Service (see docs/adr/0002).
+# Serves one model. The operator auto-installs the llm-d-infra prerequisite once
+# per ClusterDeployment and reuses it across all models; each model attaches to
+# that shared gateway (docs/adr/0002).
 apiVersion: workspaces.exalsius.ai/v1
 kind: WorkspaceClass
 metadata:
@@ -23,9 +21,9 @@ metadata:
 spec:
   displayName: "LLM Inference (model)"
   description: >-
-    Serve one LLM for inference with the llm-d stack (GAIE + vLLM). Exposes a
-    per-workspace OpenAI-compatible endpoint; auto-installs the shared llm-d-infra
-    prerequisite.
+    Serve one LLM for inference with the llm-d stack (llm-d router + vLLM).
+    Exposes a per-workspace OpenAI-compatible endpoint; auto-installs the shared
+    llm-d-infra prerequisite.
   serviceTemplate:
     name: llm-d-model-${VERSION_DASHED}
     namespace: kcm-system
@@ -37,21 +35,14 @@ spec:
     perReplica:
       cpu: "8"
       memory: "16Gi"
+      # Sizes the model cache volume (HF_HOME) — must fit the model weights.
       storage: "50Gi"
       # A model needs at least one accelerator; a deployment can raise this.
       gpuCount: 1
-  # Umbrella mapping: route resolved _exalsius fields into the modelservice
-  # subchart. gpuCount drives vLLM tensor-parallelism (the subchart auto-derives
-  # the GPU resource request from it); gpuVendor selects the accelerator family.
-  # cpu/memory are not injected — the modelservice container resources live in a
-  # list path with no clean scalar target (see docs/adr/0002).
-  resourceInjection:
-    gpuCount:
-      - "ms.decode.parallelism.tensor"
-    gpuVendor:
-      - "ms.accelerator.type"
-    replicas:
-      - "ms.decode.replicas"
+  # No resourceInjection: the chart owns the workload and reads
+  # `_exalsius.resources` directly. gpuCount is the per-pod accelerator request;
+  # tensor parallelism is gpuCount × modelServer.nodesPerReplica
+  # (docs/adr/0007, docs/adr/0010).
   accessEndpoints:
     - name: http
       protocol: HTTP
@@ -81,16 +72,21 @@ spec:
       description: "Optional bearer token clients must present to call the model"
       type: secret
       required: false
-    - helmValuePath: ms.modelArtifacts.uri
-      displayName: "Model URI"
-      description: "Hugging Face model URI, e.g. hf://Qwen/Qwen3-1.7B"
-      type: string
-      required: true
-    - helmValuePath: ms.modelArtifacts.name
+    - helmValuePath: model.name
       displayName: "Model Name"
-      description: "Served model name, e.g. Qwen/Qwen3-1.7B"
+      description: "Hugging Face model to serve, e.g. Qwen/Qwen3-1.7B. This is also the name clients pass in the OpenAI request body."
       type: string
       required: true
+    # The single-node / multi-node toggle. A Helm value rather than a second
+    # WorkspaceClass because the resource contract cannot express topology
+    # (docs/adr/0010). It divides the pod budget rather than adding to it, so
+    # replicas × perReplica stays the operator's total demand.
+    - helmValuePath: modelServer.nodesPerReplica
+      displayName: "Nodes per Model Replica"
+      description: "How many pods together serve one copy of the model. 1 (default) means each pod is a whole model. Above 1 the model is sharded across that many nodes with tensor parallelism — for models too large for a single node. `replicas` must be a whole multiple of this."
+      type: int
+      required: false
+      default: 1
   # vLLM/cuda images are large and the prerequisite installs a full stack.
   deployTimeout: 30m
   prerequisiteDeployTimeout: 20m

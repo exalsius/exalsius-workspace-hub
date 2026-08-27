@@ -1,135 +1,228 @@
-ip:
-  inferenceExtension:
-    replicas: 1
-    image:
-      name: llm-d-inference-scheduler
-      hub: ghcr.io/llm-d
-      tag: v0.7.0
-      pullPolicy: Always
-    extProcPort: 9002
-    pluginsConfigFile: "default-plugins.yaml"
+# llm-d-model — serve one LLM behind the shared inference gateway.
+#
+# The operator injects replicas, per-replica resources, GPU and placement under
+# `_exalsius.*`; `fallback.*` covers a plain `helm install`.
+
+### CHANGES REQUIRED ###
+model:
+  # The vLLM model argument AND the name the gateway routes on, so it must be
+  # exactly what clients send in the OpenAI request body.
+  name: "Qwen/Qwen3-1.7B"
+  # Serve weights already on a PVC instead of pulling from Hugging Face. vLLM is
+  # pointed at `<mountPath>/<subPath>`; `model.name` stays the advertised name.
+  source:
+    claimName: ""
+    subPath: ""
+    mountPath: /models
+
+# For gated/private Hugging Face models. Exposed to vLLM as HF_TOKEN.
+huggingfaceToken: ""
+# Bearer token for EXTERNAL access, enforced at the gateway rather than in vLLM.
+# Empty disables auth.
+inferenceApiKey: ""
+### CHANGES REQUIRED ###
+
+httpRequestTimeout: 300s
+
+# The gateway installed by the llm-d-infra prerequisite. This chart attaches to
+# it and never creates one; must match llm-d-infra's `gateway.name`/namespace.
+sharedGateway:
+  name: llm-d-inference-gateway
+  namespace: default
+  listeners:
+    external: external   # this model's HTTPRoute (trusted, stamped model name)
+    webui: webui
+  ports:
+    external: 80
+    webui: 8081
+
+modelServer:
+  # Upstream vLLM, which llm-d 0.8.0 made the default for its own guides.
+  # Requires NVIDIA driver >= 580 (CUDA 13).
+  image: docker.io/vllm/vllm-openai:v0.26.0
+  imagePullPolicy: IfNotPresent
+  # Keep in sync with igw.router.modelServers.targetPorts and the redirect
+  # Services in templates/networking.yaml.
+  port: 8000
+
+  # How many pods together serve ONE copy of the model. 1 = each pod is a whole
+  # model; above 1 the model is sharded across that many nodes with tensor
+  # parallelism. It divides the operator's pod budget rather than adding to it:
+  #
+  #     model replicas         = replicas / nodesPerReplica
+  #     --tensor-parallel-size = nodesPerReplica * gpuCount
+  #
+  # `replicas` must be a whole multiple of this. See the README for the caveats
+  # above 1 (feasibility is not checked per node; cross-node TP wants a fast
+  # interconnect).
+  nodesPerReplica: 1
+
+  # Preference for placing this model's pods on different nodes — independent
+  # replicas and sharded members alike. ScheduleAnyway, so it never blocks
+  # scheduling; use DoNotSchedule to enforce it.
+  spread:
+    enabled: true
+    topologyKey: kubernetes.io/hostname
+    maxSkew: 1
+    whenUnsatisfiable: ScheduleAnyway
+
+  # Applied verbatim, for placement `spread` cannot express.
+  affinity: {}
+
+  # Empty derives it from nodesPerReplica: `None` at 1, so a container restart
+  # costs only the container; `RecreateGroupOnPodRestart` above 1, where the
+  # ranks are one NCCL job and a surviving pod would block on a missing peer.
+  # Override with None, RecreateGroupOnPodRestart, RecreateGroupAfterStart.
+  lwsRestartPolicy: ""
+
+  # Set to [] to use the image's own entrypoint (e.g. the inference simulator).
+  command: ["vllm", "serve"]
+
+  # Appended to the derived args (model, --served-model-name, --port, and
+  # --tensor-parallel-size when more than one GPU). Passing
+  # --tensor-parallel-size here overrides the derived value.
+  args:
+    - "--disable-uvicorn-access-log"
+    - "--gpu-memory-utilization=0.95"
+
+  # Replaces the derived args entirely, for servers whose CLI is not vLLM's.
+  argsOverride: []
+
+  env:
+    - name: VLLM_USE_FLASHINFER_SAMPLER
+      value: "0"
+    # vLLM >= 0.20 fails a user lookup when the uid has no passwd entry
+    # (vllm-project/vllm#44548). Needed on every vLLM image, not just this one.
+    - name: USER
+      value: llm-d
+
+  # Escape hatches for model-specific setup, rendered verbatim.
+  initContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+
+  # Where the weights land (HF_HOME), sized from the injected storage.
+  #   emptyDir  per-pod, re-downloaded whenever the pod is replaced.
+  #   pvc       shared and persistent; ReadWriteOnce pins every pod to one node,
+  #             so more than one pod needs RWX. The chart refuses RWO + >1 pod.
+  cache:
+    mode: emptyDir
+    mountPath: /model-cache
+    accessMode: ReadWriteOnce
+    storageClassName: ""
+
+  shm:
+    sizeLimit: 20Gi
+
+  # Writable HOME-relative cache paths, needed by images that run as root with
+  # HOME=/. Set to [] to drop them.
+  scratchDirs:
+    - name: vllm-config
+      mountPath: /.config
+    - name: torch-compile-cache
+      mountPath: /.cache
+    - name: triton-cache
+      mountPath: /.triton
+
+  startupProbe:
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 120
+  livenessProbe:
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+gpu:
+  nvidia:
+    # Pod runtimeClassName, applied only when the injected GPU vendor is NVIDIA.
+    # Empty because the GPU Operator usually makes the NVIDIA runtime the node
+    # default, and pinning a non-existent RuntimeClass fails admission.
+    runtimeClassName: ""
+
+# llm-d router (gateway mode) — the InferencePool, endpoint picker and its RBAC.
+# See Chart.yaml for the `igw` alias.
+igw:
+  router:
+    epp:
+      replicas: 1
+      image:
+        registry: ghcr.io/llm-d
+        repository: llm-d-router-endpoint-picker
+        tag: v0.10.0
+        pullPolicy: IfNotPresent
+      extProcPort: 9002
+      # The default profile weights prefix-cache affinity above load, so traffic
+      # across replicas is deliberately not even. Use payload-agnostic.yaml for
+      # least-busy routing instead.
+      pluginsConfigFile: "default-plugins.yaml"
+      resources:
+        requests:
+          cpu: "1"
+          memory: 2Gi
+        limits:
+          memory: 4Gi
+    inferencePool:
+      failureMode: "FailOpen"
+    modelServers:
+      protocol: http
+      targetPorts:
+        - number: 8000
+      # The pool's pod selector, and the single place the pool<->pod link is
+      # defined — templates/modelserver.yaml stamps these same labels onto the
+      # pods. A literal because Helm cannot template subchart values.
+      #
+      # Assumes one model per namespace; give each a unique label if two share
+      # one. The worker-index entry keeps the pool on LeaderWorkerSet leaders,
+      # the only pods that run an API server. LWS sets that label itself, so the
+      # chart stamps every other key here but not that one.
+      matchLabels:
+        llm-d.ai/inference-serving: "true"
+        leaderworkerset.sigs.k8s.io/worker-index: "0"
     tracing:
-      enabled: false
+      otelExporterEndpoint: "http://localhost:4317"
+      sampling:
+        sampler: "parentbased_traceidratio"
+        samplerArg: "0.1"
     monitoring:
       interval: "10s"
       prometheus:
         enabled: true
         auth:
           enabled: false
+  # "none" leaves gateway wiring to this chart's own HTTPRoutes. Use "istio" to
+  # also get the EPP DestinationRule on an Istio-backed gateway.
   provider:
     name: none
-  inferencePool:
-    targetPorts:
-      - number: 8000
-    modelServerType: vllm
-    modelServers:
-      ### CHANGES REQUIRED ###
-      matchLabels:
-        llm-d.ai/model: Qwen3-1.7B
-      ### CHANGES REQUIRED ###
-
-### CHANGES REQUIRED ###
-huggingfaceToken: "my-hugging-face-token"
-# Bearer token required for EXTERNAL access (the per-workspace OpenAI endpoint).
-# Enforced at the inference gateway's "external" listener via an
-# AgentgatewayPolicy, not inside vLLM. Leave empty to disable auth.
-inferenceApiKey: ""
-httpRequestTimeout: 300s
-### CHANGES REQUIRED ###
-
-# The chart automatically calculates accelerator resources (e.g., nvidia.com/gpu) based on parallelism settings.
-# However, you can override this by explicitly setting resources in the container spec.
-# 1) If you explicitly set resources.limits.<accelerator> in the container spec, that value is used.
-# 2) Otherwise, the value is auto-calculated from parallelism.tensor * parallelism.dataLocal.
-# --> If you use this strategy, vLLM parallelism arguments like --tensor-parallel-size and --data-parallel-size-local and the corresponding value will be added automatically to the first container.
-ms:
-  multinode: false
-  modelArtifacts:
-    size: 20Gi
-    authSecretName: "llm-d-model-auth-details"
-    ### CHANGES REQUIRED ###
-    uri: "hf://Qwen/Qwen3-1.7B"
-    name: "Qwen/Qwen3-1.7B"
-    labels:
-      llm-d.ai/model: Qwen3-1.7B
-    ### CHANGES REQUIRED ###
-  routing:
-    proxy:
-      enabled: false
-      targetPort: 8000
-      zapLogLevel: error
-  accelerator:
-    type: nvidia
-  decode:
-    create: true
-    replicas: 1
-    # VLLM parallelism configuration
-    parallelism:
-      tensor: 1
-      data: 1
-      dataLocal: 1
-      workers: 1
-    monitoring:
-      podmonitor:
-        enabled: true
-        portName: "vllm"
-        path: "/metrics"
-        interval: "30s"
-    containers:
-    - name: "vllm"
-      image: ghcr.io/llm-d/llm-d-cuda:v0.6.0
-      modelCommand: vllmServe
-      args:
-        - "--disable-uvicorn-access-log"
-        - "--gpu-memory-utilization=0.95"
-      env:
-        - name: VLLM_USE_FLASHINFER_SAMPLER
-          value: "0"
-        - name: LIBRARY_PATH
-          value: /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/lib:/usr/local/lib64:/usr/lib64:/usr/lib/x86_64-linux-gnu
-      ports:
-        - containerPort: 8000
-          name: vllm
-          protocol: TCP
-      mountModelVolume: true
-      volumeMounts:
-        - name: metrics-volume
-          mountPath: /.config
-        - name: shm
-          mountPath: /dev/shm
-        - name: torch-compile-cache
-          mountPath: /.cache
-      startupProbe:
-        httpGet:
-          path: /v1/models
-          port: vllm
-        initialDelaySeconds: 15
-        periodSeconds: 30
-        timeoutSeconds: 5
-        failureThreshold: 120
-      livenessProbe:
-        httpGet:
-          path: /health
-          port: vllm
-        periodSeconds: 10
-        timeoutSeconds: 5
-        failureThreshold: 3
-      readinessProbe:
-        httpGet:
-          path: /v1/models
-          port: vllm
-        periodSeconds: 5
-        timeoutSeconds: 2
-        failureThreshold: 3
-    volumes:
-    - name: metrics-volume
-      emptyDir: {}
-    - name: torch-compile-cache
-      emptyDir: {}
-    - name: shm
-      emptyDir:
-        medium: Memory
-        sizeLimit: 20Gi
-  # Disabled here, but mostly same configuration options as for decode component
-  prefill:
+  # Left false deliberately — see Chart.yaml.
+  httpRoute:
     create: false
+
+# Used only by a plain `helm install`; the operator's `_exalsius.resources.*`
+# override these.
+fallback:
+  cpu: "8"
+  memory: "16Gi"
+  storage: "50Gi"
+  replicas: 1
+
+# Operator-injected — DO NOT set by hand.
+# _exalsius:
+#   resources:
+#     replicas: 1
+#     perReplica:
+#       cpu: "8"
+#       memory: "16Gi"
+#       storage: "50Gi"
+#       gpuCount: 1
+#       gpuVendor: "NVIDIA"          # or "AMD"
+#       gpuResourceName: "nvidia.com/gpu"
+#   scheduling:
+#     nodeSelector:
+#       nvidia.com/gpu.product: "NVIDIA-L40"
+_exalsius: {}

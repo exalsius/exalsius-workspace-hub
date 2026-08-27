@@ -1,19 +1,22 @@
 apiVersion: v2
 name: llm-d-model
 description: >-
-  Serves one LLM for inference with the llm-d stack (GAIE InferencePool +
-  llm-d-modelservice/vLLM). Attaches to the shared agentgateway from llm-d-infra
+  Serves one LLM for inference with the llm-d stack (llm-d router / GAIE
+  InferencePool + vLLM). Attaches to the shared agentgateway from llm-d-infra
   and exposes a per-workspace OpenAI-compatible endpoint. Requires the
   llm-d-infra prerequisite (auto-installed by the operator).
 type: application
 version: 0.3.0
-appVersion: 0.6.0
+# Tracks the aligned llm-d release (docs/adr/0007).
+appVersion: 0.9.0
 dependencies:
-  - name: inferencepool
-    alias: ip
-    version: v1.4.0
-    repository: oci://registry.k8s.io/gateway-api-inference-extension/charts
-  - name: llm-d-modelservice
-    alias: ms
-    version: v0.4.9
-    repository: https://llm-d-incubation.github.io/llm-d-modelservice
+  # llm-d router in "gateway" mode: the InferencePool, endpoint picker and RBAC.
+  # Aliased `igw` because its values nest under `router`, which would otherwise
+  # read `llm-d-router-gateway.router.epp`.
+  #
+  # `igw.httpRoute.create` stays false: it renders one route with no
+  # `sectionName`, and this chart needs the route pinned to a listener.
+  - name: llm-d-router-gateway
+    alias: igw
+    version: v0.10.0
+    repository: oci://ghcr.io/llm-d/charts

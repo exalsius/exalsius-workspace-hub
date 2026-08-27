@@ -1,9 +1,7 @@
 {{- if .Values.inferenceApiKey }}
-# API-key enforcement for external access. Attached to the external route only
-# (see networking.yaml), so it gates the per-workspace public endpoint while
-# leaving the internal route untouched. Strict mode: requests without a valid
-# key (Authorization: Bearer <key>) are rejected at the gateway. Keys come from
-# the {{ .Release.Name }}-external-apikey secret (see secret.yaml).
+# Gates the per-workspace public endpoint. Attached to the external route only,
+# leaving the internal path keyless for Open WebUI. Strict: requests without a
+# valid `Authorization: Bearer <key>` are rejected at the gateway.
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayPolicy
 metadata:
