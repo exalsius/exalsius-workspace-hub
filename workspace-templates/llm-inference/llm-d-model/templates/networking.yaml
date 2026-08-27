@@ -112,9 +112,13 @@ spec:
     - group: ""
       kind: Service
 ---
-# Routes to this model's InferencePool on the X-Gateway-Model-Name header, split
-# per listener so the optional API-key policy can gate `external` while leaving
-# `internal` open for cluster-internal consumers (auth.yaml).
+# Routes to this model's InferencePool on the trusted header stamped above.
+#
+# EXTERNAL ONLY — the "internal" listener is served by the AgentgatewayModel,
+# which matches on the request body (docs/adr/0008). That is fine for Open WebUI
+# but not for a per-workspace public endpoint, which must serve exactly the model
+# that workspace deployed; hence the trusted header here, and the API-key policy
+# on this route (auth.yaml).
 #
 # Hand-written rather than the router chart's httpRoute.create, which renders one
 # route with no sectionName and so cannot be pinned to a listener.
@@ -129,19 +133,5 @@ spec:
       name: {{ $gw.name }}
       namespace: {{ $gw.namespace }}
       sectionName: {{ $gw.listeners.external }}
-  rules:
-    {{- include "llm-d-model.modelRouteRules" . | nindent 4 }}
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: {{ .Release.Name }}-httproute-internal
-spec:
-  parentRefs:
-    - group: gateway.networking.k8s.io
-      kind: Gateway
-      name: {{ $gw.name }}
-      namespace: {{ $gw.namespace }}
-      sectionName: internal
   rules:
     {{- include "llm-d-model.modelRouteRules" . | nindent 4 }}

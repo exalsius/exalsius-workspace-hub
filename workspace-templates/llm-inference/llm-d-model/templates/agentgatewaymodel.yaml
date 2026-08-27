@@ -1,0 +1,38 @@
+{{- /*
+This model's entry in the gateway's model table, on the "internal" listener.
+Because that listener admits AgentgatewayModel, agentgateway matches the request
+body against `match.model` and serves /v1/models itself — no body-routing policy
+and no discovery service needed (docs/adr/0008).
+
+`provider: Custom` + a backendRef to the InferencePool keeps the llm-d endpoint
+picker in the path. The backendRef is namespace-local by API contract, so this
+lives beside the pool and reaches the gateway via parentRefs.
+
+Internal only; the external listener uses a trusted header instead — see
+networking.yaml.
+*/ -}}
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayModel
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "llm-d-model.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.sharedGateway.name }}
+      namespace: {{ .Values.sharedGateway.namespace }}
+      sectionName: {{ .Values.sharedGateway.listeners.internal }}
+  # The request body's "model" field. Exact match, so no cross-model shadowing.
+  match:
+    model: {{ .Values.model.name | quote }}
+  provider: Custom
+  custom:
+    # Required. Without a `path`, agentgateway uses /v1 + the standard suffix.
+    formats:
+      {{- toYaml (required "model.formats must list at least one API format" .Values.model.formats) | nindent 6 }}
+    backendRef:
+      group: inference.networking.k8s.io
+      kind: InferencePool
+      name: {{ .Release.Name }}

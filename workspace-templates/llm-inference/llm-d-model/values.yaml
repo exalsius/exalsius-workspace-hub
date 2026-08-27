@@ -14,6 +14,12 @@ model:
     claimName: ""
     subPath: ""
     mountPath: /models
+  # API surfaces advertised to the gateway's model table. Without a `path`,
+  # agentgateway calls `/v1` + the format's standard suffix, matching vLLM.
+  # Completions covers chat; add Embeddings or Responses as the model supports
+  # them. Also valid: Messages, Rerank, Realtime, AnthropicTokenCount.
+  formats:
+    - type: Completions
 
 # For gated/private Hugging Face models. Exposed to vLLM as HF_TOKEN.
 huggingfaceToken: ""
@@ -31,6 +37,7 @@ sharedGateway:
   namespace: default
   listeners:
     external: external   # this model's HTTPRoute (trusted, stamped model name)
+    internal: internal   # this model's AgentgatewayModel (body-matched)
     webui: webui
   ports:
     external: 80
