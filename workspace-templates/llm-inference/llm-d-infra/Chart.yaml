@@ -5,15 +5,9 @@ description: >-
   LeaderWorkerSet controller). Auto-installed once per cluster as the
   llm-d-model prerequisite.
 type: application
-version: 0.3.0
-# Tracks the aligned llm-d release (docs/adr/0007).
+version: 1.0.0
 appVersion: 0.9.0
 dependencies:
-  # agentgateway control plane: serves the "agentgateway" GatewayClass, the GAIE
-  # InferencePool integration and the AgentgatewayModel API.
-  #
-  # Pinned ahead of llm-d (still on v1.1.0) because AgentgatewayModel lands in
-  # v1.4.1, which builds against the same GAIE v1.5.0 we vendor.
   - name: agentgateway
     version: v1.4.1
     repository: oci://cr.agentgateway.dev/charts
@@ -21,10 +15,6 @@ dependencies:
     alias: ow
     version: 16.1.0
     repository: https://helm.openwebui.com/
-  # LeaderWorkerSet controller. Every llm-d-model is an LWS, so this is required
-  # for any model, not just sharded ones — hence the shared prerequisite rather
-  # than a separate one (docs/adr/0010). Ships its own CRDs, needs no
-  # cert-manager.
   - name: lws
     version: v0.10.0
     repository: oci://registry.k8s.io/lws/charts

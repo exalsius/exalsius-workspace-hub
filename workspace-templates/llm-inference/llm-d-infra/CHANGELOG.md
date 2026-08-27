@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0](https://github.com/exalsius/exalsius-workspace-hub/compare/llm-d-infra-v0.3.0...llm-d-infra-v1.0.0) (2026-08-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **llm-d-infra:** the model-registry service and its `modelRegistry.*` values are removed. A model is discovered only if it attaches an AgentgatewayModel to the gateway's internal listener, which llm-d-model does from this release on.
+* **llm-d-infra:** gateway settings move from `infra.gateway.*` to `gateway.*`. They are no longer passthrough values for a subchart.
+
+### Features
+
+* **llm-d-infra:** bundle the LeaderWorkerSet controller ([e08c05a](https://github.com/exalsius/exalsius-workspace-hub/commit/e08c05a4318c470e7b6192d908d469cf0986c802))
+* **llm-d-infra:** own the Gateway and move to agentgateway v1.4.1 ([92a87ca](https://github.com/exalsius/exalsius-workspace-hub/commit/92a87ca6a9f48098ef465cc9764631982a75038b))
+* **llm-d-infra:** replace the model-registry service with AgentgatewayModel ([7f22f55](https://github.com/exalsius/exalsius-workspace-hub/commit/7f22f5586392387f348ac150d92cf898670c6edc))
+
 ## [0.3.0](https://github.com/exalsius/exalsius-workspace-hub/compare/llm-d-infra-v0.2.0...llm-d-infra-v0.3.0) (2026-07-07)
 
 
