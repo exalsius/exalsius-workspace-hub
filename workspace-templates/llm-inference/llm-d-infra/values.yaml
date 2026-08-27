@@ -1,32 +1,13 @@
-modelRegistry:
-  enabled: true
-  replicas: 1
-  image:
-    repository: ghcr.io/astral-sh/uv
-    tag: python3.12-bookworm-slim
-    pullPolicy: IfNotPresent
-  configMapLabel:
-    key: inference.networking.k8s.io/bbr-managed
-    value: "true"
-  modelsDataKey: baseModel
-  pollIntervalSec: "30"
-  pollBackoffMaxSec: "300"
-  service:
-    type: ClusterIP
-    port: 8000
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-
 # agentgateway control plane (upstream subchart).
 agentgateway:
   # Wires the controller to GAIE so it can route to the InferencePools the
   # per-model endpoint pickers own.
   inferenceExtension:
+    enabled: true
+  # The AgentgatewayModel API: request-body model matching and an
+  # OpenAI-compatible /v1/models. Off by default upstream, still experimental
+  # there (docs/adr/0008).
+  agentgatewayModels:
     enabled: true
 
 # The shared inference gateway, rendered by templates/gateway.yaml rather than
@@ -44,11 +25,16 @@ gateway:
       allowedRoutes:
         namespaces:
           from: All
-    # Open WebUI's model calls and discovery.
+    # Open WebUI. Admitting AgentgatewayModel turns on agentgateway's built-in
+    # LLM paths here: body-based model matching plus /v1/models across every
+    # attached model (docs/adr/0008). HTTPRoute is deliberately not admitted.
     - name: internal
       port: 8080
       protocol: HTTP
       allowedRoutes:
+        kinds:
+          - group: agentgateway.dev
+            kind: AgentgatewayModel
         namespaces:
           from: All
     # Fronts Open WebUI. Each model's "chat" endpoint redirects here rather than

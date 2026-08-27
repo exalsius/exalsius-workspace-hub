@@ -4,7 +4,7 @@
 
 Shared llm-d inference infrastructure for the exalsius operator. An umbrella
 chart wrapping [agentgateway](https://agentgateway.dev/) and Open WebUI, plus
-the `Gateway` this chart owns:
+the `Gateway` and model table this chart owns:
 
 - **Shared inference gateway** — a single agentgateway `llm-d-inference-gateway`
   that every `llm-d-model` attaches to. Three listeners: `external` (:80), which
@@ -13,14 +13,18 @@ the `Gateway` this chart owns:
   Rendered by `templates/gateway.yaml` — the upstream `llm-d-infra` chart that
   used to provide it was deprecated in llm-d 0.7.0 and its repository archived
   ([ADR-0007](../../../docs/adr/0007-llm-d-0.9-router-charts-and-owned-modelserver.md)).
-- **Body-based routing (BBR)** — an agentgateway policy on the **internal**
-  listener that extracts the model name from the request body into the
-  `X-Gateway-Model-Name` header, so Open WebUI's model-agnostic requests route to
-  the right model. (External clients don't rely on BBR — each model's chart stamps
-  the trusted header on its own route.)
-- **Model discovery** — exposes OpenAI-compatible `/v1/models` (on the internal
-  listener) by aggregating `bbr-managed` ConfigMaps across namespaces, so Open
-  WebUI can list every deployed model.
+- **Model routing and discovery, natively** — the `internal` listener admits the
+  `AgentgatewayModel` kind, which turns on agentgateway's built-in LLM paths:
+  it extracts the model name from the request body and serves an
+  OpenAI-compatible `/v1/models` aggregated from every model attached to the
+  listener. Each `llm-d-model` ships one `AgentgatewayModel` pointing at its own
+  `InferencePool`, so the llm-d endpoint picker stays in the path.
+  This replaced a hand-rolled body-based-routing policy **and** a
+  `model-registry` service that polled labelled ConfigMaps
+  ([ADR-0008](../../../docs/adr/0008-agentgateway-model-api-replaces-model-registry.md)).
+  External clients don't use this path — each model's chart stamps a trusted
+  `X-Gateway-Model-Name` on its own `external` route, because a per-workspace
+  public endpoint must serve exactly the model that workspace deployed.
 - **Open WebUI** — the chat interface, pointed at the gateway's internal listener.
 
 ## Role: a pure shared prerequisite
