@@ -3,13 +3,16 @@
 # llm-d-infra
 
 Shared llm-d inference infrastructure for the exalsius operator. An umbrella
-chart wrapping [agentgateway](https://agentgateway.dev/), the upstream
-`llm-d-infra` stack, and Open WebUI:
+chart wrapping [agentgateway](https://agentgateway.dev/) and Open WebUI, plus
+the `Gateway` this chart owns:
 
 - **Shared inference gateway** — a single agentgateway `llm-d-inference-gateway`
-  that every `llm-d-model` attaches to. It has two listeners: `external` (:80),
-  which model workspaces attach `HTTPRoute`s to, and `internal` (:8080), used by
-  Open WebUI and model discovery.
+  that every `llm-d-model` attaches to. Three listeners: `external` (:80), which
+  model workspaces attach `HTTPRoute`s to, `internal` (:8080), used by Open WebUI
+  and model discovery, and `webui` (:8081), which fronts Open WebUI itself.
+  Rendered by `templates/gateway.yaml` — the upstream `llm-d-infra` chart that
+  used to provide it was deprecated in llm-d 0.7.0 and its repository archived
+  ([ADR-0007](../../../docs/adr/0007-llm-d-0.9-router-charts-and-owned-modelserver.md)).
 - **Body-based routing (BBR)** — an agentgateway policy on the **internal**
   listener that extracts the model name from the request body into the
   `X-Gateway-Model-Name` header, so Open WebUI's model-agnostic requests route to
@@ -42,8 +45,11 @@ prerequisite
 Open WebUI is therefore reachable only once at least one model exists.
 
 Services are **ClusterIP** — routing is operator-owned (the legacy NodePort and
-`workspace.exalsius.ai/access-*` annotations were removed). `appVersion` tracks
-the upstream llm-d release (`0.6.0`), kept deliberately
+`workspace.exalsius.ai/access-*` annotations were removed). The gateway's own
+data-plane Service is pinned to ClusterIP by the `AgentgatewayParameters` that
+`templates/gateway.yaml` renders; without it agentgateway would provision a
+LoadBalancer. `appVersion` tracks the upstream llm-d release (`0.9.0`), kept
+deliberately
 ([ADR-0002](../../../docs/adr/0002-llm-inference-prerequisite-and-umbrella-mapping.md)).
 
 ## Local render
