@@ -69,8 +69,12 @@ _Avoid_: vscode-devcontainer (the former name), dev-pod, devcontainer.
 ### llm inference
 
 **llm-d-infra**:
-Shared inference infrastructure (a shared agentgateway, body-based routing, model
-discovery, Open WebUI). A **pure prerequisite** — ships a ServiceTemplate **only**,
+Shared inference infrastructure (a shared agentgateway and Open WebUI; model
+routing and discovery are the gateway's own, via **AgentgatewayModel**). Our
+chart, not the upstream one of the same name — that
+was deprecated in llm-d 0.7.0 and archived, and the `Gateway` it used to render
+is now ours ([ADR-0007](docs/adr/0007-llm-d-0.9-router-charts-and-owned-modelserver.md)).
+A **pure prerequisite** — ships a ServiceTemplate **only**,
 auto-installed once per ClusterDeployment as the cluster-shared prerequisite of
 `llm-d-model`. It has **no WorkspaceClass**: infra never routes anything itself, so
 the class-vs-prerequisite double-install footgun is structurally impossible. Open
@@ -79,8 +83,9 @@ model** via each `llm-d-model`'s `chat` endpoint (a prerequisite can't own a rou
 endpoint, so the route must ride on a class that does — the model's).
 
 **llm-d-model**:
-A served model. Runs a GAIE InferencePool + llm-d-modelservice/vLLM in its own
-namespace and attaches `HTTPRoute`s to the **shared** inference gateway (it does
+A served model. Runs a GAIE InferencePool + endpoint picker (from the llm-d
+router chart) in front of a chart-owned vLLM LeaderWorkerSet, in its own
+namespace, and attaches `HTTPRoute`s to the **shared** inference gateway (it does
 not run its own). Exposes **two** `accessEndpoint`s, each backed by an in-namespace
 redirect Service (`<release>-<endpoint>`): `http` — the model's
 OpenAI-compatible API, redirecting to the shared gateway — and `chat` — the shared
@@ -108,25 +113,68 @@ tenants via the keyless internal listener.
 **Inference gateway**:
 The single shared agentgateway (`llm-d-inference-gateway`, in `default`) installed
 by `llm-d-infra`. Every model attaches to it via `HTTPRoute`s. Three listeners:
-`external` (:80) for model workspaces, `internal` (:8080) for Open WebUI's
-model-discovery and model calls, and `webui` (:8081) fronting Open WebUI itself
-(the target of each model's `chat` redirect). Each model still backs its endpoints
-with in-namespace redirect Services so operator routing stays in-namespace.
+`external` (:80) for model workspaces, which attach `HTTPRoute`s; `internal`
+(:8080) for Open WebUI's discovery and model calls, which admits
+`AgentgatewayModel` **instead of** `HTTPRoute` and so serves `/v1/models` and
+body-matched routing itself; and `webui` (:8081) fronting Open WebUI (the target
+of each model's `chat` redirect). Each model still backs its endpoints with
+in-namespace redirect Services so operator routing stays in-namespace.
 
-**Body-based routing (BBR)**:
-An agentgateway policy on the gateway's **internal** listener that extracts the
-model name from the request body into the `X-Gateway-Model-Name` header, so Open
-WebUI's model-agnostic requests match a model's `HTTPRoute`. External clients get
-the header stamped by the model chart's redirect route instead. Models are
-discovered via labeled ConfigMaps across namespaces.
+**AgentgatewayModel**:
+One per `llm-d-model`, attached to the gateway's **internal** listener and
+pointing at that model's `InferencePool` via `provider: Custom` +
+`custom.backendRef`. Because the listener admits the kind, agentgateway extracts
+the model name from the request body and serves `/v1/models` itself — replacing
+both the old body-based-routing policy and the `model-registry` service
+([ADR-0008](docs/adr/0008-agentgateway-model-api-replaces-model-registry.md)).
+Requires agentgateway ≥ v1.4.1 with `agentgatewayModels.enabled`; still
+experimental upstream.
+_Avoid_: BBR, model-registry, model discovery (all retired).
+
+**X-Gateway-Model-Name**:
+The **external**-only trusted header. Stamped by a model's `<release>-http`
+redirect route and matched by its `external` `HTTPRoute`. It exists so a
+per-workspace public endpoint serves exactly the model that workspace deployed —
+which is why the external listener was *not* converted to `AgentgatewayModel`,
+whose matching reads client-controlled request bodies.
 
 **InferencePool**:
-The GAIE pool of model-server pods a gateway route targets.
+The GAIE pool of model-server pods a gateway route targets. Rendered by the
+llm-d router chart, named off the Helm release.
 
-**modelservice**:
-The llm-d subchart that runs vLLM decode/prefill pods. GPU count derives from
-`parallelism.tensor`; vendor from `accelerator.type`.
+**llm-d router**:
+The upstream chart (`llm-d-router-gateway`) that replaced the GAIE `inferencepool`
+chart in llm-d 0.9.0. Renders the `InferencePool`, the endpoint picker (EPP,
+formerly `llm-d-inference-scheduler`) and its RBAC. Aliased `igw` in
+`llm-d-model`. Its sibling `llm-d-router-standalone` — EPP plus a sidecar proxy,
+no Gateway — is the mode we do *not* use.
 
-**Model discovery / model-registry**:
-The infra service exposing OpenAI-compatible `/v1/models` by aggregating model
-names from `bbr-managed` ConfigMaps.
+**Model server**:
+The vLLM `LeaderWorkerSet` in `llm-d-model/templates/modelserver.yaml`. Owned by
+the chart, because upstream's replacement for the deprecated
+`llm-d-modelservice` chart is a Kustomize base. It reads `_exalsius` directly,
+which is why `llm-d-model` has no `resourceInjection`. Always an LWS, never a
+Deployment — `size: 1` is the single-node case
+([ADR-0010](docs/adr/0010-always-leaderworkerset-and-the-nodesperreplica-toggle.md)).
+_Avoid_: modelservice (the retired subchart), "the model Deployment".
+
+**nodesPerReplica**:
+`modelServer.nodesPerReplica` — how many pods together serve ONE copy of the
+model. 1 (default) = single-node. Above 1 the model is sharded across that many
+nodes with tensor parallelism. It *divides* the operator's pod budget rather
+than adding to it: `replicas` stays "pods", `gpuCount` stays "GPUs per pod", and
+the chart derives `groups = replicas / nodesPerReplica` and
+`TP = nodesPerReplica * gpuCount`. `replicas` must be a whole multiple of it.
+
+**Leader / worker**:
+The pods of one LWS group. Only the leader runs the OpenAI API server
+(`--api-server-count 1`); workers join over NCCL and serve nothing, so they get
+no probes and are excluded from every selector via
+`leaderworkerset.sigs.k8s.io/worker-index: "0"`. At `nodesPerReplica: 1` the
+leader is the only pod.
+
+**Model table**:
+The set of `AgentgatewayModel`s attached to the gateway's internal listener.
+agentgateway aggregates it into OpenAI-compatible `/v1/models` and matches
+request bodies against it. Keyed on `match.model`, so served model names must be
+unique per cluster.

@@ -4,18 +4,28 @@ The cluster-scoped CRDs the llm-inference stack depends on are vendored into
 [`llm-d-infra/crds/`](../../workspace-templates/llm-inference/llm-d-infra/crds)
 rather than installed as cluster infrastructure:
 
-- **`gaie.crds-v1.4.0.yaml`** — Gateway API Inference Extension: `InferencePool`
+- **`gaie.crds-v1.5.0.yaml`** — Gateway API Inference Extension: `InferencePool`
   (`inference.networking.k8s.io/v1`) plus the `inference.networking.x-k8s.io`
-  objectives the endpoint-picker watches, pinned to the GAIE **v1.4.0** release.
-- **`agentgateway.crds-v1.0.0.yaml`** — the agentgateway CRDs the routing layer
-  uses, pinned to **v1.0.0**.
+  objectives the endpoint-picker watches, pinned to the GAIE **v1.5.0** release
+  (the `manifests.yaml` bundle). v1.5.0 drops the alpha
+  `inferencepools.inference.networking.x-k8s.io`, so the bundle is four CRDs
+  rather than five.
+- **`agentgateway.crds-v1.4.1.yaml`** — the agentgateway CRDs the routing layer
+  uses, pinned to **v1.4.1**, rendered from
+  `oci://cr.agentgateway.dev/charts/agentgateway-crds`. v1.4.1 adds
+  `AgentgatewayModel`, which the model routing and `/v1/models` discovery now
+  depend on ([ADR-0008](0008-agentgateway-model-api-replaces-model-registry.md)).
 
 The chart carries the CRDs; the cluster is not expected to pre-install them.
 
 The GAIE bundle arrived with the llm-d 0.6.0 alignment (#82); the agentgateway
 bundle with the agentgateway routing refactor (dropping external body-based
-routing). This ADR records the rationale and trade-offs of that placement — the
-same reasoning covers both bundles.
+routing). Both were bumped by the llm-d 0.9.0 alignment
+([ADR-0007](0007-llm-d-0.9-router-charts-and-owned-modelserver.md)), and
+agentgateway again by [ADR-0008](0008-agentgateway-model-api-replaces-model-registry.md).
+This ADR
+records the rationale and trade-offs of that placement — the same reasoning
+covers both bundles.
 
 **Why — the CRDs are the missing piece, and the chart is the only place we
 control.** The upstream subcharts ship the *instances* (an `InferencePool`, the
@@ -55,6 +65,7 @@ when absent (see consequences).
   charts via k0rdent ServiceTemplate → Sveltos. If Sveltos did not apply a chart's
   `crds/`, this approach would silently fail and we would fall back to a
   cluster-level install. Verified on the local dev harness: installing
-  llm-d-infra established all five GAIE CRDs on the child cluster
-  (`inferencepools.inference.networking.k8s.io` et al., `bundle-version: v1.4.0`),
+  llm-d-infra established all five GAIE CRDs of the then-current v1.4.0 bundle on
+  the child cluster (`inferencepools.inference.networking.k8s.io` et al.,
+  `bundle-version: v1.4.0`),
   so Sveltos does apply `crds/`.
