@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0](https://github.com/exalsius/exalsius-workspace-hub/compare/llm-d-model-v0.3.0...llm-d-model-v1.0.0) (2026-08-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **llm-d-model:** model discovery no longer works against an llm-d-infra older than the release that admits AgentgatewayModel on its internal listener.
+* **llm-d-model:** values move from `ms.*` and `ip.*` to `model.*`, `modelServer.*` and `igw.*`; `ms.modelArtifacts.uri` collapses into `model.name` with `model.source.claimName` replacing the `pvc://` form. The WorkspaceClass drops `resourceInjection`, and the workload is a LeaderWorkerSet rather than a Deployment, which needs the controller from llm-d-infra.
+
+### Features
+
+* **llm-d-model:** add opt-in OpenAI tool calling ([c161baf](https://github.com/exalsius/exalsius-workspace-hub/commit/c161baf93fa31f9f756d08782ecfc520353482fa))
+* **llm-d-model:** rebuild on the llm-d router chart with an owned LeaderWorkerSet ([2179974](https://github.com/exalsius/exalsius-workspace-hub/commit/2179974e74684ebe323944243150c01c3493739d))
+* **llm-d-model:** route the internal listener via AgentgatewayModel ([1ac7a9a](https://github.com/exalsius/exalsius-workspace-hub/commit/1ac7a9a0c59e1a01fefe3d277f64fa23e7fa9614))
+* **llm-d-model:** run llm-d's vLLM build instead of upstream ([47cbf2c](https://github.com/exalsius/exalsius-workspace-hub/commit/47cbf2ce8780fffbb3cb9693b4714b3c2e11505b))
+
 ## [0.3.0](https://github.com/exalsius/exalsius-workspace-hub/compare/llm-d-model-v0.2.0...llm-d-model-v0.3.0) (2026-07-07)
 
 
